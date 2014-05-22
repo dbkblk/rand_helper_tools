@@ -5,24 +5,26 @@
 
 using namespace tinyxml2;
 
-class langages
+class languages
 {
 public:
-    void ParseDocument(QString input_file, QString langage);
-    void ParseAllFiles(QString langage);
-    void ImportDocument(QString langage);
+    void ParseDocument(QString input_file, QString language);
+    void ParseAllFiles(QString language);
+    void ImportDocument(QString language);
+    void SortCategories();
+    void SorterHelper(QString prefix);
 
 private:
     XMLDocument input;
     XMLDocument output;
-    QString langage;
+    QString language;
     const char* lang_file;
 };
 
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
-    langages *xml = new langages();
+    languages *xml = new languages();
 
     // Clean directory
     QDir dir("lang/");
@@ -33,7 +35,7 @@ int main(int argc, char *argv[])
     int ch;
     int z = 0;
     do {
-    qDebug() << "\nWhat do you want to do ?\n1 - Export all langage\n2 - Export a specific langage\n3 - Import a langage\n4 - Exit program\n\n";
+    qDebug() << "\nWhat do you want to do ?\n1 - Export all language\n2 - Export a specific language\n3 - Import a language\n4 - Sort files by categories\n5 - Exit program\n\n";
     std::cin >> ch;
     std::string lang;
     switch (ch)
@@ -48,11 +50,11 @@ int main(int argc, char *argv[])
             break;
 
         case 2 :
-            std::cout << "Please specify which langage (en, fr, ge, it, sp, po) ?";
+            std::cout << "Please specify which language (en, fr, ge, it, sp, po) ?";
             std::cin >> lang;
             if(lang == "en" && lang == "fr" && lang == "ge" && lang == "it" && lang == "sp" && lang == "po")
             {
-                qDebug() << "A valid langage code is required";
+                qDebug() << "A valid language code is required";
                 break;
             }
             xml->ParseAllFiles(QString::fromStdString(lang));
@@ -64,6 +66,9 @@ int main(int argc, char *argv[])
             break;
 
         case 4 :
+            xml->SortCategories();
+
+        case 5 :
             return 0;
             break;
 
@@ -76,23 +81,25 @@ int main(int argc, char *argv[])
     return a.exec();
 }
 
-void langages::ParseAllFiles(QString langage)
+void languages::ParseAllFiles(QString language)
 {
     // List all files
 
     QDir root(".");
+    QStringList xml_filter;
+    xml_filter << "*.xml";
     QStringList folders;
-    folders = root.entryList(QDir::Files);
+    folders = root.entryList(xml_filter, QDir::Files);
 
     for(QStringList::Iterator it = folders.begin(); it != folders.end(); it++)
     {
-        ParseDocument(*it,langage);
+        ParseDocument(*it,language);
     }
 
-    qDebug() << "Export finished. All translations are into subfolders 'lang/langage/'";
+    qDebug() << "Export finished. All translations are into subfolders 'lang/language/'";
 }
 
-void langages::ParseDocument(QString input_file, QString langage)
+void languages::ParseDocument(QString input_file, QString language)
 {
     XMLDocument input;
     XMLDocument output;
@@ -100,12 +107,12 @@ void langages::ParseDocument(QString input_file, QString langage)
     QString int_lang;
     int_lang = "English";
 
-    // Check langage
-    if(langage == "fr"){int_lang = "French";};
-    if(langage == "ge"){int_lang = "German";};
-    if(langage == "it"){int_lang = "Italian";};
-    if(langage == "sp"){int_lang = "Spanish";};
-    if(langage == "po"){int_lang = "Polish";};
+    // Check language
+    if(language == "fr"){int_lang = "French";};
+    if(language == "ge"){int_lang = "German";};
+    if(language == "it"){int_lang = "Italian";};
+    if(language == "sp"){int_lang = "Spanish";};
+    if(language == "po"){int_lang = "Polish";};
 
     // Getting filenames
     input_file.replace(".XML", ".xml", Qt::CaseSensitive);
@@ -154,6 +161,7 @@ void langages::ParseDocument(QString input_file, QString langage)
         const char* value_tag = tag_el->FirstChildElement("Tag")->GetText();
         // qDebug() << int_lang << " : " << value_tag;
 
+        // Check for NULL values
         if(tag_el->FirstChildElement(int_lang.toStdString().c_str()) == NULL)
         {
             qDebug() << "Element is NULL";
@@ -190,26 +198,25 @@ void langages::ParseDocument(QString input_file, QString langage)
     QFile::remove(input_temp_file);
 }
 
-void langages::ImportDocument(QString langage)
+void languages::ImportDocument(QString language)
 {
     qDebug() << "Open function";
 
     XMLDocument input;
     XMLDocument input_tr;
-    XMLDocument output;
 
     QString int_lang;
     int_lang;
 
-    // Check langage
+    // Check language
 
-    if(langage == "fr"){int_lang = "French";};
-    if(langage == "ge"){int_lang = "German";};
-    if(langage == "it"){int_lang = "Italian";};
-    if(langage == "sp"){int_lang = "Spanish";};
-    if(langage == "po"){int_lang = "Polish";};
-    if(langage == "en"){int_lang = "English";};
-    qDebug() << "Langage is " << int_lang;
+    if(language == "fr"){int_lang = "French";};
+    if(language == "ge"){int_lang = "German";};
+    if(language == "it"){int_lang = "Italian";};
+    if(language == "sp"){int_lang = "Spanish";};
+    if(language == "po"){int_lang = "Polish";};
+    if(language == "en"){int_lang = "English";};
+    qDebug() << "language is " << int_lang;
 
     // Open files
     QDir dir_temp;
@@ -218,11 +225,13 @@ void langages::ImportDocument(QString langage)
     /* Search the tag trough existing files and replace with the new value if found */
     // List all files
     QDir root(".");
+    QStringList xml_filter;
+    xml_filter << "*.xml";
     QStringList folders;
-    folders = root.entryList(QDir::Files);
+    folders = root.entryList(xml_filter, QDir::Files);
     QDir translated("imported/");
     QStringList files_translated;
-    files_translated = translated.entryList(QDir::Files);
+    files_translated = translated.entryList(xml_filter, QDir::Files);
 
     qDebug() << "Entering loop";
     for(QStringList::Iterator it = folders.begin(); it != folders.end(); it++)
@@ -252,10 +261,6 @@ void langages::ImportDocument(QString langage)
         file_out.close();
 
         input.LoadFile(current_copy.toStdString().c_str());
-
-        // Look into each root file
-
-
 
         // Comparing to each new file
         for(QStringList::Iterator tr = files_translated.begin(); tr != files_translated.end(); tr++)
@@ -298,5 +303,264 @@ void langages::ImportDocument(QString langage)
 
 
     }
+
+}
+
+void languages::SortCategories()
+{
+    // List all root files
+    qDebug() << "Parameters";
+    XMLDocument xml_input;
+    XMLDocument xml_export;
+
+    QFile::remove("export/bigfile.xml");
+    QDir root_dir(".");
+    QDir export_dir;
+    export_dir.mkdir("export/");
+    QStringList xml_filter;
+    xml_filter << "*.xml";
+    QStringList files;
+    files = root_dir.entryList(xml_filter, QDir::Files);
+    QStringList tags;
+
+    // Creation of the big file
+    qDebug() << "Creation of export file";
+    xml_export.LoadFile("export/bigfile.xml");
+    xml_export.InsertFirstChild(xml_export.NewDeclaration());
+    qDebug() << "2nd node";
+    XMLNode *root = xml_export.NewElement("Civ4GameText");
+    xml_export.InsertEndChild(root);
+
+
+    qDebug() << "Entering loop";
+    for (QStringList::Iterator it = files.begin(); it != files.end(); it++)
+    {
+        QString current = *it;
+
+        // Begin iteration
+
+        xml_input.LoadFile(current.toStdString().c_str());
+        XMLElement* tag_orig = xml_input.FirstChildElement("Civ4GameText")->FirstChildElement("TEXT")->ToElement();
+        for(tag_orig;tag_orig != NULL;tag_orig = tag_orig->NextSiblingElement())
+        {
+            qDebug() << current << " - " << tag_orig->FirstChildElement("Tag")->GetText();
+
+            // Create xml structure
+
+            XMLElement* text_value = xml_export.NewElement("TEXT");
+            root->InsertEndChild(text_value);
+            XMLElement* tag_export = xml_export.NewElement("Tag");
+            text_value->InsertEndChild(tag_export);
+            XMLElement* english_export = xml_export.NewElement("English");
+            text_value->InsertEndChild(english_export);
+            XMLElement* french_export = xml_export.NewElement("French");
+            text_value->InsertEndChild(french_export);
+            XMLElement* german_export = xml_export.NewElement("German");
+            text_value->InsertEndChild(german_export);
+            XMLElement* italian_export = xml_export.NewElement("Italian");
+            text_value->InsertEndChild(italian_export);
+            XMLElement* spanish_export = xml_export.NewElement("Spanish");
+            text_value->InsertEndChild(spanish_export);
+            XMLElement* polish_export = xml_export.NewElement("Polish");
+            text_value->InsertEndChild(polish_export);
+
+            // Read elements and check if NULL
+
+            tags << tag_orig->FirstChildElement("Tag")->GetText();
+            tag_export->SetText(tag_orig->FirstChildElement("Tag")->GetText());
+            if(tag_orig->FirstChildElement("English") == NULL)
+            {
+                //english_export->SetText("");
+            }
+            if(tag_orig->FirstChildElement("English")->GetText() == NULL)
+            {
+                english_export->SetText("");
+            }
+            else
+            {
+                english_export->SetText(tag_orig->FirstChildElement("English")->GetText());
+            }
+
+            if(tag_orig->FirstChildElement("French") == NULL)
+            {
+                //french_export->SetText("");
+            }
+            if(tag_orig->FirstChildElement("French")->GetText() == NULL)
+            {
+                french_export->SetText("");
+            }
+            else
+            {
+                french_export->SetText(tag_orig->FirstChildElement("French")->GetText());
+            }
+
+            if(tag_orig->FirstChildElement("German") == NULL)
+            {
+                //german_export->SetText("");
+            }
+            if(tag_orig->FirstChildElement("German")->GetText() == NULL)
+            {
+                german_export->SetText("");
+            }
+            else
+            {
+                german_export->SetText(tag_orig->FirstChildElement("German")->GetText());
+            }
+
+            if(tag_orig->FirstChildElement("Italian") == NULL)
+            {
+                //italian_export->SetText("");
+            }
+            if(tag_orig->FirstChildElement("Italian")->GetText() == NULL)
+            {
+                italian_export->SetText("");
+            }
+            else
+            {
+                italian_export->SetText(tag_orig->FirstChildElement("Italian")->GetText());
+            }
+
+            if(tag_orig->FirstChildElement("Spanish") == NULL)
+            {
+                //spanish_export->SetText("");
+            }
+            if(tag_orig->FirstChildElement("Spanish")->GetText() == NULL)
+            {
+                spanish_export->SetText("");
+            }
+            else
+            {
+                spanish_export->SetText(tag_orig->FirstChildElement("Spanish")->GetText());
+            }
+
+            if(tag_orig->FirstChildElement("Polish") == NULL)
+            {
+                //polish_export->SetText("");
+            }
+            if(tag_orig->FirstChildElement("Polish")->GetText() == NULL)
+            {
+                polish_export->SetText("");
+            }
+            else
+            {
+                polish_export->SetText(tag_orig->FirstChildElement("Polish")->GetText());
+            }
+
+        }
+
+    }
+    xml_export.SaveFile("export/bigfile.xml");
+
+    // Fix encoding before process
+    QFile file_in("export/bigfile.xml");
+    QFile file_out("export/__temp__bigfile.xml");
+    file_in.open(QIODevice::ReadOnly | QIODevice::Text);
+    file_out.open(QIODevice::WriteOnly | QIODevice::Truncate);
+    QTextStream in_enc(&file_in);
+    QTextStream out_enc(&file_out);
+    out_enc.setCodec("UTF-8");
+    while(!in_enc.atEnd())
+    {
+        QString line = in_enc.readLine();
+        out_enc << line;
+    }
+    file_in.close();
+    file_out.close();
+    QFile::remove("export/bigfile.xml");
+    QFile::rename("export/__temp__bigfile.xml","export/bigfile.xml");
+
+        // Sort tags by category
+    XMLDocument xml_sort;
+    xml_export.LoadFile("export/bigfile.xml");
+
+    tags.sort();
+    QString tag_search;
+    QStringList sort_categories;
+    QString category;
+    sort_categories << "AI_DIPLO" << "INTERFACE_" << "TXT_KEY_BUILDING";
+
+    foreach(category, sort_categories)
+    {
+        // Creation of each file
+        QString category_file = "export/" + category + ".xml";
+        xml_sort.LoadFile(category_file.toStdString().c_str());
+        xml_sort.InsertFirstChild(xml_sort.NewDeclaration());
+        XMLNode *root = xml_sort.NewElement("Civ4GameText");
+        xml_sort.InsertEndChild(root);
+        xml_sort.SaveFile(category_file.toStdString().c_str());
+    }
+// Loop are inversed
+    foreach(tag_search, tags)
+    {
+        foreach(category, sort_categories)
+        {
+            QString category_file = "export/" + category + ".xml";
+            xml_sort.LoadFile(category_file.toStdString().c_str());
+
+            if(tag_search.contains(category))
+            {
+                // Look for the correct tag
+
+
+                for(tag_orig;tag_orig != NULL;tag_orig = tag_orig->NextSiblingElement())
+                {
+                    // Create xml structure
+
+                    XMLElement* text_value = xml_export.NewElement("TEXT");
+                    root->InsertEndChild(text_value);
+                    XMLElement* tag_export = xml_export.NewElement("Tag");
+                    text_value->InsertEndChild(tag_export);
+                    XMLElement* english_export = xml_export.NewElement("English");
+                    text_value->InsertEndChild(english_export);
+                    XMLElement* french_export = xml_export.NewElement("French");
+                    text_value->InsertEndChild(french_export);
+                    XMLElement* german_export = xml_export.NewElement("German");
+                    text_value->InsertEndChild(german_export);
+                    XMLElement* italian_export = xml_export.NewElement("Italian");
+                    text_value->InsertEndChild(italian_export);
+                    XMLElement* spanish_export = xml_export.NewElement("Spanish");
+                    text_value->InsertEndChild(spanish_export);
+                    XMLElement* polish_export = xml_export.NewElement("Polish");
+                    text_value->InsertEndChild(polish_export);
+
+                    // Read elements
+
+                    tag_export->SetText(tag_orig->FirstChildElement("Tag")->GetText());
+                    english_export->SetText(tag_orig->FirstChildElement("English")->GetText());
+                    french_export->SetText(tag_orig->FirstChildElement("French")->GetText());
+                    german_export->SetText(tag_orig->FirstChildElement("German")->GetText());
+                    italian_export->SetText(tag_orig->FirstChildElement("Italian")->GetText());
+                    spanish_export->SetText(tag_orig->FirstChildElement("Spanish")->GetText());
+                    polish_export->SetText(tag_orig->FirstChildElement("Polish")->GetText());
+                }
+            }
+
+            xml_sort.SaveFile(category_file.toStdString().c_str());
+        }
+
+
+    }
+
+    // Export tags to file
+    QString tag;
+    QFile tag_list("export/tag_list.txt");
+
+    if ( tag_list.open(QIODevice::ReadWrite) )
+    {
+        QTextStream stream( &tag_list );
+
+        foreach(tag, tags)
+        {
+            stream << tag << endl;
+        }
+    }
+    tag_list.close();
+
+
+    // Sort by category
+}
+
+void languages::SorterHelper(QString prefix)
+{
 
 }
