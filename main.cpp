@@ -1,11 +1,11 @@
 #include <iostream>
 #include <QtCore>
-#include <lib/tinyxml2.h>
+#include "lib/tinyxml2.h"
 #include <QDebug>
 
 using namespace tinyxml2;
 
-class langage
+class langages
 {
 public:
     void ParseDocument(QString input_file, QString langage);
@@ -22,7 +22,7 @@ private:
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
-    langage *xml = new langage();
+    langages *xml = new langages();
 
     // Clean directory
     QDir dir("lang/");
@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
     return a.exec();
 }
 
-void langage::ParseAllFiles(QString langage)
+void langages::ParseAllFiles(QString langage)
 {
     // List all files
 
@@ -92,7 +92,7 @@ void langage::ParseAllFiles(QString langage)
     qDebug() << "Export finished. All translations are into subfolders 'lang/langage/'";
 }
 
-void langage::ParseDocument(QString input_file, QString langage)
+void langages::ParseDocument(QString input_file, QString langage)
 {
     XMLDocument input;
     XMLDocument output;
@@ -190,7 +190,7 @@ void langage::ParseDocument(QString input_file, QString langage)
     QFile::remove(input_temp_file);
 }
 
-void langage::ImportDocument(QString langage)
+void langages::ImportDocument(QString langage)
 {
     qDebug() << "Open function";
 
@@ -212,19 +212,15 @@ void langage::ImportDocument(QString langage)
     qDebug() << "Langage is " << int_lang;
 
     // Open files
-    qDebug() << "Create folder";
     QDir dir_temp;
-    dir_temp.mkdir("temp");
-    qDebug() << "Open first file";
-    //input_tr.LoadFile("test/A_New_Dawn_Concept_Civ4GameText.xml");
+    dir_temp.mkdir("import");
 
     /* Search the tag trough existing files and replace with the new value if found */
     // List all files
-    qDebug() << "Look for all files in the folder";
     QDir root(".");
     QStringList folders;
     folders = root.entryList(QDir::Files);
-    QDir translated("test/");
+    QDir translated("imported/");
     QStringList files_translated;
     files_translated = translated.entryList(QDir::Files);
 
@@ -235,7 +231,7 @@ void langage::ImportDocument(QString langage)
 
         // Open file. Check if it can close the file
         QString current = *it;
-        QString current_copy = "temp/" + current;
+        QString current_copy = "import/" + current;
         //QFile::copy(current,current_copy);
         qDebug() << "Comparing " << current;
 
@@ -264,7 +260,7 @@ void langage::ImportDocument(QString langage)
         // Comparing to each new file
         for(QStringList::Iterator tr = files_translated.begin(); tr != files_translated.end(); tr++)
         {
-            QString current_new = "test/" + *tr;
+            QString current_new = "imported/" + *tr;
             input_tr.LoadFile(current_new.toStdString().c_str());
 
             XMLElement* tag_orig = input.FirstChildElement("Civ4GameText")->FirstChildElement("TEXT")->ToElement();
