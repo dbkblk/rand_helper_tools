@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="TXT_KEY_CONCEPT_FIXED_BORDERS_TEXT">Fixed Borders</string>
+  <string name="TXT_KEY_CONCEPT_DIPLOMACY_TEXT">Advanced Diplomacy</string>
+</resources>
