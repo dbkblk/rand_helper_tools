@@ -13,6 +13,7 @@ public:
     void ImportDocument(QString language);
     void SortCategories();
     void SorterHelper(QString prefix);
+    void ConvertToUTF8();
 
 private:
     XMLDocument input;
@@ -26,16 +27,13 @@ int main(int argc, char *argv[])
     QCoreApplication a(argc, argv);
     languages *xml = new languages();
 
-    // Clean directory
     QDir dir("lang/");
     dir.removeRecursively();
-    QDir dir2("modif/");
-    dir2.removeRecursively();
 
     int ch;
     int z = 0;
     do {
-    qDebug() << "\nWhat do you want to do ?\n1 - Export all language\n2 - Export a specific language\n3 - Import a language\n4 - Sort files by categories\n5 - Exit program\n\n";
+    qDebug() << "\nWhat do you want to do ?\n1 - Export all language\n2 - Export a specific language\n3 - Import a language\n4 - Sort files by categories\n5 - Convert all root files from ISO8859-1 to UTF8\n6 - Convert all root files from UTF8 to ISO8859-1\n7 - Exit program\n\n";
     std::cin >> ch;
     std::string lang;
     switch (ch)
@@ -73,8 +71,31 @@ int main(int argc, char *argv[])
 
         case 4 :
             xml->SortCategories();
+            break;
 
         case 5 :
+            std::cout << "This will convert all files in the root directory from encoding ISO8859-1 to UTF8. Are you sure to continue (Y/N) ?\n";
+            std::cin >> lang;
+            if(lang == "Y")
+            {
+                xml->ConvertToUTF8();
+                break;
+            }
+            else
+                break;
+
+        case 6 :
+            std::cout << "This will convert all files in the root directory from encoding UTF8 to ISO8859-1. Are you sure to continue (Y/N) ?\n";
+            std::cin >> lang;
+            if(lang == "Y")
+            {
+                xml->ConvertToISO8859();
+                break;
+            }
+            else
+                break;
+
+        case 7 :
             return 0;
             break;
 
@@ -216,8 +237,6 @@ void languages::ParseDocument(QString input_file, QString language)
 
 void languages::ImportDocument(QString language)
 {
-    qDebug() << "Open function";
-
     XMLDocument input;
     XMLDocument input_tr;
 
@@ -232,7 +251,7 @@ void languages::ImportDocument(QString language)
     if(language == "sp"){int_lang = "Spanish";};
     if(language == "po"){int_lang = "Polish";};
     if(language == "en"){int_lang = "English";};
-    qDebug() << "language is " << int_lang;
+    qDebug() << "Selected language is " << int_lang;
 
     /* Search the tag trough existing files and replace with the new value if found */
     QStringList xml_filter;
@@ -261,7 +280,7 @@ void languages::ImportDocument(QString language)
         QString current = *it;
         QString current_copy = "imported/" + current;
 
-        qDebug() << "Comparing " << current;
+        qDebug() << "Checking " << current;
 
         // Check encoding before process
         QFile file_in(current);
@@ -292,44 +311,100 @@ void languages::ImportDocument(QString language)
             {
                 // Compare each occurence with each tag of the translated file
                 const char* value_tag = tag_orig->FirstChildElement("Tag")->GetText();
-                //qDebug() << "Tag : " << value_tag;
+                //qDebug() << value_tag;
                 XMLElement* tag_tr = input_tr.FirstChildElement("resources")->FirstChildElement("string")->ToElement();
                 for(tag_tr;tag_tr != NULL;tag_tr = tag_tr->NextSiblingElement())
                 {
                     const char* value_tag_tr = tag_tr->Attribute("name");
-                    //qDebug() << "Tr. tag : " << value_tag_tr;
+
                     if (!std::strcmp(value_tag,value_tag_tr))
                     {
                         s++;
-                        const char * value_text_tr = tag_tr->GetText();
+                        const char* value_text_tr = tag_tr->GetText();
                         const char* value_text;
 
-                        if(tag_orig->FirstChildElement(language.toStdString().c_str()) == NULL)
+                        // Checking tag presence
+
+                        if(tag_orig->FirstChildElement(int_lang.toStdString().c_str()) == NULL)
                         {
+                            //qDebug() << "No tag";
                             value_text = "";
                         }
 
-                        else if (tag_orig->FirstChildElement(language.toStdString().c_str())->GetText() == NULL)
+                        else if (tag_orig->FirstChildElement(int_lang.toStdString().c_str())->GetText() == NULL)
                         {
-                            if(tag_orig->FirstChildElement(language.toStdString().c_str())->FirstChildElement("Text") != NULL)
+                            if(tag_orig->FirstChildElement(int_lang.toStdString().c_str())->FirstChildElement("Text") != NULL)
                             {
-                                value_text = tag_orig->FirstChildElement(language.toStdString().c_str())->FirstChildElement("Text")->GetText();
+                                //qDebug() << "No value";
+                                value_text = tag_orig->FirstChildElement(int_lang.toStdString().c_str())->FirstChildElement("Text")->GetText();
                             }
-                            value_text = "";
+                            else
+                            {
+                                value_text = "";
+                            }
                         }
 
                         else
                         {
+                            //qDebug() << "Value set";
                             value_text = tag_orig->FirstChildElement(int_lang.toStdString().c_str())->GetText();
                         }
 
-                        //qDebug() << value_text << " / " << value_text_tr;
-                        if(std::strcmp(value_text,value_text_tr))
+                        //qDebug() << value_tag << " : " << value_text << " / " << value_text_tr;
+
+                        // Normalize value
+                        if(value_text_tr == NULL)
                         {
-                            QString operation;
-                            operation = "FILE: " + current + " | TAG: " + value_tag + " | OLD: " + value_text + " -> NEW: " + value_text_tr;
-                            print_list << operation;
-                            tag_orig->FirstChildElement(int_lang.toStdString().c_str())->SetText(value_text_tr);
+                            value_text_tr = "";
+                        }
+
+                        // Compare original and modified strings
+                        if(value_text != value_text_tr)
+                        {
+                            // Check if the modified file has a value
+                            if(value_text != "" && value_text_tr == "")
+                            {
+                                QString operation;
+                                operation = "--WARNING-- TAG:" + QString(value_tag)+ " | ORIGINAL FILE: " + QString(current) + " | IMPORT FILE: " + QString(current_new) + " has empty value.";
+                                print_list << operation;
+                                qDebug() << operation;
+                            }
+
+                            // Major cases
+                            else if(strcmp(value_text,value_text_tr))
+                            {
+                                QString operation;
+                                operation = "FILE: " + current + " | TAG: " + value_tag + " | OLD: " + value_text + " -> NEW: " + value_text_tr;
+                                print_list << operation;
+                                qDebug() << operation;
+
+                                // Checking if tag is not subtag, again...
+                                if(tag_orig->FirstChildElement(int_lang.toStdString().c_str()) == NULL)
+                                {
+                                }
+                                else if (tag_orig->FirstChildElement(int_lang.toStdString().c_str())->GetText() == NULL)
+                                {
+                                    if(tag_orig->FirstChildElement(int_lang.toStdString().c_str())->FirstChildElement("Text") != NULL)
+                                    {
+                                        tag_orig->FirstChildElement(int_lang.toStdString().c_str())->FirstChildElement("Text")->SetText(value_text_tr);
+                                        // Check for additionnal attributes
+                                        if(tag_tr->Attribute("Gender") != NULL)
+                                        {
+                                            tag_orig->FirstChildElement(int_lang.toStdString().c_str())->FirstChildElement("Gender")->SetText(tag_tr->Attribute("Gender"));
+                                        }
+                                        if(tag_tr->Attribute("Plural") != NULL)
+                                        {
+                                            tag_orig->FirstChildElement(int_lang.toStdString().c_str())->FirstChildElement("Plural")->SetText(tag_tr->Attribute("Plural"));
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    tag_orig->FirstChildElement(int_lang.toStdString().c_str())->SetText(value_text_tr);
+                                }
+                            }
+
+
                         }
                     }
                 }
@@ -569,4 +644,44 @@ void languages::SortCategories()
         }
     }
     tag_list.close();
+}
+
+void languages::ConvertToUTF8()
+{
+    XMLDocument temp;
+    QDir root_dir(".");
+    QStringList files;
+    QStringList xml_filter;
+    xml_filter << "*.xml";
+    files = root_dir.entryList(xml_filter, QDir::Files);
+
+    for (QStringList::Iterator it = files.begin(); it != files.end(); it++)
+    {
+        QString string_in = *it;
+        QString string_out = "__temp__" + *it;
+        QFile file_in(string_in);
+        QFile file_out(string_out);
+        file_in.open(QIODevice::ReadOnly | QIODevice::Text);
+        file_out.open(QIODevice::WriteOnly | QIODevice::Truncate);
+        QTextStream in_enc(&file_in);
+        QTextStream out_enc(&file_out);
+        in_enc.setCodec("ISO 8859-1");
+        out_enc.setCodec("UTF-8");
+        while(!in_enc.atEnd())
+        {
+            QString line = in_enc.readLine();
+            line.replace("ISO-8859-1","utf-8",Qt::CaseInsensitive);
+            //line.toLatin1();
+            out_enc << line;
+        }
+        file_in.close();
+        file_out.close();
+        temp.LoadFile(string_out.toStdString().c_str());
+        temp.SaveFile(string_out.toStdString().c_str());
+        QFile::remove(string_in);
+        QFile::rename(string_out,string_in);
+    }
+
+
+
 }
