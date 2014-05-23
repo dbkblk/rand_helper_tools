@@ -1,2 +1,2 @@
 - Define new categories for sorting
-- Fix the german import bug
+- Add a function to track the duplicate entries

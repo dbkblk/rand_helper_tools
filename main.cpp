@@ -14,6 +14,8 @@ public:
     void SortCategories();
     void SorterHelper(QString prefix);
     void ConvertToUTF8();
+    void ConvertToISO8859();
+    void FindDuplicates();
 
 private:
     XMLDocument input;
@@ -29,11 +31,13 @@ int main(int argc, char *argv[])
 
     QDir dir("lang/");
     dir.removeRecursively();
+    QDir dir_export("export/");
+    dir_export.removeRecursively();
 
     int ch;
     int z = 0;
     do {
-    qDebug() << "\nWhat do you want to do ?\n1 - Export all language\n2 - Export a specific language\n3 - Import a language\n4 - Sort files by categories\n5 - Convert all root files from ISO8859-1 to UTF8\n6 - Convert all root files from UTF8 to ISO8859-1\n7 - Exit program\n\n";
+    qDebug() << "\nWhat do you want to do ?\n1 - Export all language\n2 - Export a specific language\n3 - Import a language\n4 - Sort files by categories\n5 - Convert all root files from ISO8859-1 to UTF8\n6 - Convert all root files from UTF8 to ISO8859-1\n7 - Find duplicates files\n8 - Exit program\n\n";
     std::cin >> ch;
     std::string lang;
     switch (ch)
@@ -96,6 +100,10 @@ int main(int argc, char *argv[])
                 break;
 
         case 7 :
+            xml->FindDuplicates();
+            break;
+
+        case 8 :
             return 0;
             break;
 
@@ -443,13 +451,14 @@ void languages::SortCategories()
     languages_list << "English" << "French" << "German" << "Italian" << "Spanish" << "Polish";
 
     // List all root files
-    qDebug() << "Parameters";
+    qDebug() << "Preparing the sorting...";
     XMLDocument xml_input;
     XMLDocument xml_export;
 
     QFile::remove("export/bigfile.xml");
     QDir root_dir(".");
     QDir export_dir;
+    //export_dir.removeRecursively();
     export_dir.mkdir("export/");
     QStringList xml_filter;
     xml_filter << "*.xml";
@@ -458,15 +467,12 @@ void languages::SortCategories()
     QStringList tags;
 
     // Creation of the big file
-    qDebug() << "Creation of export file";
+    qDebug() << "Creation of export file...";
     xml_export.LoadFile("export/bigfile.xml");
     xml_export.InsertFirstChild(xml_export.NewDeclaration());
-    qDebug() << "2nd node";
     XMLNode *root = xml_export.NewElement("Civ4GameText");
     xml_export.InsertEndChild(root);
 
-
-    qDebug() << "Entering loop";
     const char* null_value = "";
     for (QStringList::Iterator it = files.begin(); it != files.end(); it++)
     {
@@ -478,7 +484,7 @@ void languages::SortCategories()
         XMLElement* tag_orig = xml_input.FirstChildElement("Civ4GameText")->FirstChildElement("TEXT")->ToElement();
         for(tag_orig;tag_orig != NULL;tag_orig = tag_orig->NextSiblingElement())
         {
-            qDebug() << current << " - " << tag_orig->FirstChildElement("Tag")->GetText();
+            //qDebug() << current << " - " << tag_orig->FirstChildElement("Tag")->GetText();
 
             // Create xml structure
 
@@ -496,13 +502,13 @@ void languages::SortCategories()
                 text_value->InsertEndChild(xml_export.NewElement(language.toStdString().c_str()));
                 if(tag_orig->FirstChildElement(language.toStdString().c_str()) == NULL)
                 {
-                    qDebug() << "No " << language << " element.";
+                    //qDebug() << "No " << language << " element.";
                     const char* null_value = "";
                     text_value->FirstChildElement(language.toStdString().c_str())->SetText(null_value);
                 }
                 else if (tag_orig->FirstChildElement(language.toStdString().c_str())->GetText() == NULL)
                 {
-                    qDebug() << "No " << language << " text.";
+                    //qDebug() << "No " << language << " text.";
                     if(tag_orig->FirstChildElement(language.toStdString().c_str())->FirstChildElement("Text") != NULL)
                     {
                         XMLElement* sub_text = xml_export.NewElement("Text");
@@ -544,17 +550,20 @@ void languages::SortCategories()
     QFile::remove("export/bigfile.xml");
     QFile::rename("export/__temp__bigfile.xml","export/bigfile.xml");
 
-        // Sort tags by category
+
+
+    // Sort tags by category
+    qDebug() << "Begin sorting...";
     XMLDocument xml_sort;
     xml_export.LoadFile("export/bigfile.xml");
-
     tags.sort();
+
     QString tag_search;
     QStringList sort_categories;
     QString category;
 
     //* --- Known categories --- *//
-    sort_categories << "AI_DIPLO" << "INTERFACE_" << "TXT_KEY_GREAT_PERSON" << "TXT_KEY_BUILDING";
+    sort_categories << "AI_" << "INTERFACE_" << "TXT_KEY_GREAT_PERSON" << "TXT_KEY_BUILDING" << "USER_" << "TXT_MAIN_MENU" << "TXT_KEY_UNIT";
 
 
 
@@ -582,7 +591,7 @@ void languages::SortCategories()
 
                     if(!std::strcmp(tag_value,tag_search.toStdString().c_str()))
                     {
-                        qDebug() << "Found " << tag_value;
+                        //qDebug() << "Found " << tag_value;
                         XMLElement* text_value = xml_sort.NewElement("TEXT");
                         root->InsertEndChild(text_value);
                         XMLElement* tag_export = xml_sort.NewElement("Tag");
@@ -594,13 +603,13 @@ void languages::SortCategories()
                             text_value->InsertEndChild(xml_sort.NewElement(language.toStdString().c_str()));
                             if(tag_orig->FirstChildElement(language.toStdString().c_str()) == NULL)
                             {
-                                qDebug() << "No " << language << " element.";
+                                //qDebug() << "No " << language << " element.";
                                 const char* null_value = "";
                                 text_value->FirstChildElement(language.toStdString().c_str())->SetText(null_value);
                             }
                             else if (tag_orig->FirstChildElement(language.toStdString().c_str())->GetText() == NULL)
                             {
-                                qDebug() << "No " << language << " text.";
+                                //qDebug() << "No " << language << " text.";
                                 if(tag_orig->FirstChildElement(language.toStdString().c_str())->FirstChildElement("Text") != NULL)
                                 {
                                     XMLElement* sub_text = xml_sort.NewElement("Text");
@@ -631,6 +640,7 @@ void languages::SortCategories()
     }
 
     // Export tags to file
+    qDebug() << "Exporting tags...";
     QString tag;
     QFile tag_list("export/tag_list.txt");
 
@@ -644,6 +654,9 @@ void languages::SortCategories()
         }
     }
     tag_list.close();
+
+    qDebug() << "Find duplicates tags...";
+    languages::FindDuplicates();
 }
 
 void languages::ConvertToUTF8()
@@ -671,7 +684,6 @@ void languages::ConvertToUTF8()
         {
             QString line = in_enc.readLine();
             line.replace("ISO-8859-1","utf-8",Qt::CaseInsensitive);
-            //line.toLatin1();
             out_enc << line;
         }
         file_in.close();
@@ -681,7 +693,68 @@ void languages::ConvertToUTF8()
         QFile::remove(string_in);
         QFile::rename(string_out,string_in);
     }
+}
 
+void languages::ConvertToISO8859()
+{
+    XMLDocument temp;
+    QDir root_dir(".");
+    QStringList files;
+    QStringList xml_filter;
+    xml_filter << "*.xml";
+    files = root_dir.entryList(xml_filter, QDir::Files);
 
+    for (QStringList::Iterator it = files.begin(); it != files.end(); it++)
+    {
+        QString string_in = *it;
+        QString string_out = "__temp__" + *it;
+        QFile file_in(string_in);
+        QFile file_out(string_out);
+        file_in.open(QIODevice::ReadOnly | QIODevice::Text);
+        file_out.open(QIODevice::WriteOnly | QIODevice::Truncate);
+        QTextStream in_enc(&file_in);
+        QTextStream out_enc(&file_out);
+        in_enc.setCodec("UTF-8");
+        out_enc.setCodec("ISO 8859-1");
+        while(!in_enc.atEnd())
+        {
+            QString line = in_enc.readLine();
+            line.replace("utf-8","ISO-8859-1",Qt::CaseInsensitive);
+            out_enc << line;
+        }
+        file_in.close();
+        file_out.close();
+        temp.LoadFile(string_out.toStdString().c_str());
+        temp.SaveFile(string_out.toStdString().c_str());
+        QFile::remove(string_in);
+        QFile::rename(string_out,string_in);
+    }
+}
 
+void languages::FindDuplicates()
+{
+
+    // Find duplicate tags
+    QString dupl_old = "";
+    QString dupl_new;
+    QFile dupl_in("export/tag_list.txt");
+    QFile dupl_out("export/duplicates.txt");
+    dupl_in.open(QIODevice::ReadOnly | QIODevice::Text);
+    dupl_out.open(QIODevice::WriteOnly | QIODevice::Truncate);
+    QTextStream in_dupl(&dupl_in);
+    QTextStream out_dupl(&dupl_out);
+    while(!in_dupl.atEnd())
+    {
+        dupl_new = in_dupl.readLine();
+        if(!strcmp(dupl_new.toStdString().c_str(),dupl_old.toStdString().c_str()))
+        {
+            //qDebug() << dupl_new;
+            out_dupl << dupl_new << endl;
+        }
+        dupl_old = dupl_new;
+    }
+    dupl_in.close();
+    dupl_out.close();
+
+    qDebug() << "Duplicates tags have been gathered in 'export/duplicates.txt'";
 }
