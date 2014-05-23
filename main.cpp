@@ -13,8 +13,8 @@ public:
     void ImportDocument(QString language);
     void SortCategories();
     void SorterHelper(QString prefix);
-    void ConvertToUTF8();
-    void ConvertToISO8859();
+    void ConvertToUTF8(QString input_file);
+    void ConvertToISO8859(QString input_file);
     void FindDuplicates();
 
 private:
@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
             std::cin >> lang;
             if(lang == "Y")
             {
-                xml->ConvertToUTF8();
+                //xml->ConvertToUTF8();
                 break;
             }
             else
@@ -93,7 +93,7 @@ int main(int argc, char *argv[])
             std::cin >> lang;
             if(lang == "Y")
             {
-                xml->ConvertToISO8859();
+                //xml->ConvertToISO8859();
                 break;
             }
             else
@@ -161,35 +161,18 @@ void languages::ParseDocument(QString input_file, QString language)
     // Getting filenames
     input_file.replace(".XML", ".xml", Qt::CaseSensitive);
     QString input_temp_file = "__temp__" + input_file;
+    QFile::copy(input_file,input_temp_file);
+    ConvertToUTF8(input_temp_file);
     QString output_dir = "lang/" + int_lang + "/";
     QString output_file = output_dir + input_file;
     QDir dir;
     dir.mkpath(output_dir);
     bool save = false;
 
-    // Check encoding before process
-    QFile file_in(input_file);
-    QFile file_out(input_temp_file);
-    file_in.open(QIODevice::ReadOnly | QIODevice::Text);
-    file_out.open(QIODevice::WriteOnly | QIODevice::Truncate);
-    QTextStream in_enc(&file_in);
-    QTextStream out_enc(&file_out);
-    out_enc.setCodec("UTF-8");
-    while(!in_enc.atEnd())
-    {
-        QString line = in_enc.readLine();
-        out_enc << line;
-    }
-    file_in.close();
-    file_out.close();
-
     // Begin process
-
     input.LoadFile(input_temp_file.toStdString().c_str());
     output.LoadFile(output_file.toStdString().c_str());
 
-    XMLDeclaration *declaration = output.NewDeclaration("xml version=\"1.0\" encoding=\"ISO-8859-1\"");
-    //output.InsertFirstChild(declaration);
     XMLNode *root = output.NewElement("resources");
     output.InsertEndChild(root);
 
@@ -232,6 +215,8 @@ void languages::ParseDocument(QString input_file, QString language)
     }
 
     output.SaveFile(output_file.toStdString().c_str());
+
+    languages::ConvertToUTF8(output_file);
 
     // Save input if modified
     if(save)
@@ -451,14 +436,14 @@ void languages::SortCategories()
     languages_list << "English" << "French" << "German" << "Italian" << "Spanish" << "Polish";
 
     // List all root files
-    qDebug() << "Preparing the sorting...";
+    qDebug() << "Configuration...";
     XMLDocument xml_input;
     XMLDocument xml_export;
 
     QFile::remove("export/bigfile.xml");
     QDir root_dir(".");
     QDir export_dir;
-    //export_dir.removeRecursively();
+
     export_dir.mkdir("export/");
     QStringList xml_filter;
     xml_filter << "*.xml";
@@ -467,7 +452,7 @@ void languages::SortCategories()
     QStringList tags;
 
     // Creation of the big file
-    qDebug() << "Creation of export file...";
+    qDebug() << "Gathering all values...";
     xml_export.LoadFile("export/bigfile.xml");
     xml_export.InsertFirstChild(xml_export.NewDeclaration());
     XMLNode *root = xml_export.NewElement("Civ4GameText");
@@ -533,6 +518,7 @@ void languages::SortCategories()
     xml_export.SaveFile("export/bigfile.xml");
 
     // Fix encoding before process
+    qDebug() << "Fixing encoding...";
     QFile file_in("export/bigfile.xml");
     QFile file_out("export/__temp__bigfile.xml");
     file_in.open(QIODevice::ReadOnly | QIODevice::Text);
@@ -553,7 +539,8 @@ void languages::SortCategories()
 
 
     // Sort tags by category
-    qDebug() << "Begin sorting...";
+    int total_tags = tags.size();
+    qDebug() << "Sorting" << total_tags << "tags into categories...";
     XMLDocument xml_sort;
     xml_export.LoadFile("export/bigfile.xml");
     tags.sort();
@@ -563,9 +550,10 @@ void languages::SortCategories()
     QString category;
 
     //* --- Known categories --- *//
-    sort_categories << "AI_" << "INTERFACE_" << "TXT_KEY_GREAT_PERSON" << "TXT_KEY_BUILDING" << "USER_" << "TXT_MAIN_MENU" << "TXT_KEY_UNIT";
+    sort_categories << "AI_" << "INTERFACE_" << "USER_" << "TXT_";
+                    //<< "TXT_KEY_GREAT_PERSON" << "TXT_KEY_BUILDING" << "TXT_MAIN_MENU" << "TXT_KEY_UNIT";
 
-
+    QStringList tags_process = tags;
 
     foreach(category, sort_categories)
     {
@@ -621,11 +609,14 @@ void languages::SortCategories()
                                     sub_text->SetText(tag_orig->FirstChildElement(language.toStdString().c_str())->FirstChildElement("Text")->GetText());
                                     sub_gender->SetText(tag_orig->FirstChildElement(language.toStdString().c_str())->FirstChildElement("Gender")->GetText());
                                     sub_plural->SetText(tag_orig->FirstChildElement(language.toStdString().c_str())->FirstChildElement("Plural")->GetText());
+                                    xml_export.DeleteNode(tag_orig);
                                 }
+
                             }
                             else
                             {
                                 text_value->FirstChildElement(language.toStdString().c_str())->SetText(tag_orig->FirstChildElement(language.toStdString().c_str())->GetText());
+                                xml_export.DeleteNode(tag_orig);
                             }
                         }
 
@@ -636,11 +627,31 @@ void languages::SortCategories()
         }
 
         xml_sort.SaveFile(category_file.toStdString().c_str());
-
     }
 
+    xml_export.SaveFile("export/OTHERS.xml");
+
+    // Count exported tags
+    qDebug() << "Checking exported tags...";
+    int tags_counter = 0;
+    QDir dir_export("export/");
+    QStringList folders;
+    folders = dir_export.entryList(xml_filter, QDir::Files);
+    for(QStringList::Iterator it = folders.begin(); it != folders.end(); it++)
+    {
+        XMLDocument temp;
+        QString current = "export/" + *it;
+        temp.LoadFile(current.toStdString().c_str());
+        XMLElement* root = temp.FirstChildElement("Civ4GameText")->FirstChildElement("TEXT")->FirstChildElement("Tag")->ToElement();
+        for(root;root != NULL;root = root->NextSiblingElement())
+        {
+            tags_counter++;
+        }
+    }
+    qDebug() << "Found" << tags_counter << "tags !";
+
     // Export tags to file
-    qDebug() << "Exporting tags...";
+    qDebug() << "Exporting tags to a list...";
     QString tag;
     QFile tag_list("export/tag_list.txt");
 
@@ -657,78 +668,60 @@ void languages::SortCategories()
 
     qDebug() << "Find duplicates tags...";
     languages::FindDuplicates();
+
+    QFile::remove("export/bigfile.xml");
 }
 
-void languages::ConvertToUTF8()
+void languages::ConvertToUTF8(QString input_file)
 {
     XMLDocument temp;
-    QDir root_dir(".");
-    QStringList files;
-    QStringList xml_filter;
-    xml_filter << "*.xml";
-    files = root_dir.entryList(xml_filter, QDir::Files);
-
-    for (QStringList::Iterator it = files.begin(); it != files.end(); it++)
+    QString output_file = input_file + "__temp__";
+    QFile file_in(input_file);
+    QFile file_out(output_file);
+    file_in.open(QIODevice::ReadOnly | QIODevice::Text);
+    file_out.open(QIODevice::WriteOnly | QIODevice::Truncate);
+    QTextStream in_enc(&file_in);
+    QTextStream out_enc(&file_out);
+    in_enc.setCodec("ISO 8859-1");
+    out_enc.setCodec("UTF-8");
+    while(!in_enc.atEnd())
     {
-        QString string_in = *it;
-        QString string_out = "__temp__" + *it;
-        QFile file_in(string_in);
-        QFile file_out(string_out);
-        file_in.open(QIODevice::ReadOnly | QIODevice::Text);
-        file_out.open(QIODevice::WriteOnly | QIODevice::Truncate);
-        QTextStream in_enc(&file_in);
-        QTextStream out_enc(&file_out);
-        in_enc.setCodec("ISO 8859-1");
-        out_enc.setCodec("UTF-8");
-        while(!in_enc.atEnd())
-        {
-            QString line = in_enc.readLine();
-            line.replace("ISO-8859-1","utf-8",Qt::CaseInsensitive);
-            out_enc << line;
-        }
-        file_in.close();
-        file_out.close();
-        temp.LoadFile(string_out.toStdString().c_str());
-        temp.SaveFile(string_out.toStdString().c_str());
-        QFile::remove(string_in);
-        QFile::rename(string_out,string_in);
+        QString line = in_enc.readLine();
+        line.replace("ISO-8859-1","utf-8",Qt::CaseInsensitive);
+        out_enc << line;
     }
+    file_in.close();
+    file_out.close();
+    temp.LoadFile(output_file.toStdString().c_str());
+    temp.SaveFile(output_file.toStdString().c_str());
+    QFile::remove(input_file);
+    QFile::rename(output_file,input_file);
 }
 
-void languages::ConvertToISO8859()
+void languages::ConvertToISO8859(QString input_file)
 {
     XMLDocument temp;
-    QDir root_dir(".");
-    QStringList files;
-    QStringList xml_filter;
-    xml_filter << "*.xml";
-    files = root_dir.entryList(xml_filter, QDir::Files);
-
-    for (QStringList::Iterator it = files.begin(); it != files.end(); it++)
+    QString output_file = "__temp__" + input_file;
+    QFile file_in(input_file);
+    QFile file_out(output_file);
+    file_in.open(QIODevice::ReadOnly | QIODevice::Text);
+    file_out.open(QIODevice::WriteOnly | QIODevice::Truncate);
+    QTextStream in_enc(&file_in);
+    QTextStream out_enc(&file_out);
+    in_enc.setCodec("UTF-8");
+    out_enc.setCodec("ISO 8859-1");
+    while(!in_enc.atEnd())
     {
-        QString string_in = *it;
-        QString string_out = "__temp__" + *it;
-        QFile file_in(string_in);
-        QFile file_out(string_out);
-        file_in.open(QIODevice::ReadOnly | QIODevice::Text);
-        file_out.open(QIODevice::WriteOnly | QIODevice::Truncate);
-        QTextStream in_enc(&file_in);
-        QTextStream out_enc(&file_out);
-        in_enc.setCodec("UTF-8");
-        out_enc.setCodec("ISO 8859-1");
-        while(!in_enc.atEnd())
-        {
-            QString line = in_enc.readLine();
-            line.replace("utf-8","ISO-8859-1",Qt::CaseInsensitive);
-            out_enc << line;
-        }
-        file_in.close();
-        file_out.close();
-        temp.LoadFile(string_out.toStdString().c_str());
-        temp.SaveFile(string_out.toStdString().c_str());
-        QFile::remove(string_in);
-        QFile::rename(string_out,string_in);
+        QString line = in_enc.readLine();
+        line.replace("utf-8","ISO-8859-1",Qt::CaseInsensitive);
+        out_enc << line;
     }
+    file_in.close();
+    file_out.close();
+    temp.LoadFile(output_file.toStdString().c_str());
+    temp.SaveFile(output_file.toStdString().c_str());
+    QFile::remove(input_file);
+    QFile::rename(output_file,input_file);
 }
 
 void languages::FindDuplicates()

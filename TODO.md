@@ -1,2 +1,3 @@
 - Define new categories for sorting
 - Add a function to track the duplicate entries
+- Verify encoding for import and sort
