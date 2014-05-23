@@ -308,6 +308,9 @@ void languages::ImportDocument(QString language)
 
 void languages::SortCategories()
 {
+    QStringList languages_list;
+    languages_list << "English" << "French" << "German" << "Italian" << "Spanish" << "Polish";
+
     // List all root files
     qDebug() << "Parameters";
     XMLDocument xml_input;
@@ -479,6 +482,7 @@ void languages::SortCategories()
     QString category;
     sort_categories << "AI_DIPLO" << "INTERFACE_" << "TXT_KEY_BUILDING";
 
+// Loop are inversed
     foreach(category, sort_categories)
     {
         // Creation of each file
@@ -487,57 +491,62 @@ void languages::SortCategories()
         xml_sort.InsertFirstChild(xml_sort.NewDeclaration());
         XMLNode *root = xml_sort.NewElement("Civ4GameText");
         xml_sort.InsertEndChild(root);
-        xml_sort.SaveFile(category_file.toStdString().c_str());
-    }
-// Loop are inversed
-    foreach(tag_search, tags)
-    {
-        foreach(category, sort_categories)
-        {
-            QString category_file = "export/" + category + ".xml";
-            xml_sort.LoadFile(category_file.toStdString().c_str());
 
-            if(tag_search.contains(category))
+        foreach(tag_search, tags)
+        {
+
+            if(tag_search.startsWith(category))
             {
                 // Look for the correct tag
-
+                XMLElement* tag_orig = xml_export.FirstChildElement("Civ4GameText")->FirstChildElement("TEXT")->ToElement();
 
                 for(tag_orig;tag_orig != NULL;tag_orig = tag_orig->NextSiblingElement())
                 {
                     // Create xml structure
+                    const char* tag_value = tag_orig->FirstChildElement("Tag")->GetText();
 
-                    XMLElement* text_value = xml_export.NewElement("TEXT");
-                    root->InsertEndChild(text_value);
-                    XMLElement* tag_export = xml_export.NewElement("Tag");
-                    text_value->InsertEndChild(tag_export);
-                    XMLElement* english_export = xml_export.NewElement("English");
-                    text_value->InsertEndChild(english_export);
-                    XMLElement* french_export = xml_export.NewElement("French");
-                    text_value->InsertEndChild(french_export);
-                    XMLElement* german_export = xml_export.NewElement("German");
-                    text_value->InsertEndChild(german_export);
-                    XMLElement* italian_export = xml_export.NewElement("Italian");
-                    text_value->InsertEndChild(italian_export);
-                    XMLElement* spanish_export = xml_export.NewElement("Spanish");
-                    text_value->InsertEndChild(spanish_export);
-                    XMLElement* polish_export = xml_export.NewElement("Polish");
-                    text_value->InsertEndChild(polish_export);
+                    if(!std::strcmp(tag_value,tag_search.toStdString().c_str()))
+                    {
+                        qDebug() << "Found " << tag_value;
+                        XMLElement* text_value = xml_sort.NewElement("TEXT");
+                        root->InsertEndChild(text_value);
+                        XMLElement* tag_export = xml_sort.NewElement("Tag");
+                        text_value->InsertEndChild(tag_export);
+                        XMLElement* english_export = xml_sort.NewElement("English");
+                        text_value->InsertEndChild(english_export);
+                        XMLElement* french_export = xml_sort.NewElement("French");
+                        text_value->InsertEndChild(french_export);
+                        XMLElement* german_export = xml_sort.NewElement("German");
+                        text_value->InsertEndChild(german_export);
+                        XMLElement* italian_export = xml_sort.NewElement("Italian");
+                        text_value->InsertEndChild(italian_export);
+                        XMLElement* spanish_export = xml_sort.NewElement("Spanish");
+                        text_value->InsertEndChild(spanish_export);
+                        XMLElement* polish_export = xml_sort.NewElement("Polish");
+                        text_value->InsertEndChild(polish_export);
 
-                    // Read elements
+                        // Read elements
 
-                    tag_export->SetText(tag_orig->FirstChildElement("Tag")->GetText());
-                    english_export->SetText(tag_orig->FirstChildElement("English")->GetText());
-                    french_export->SetText(tag_orig->FirstChildElement("French")->GetText());
-                    german_export->SetText(tag_orig->FirstChildElement("German")->GetText());
-                    italian_export->SetText(tag_orig->FirstChildElement("Italian")->GetText());
-                    spanish_export->SetText(tag_orig->FirstChildElement("Spanish")->GetText());
-                    polish_export->SetText(tag_orig->FirstChildElement("Polish")->GetText());
+                        tag_export->SetText(tag_search.toStdString().c_str());
+                        if(tag_orig->FirstChildElement("English") != NULL)
+                        {
+                            english_export->SetText(tag_orig->FirstChildElement("English")->GetText());
+                        }
+                        if(tag_orig->FirstChildElement("French") != NULL)
+                        {
+                            french_export->SetText(tag_orig->FirstChildElement("French")->GetText());
+                        }
+                        //if(german_export->SetText(tag_orig->FirstChildElement("German")->GetText()) != NULL);
+                        //if(italian_export->SetText(tag_orig->FirstChildElement("Italian")->GetText()) != NULL);
+                        //if(spanish_export->SetText(tag_orig->FirstChildElement("Spanish")->GetText()) != NULL);
+                        //if(polish_export->SetText(tag_orig->FirstChildElement("Polish")->GetText()) != NULL);
+
+                    }
                 }
             }
-
-            xml_sort.SaveFile(category_file.toStdString().c_str());
         }
 
+        xml_sort.SaveFile(category_file.toStdString().c_str());
 
     }
 
