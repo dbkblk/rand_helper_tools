@@ -20,3 +20,6 @@ SOURCES += main.cpp \
 
 HEADERS += \
     lib/tinyxml2.h
+
+OTHER_FILES += \
+    TODO.md

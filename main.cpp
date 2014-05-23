@@ -308,6 +308,7 @@ void languages::ImportDocument(QString language)
 
 void languages::SortCategories()
 {
+    QString language;
     QStringList languages_list;
     languages_list << "English" << "French" << "German" << "Italian" << "Spanish" << "Polish";
 
@@ -336,6 +337,7 @@ void languages::SortCategories()
 
 
     qDebug() << "Entering loop";
+    const char* null_value = "";
     for (QStringList::Iterator it = files.begin(); it != files.end(); it++)
     {
         QString current = *it;
@@ -354,101 +356,44 @@ void languages::SortCategories()
             root->InsertEndChild(text_value);
             XMLElement* tag_export = xml_export.NewElement("Tag");
             text_value->InsertEndChild(tag_export);
-            XMLElement* english_export = xml_export.NewElement("English");
-            text_value->InsertEndChild(english_export);
-            XMLElement* french_export = xml_export.NewElement("French");
-            text_value->InsertEndChild(french_export);
-            XMLElement* german_export = xml_export.NewElement("German");
-            text_value->InsertEndChild(german_export);
-            XMLElement* italian_export = xml_export.NewElement("Italian");
-            text_value->InsertEndChild(italian_export);
-            XMLElement* spanish_export = xml_export.NewElement("Spanish");
-            text_value->InsertEndChild(spanish_export);
-            XMLElement* polish_export = xml_export.NewElement("Polish");
-            text_value->InsertEndChild(polish_export);
+
+            foreach (language, languages_list) {
+                text_value->InsertEndChild(xml_export.NewElement(language.toStdString().c_str()));
+            }
 
             // Read elements and check if NULL
 
             tags << tag_orig->FirstChildElement("Tag")->GetText();
             tag_export->SetText(tag_orig->FirstChildElement("Tag")->GetText());
-            if(tag_orig->FirstChildElement("English") == NULL)
-            {
-                //english_export->SetText("");
-            }
-            if(tag_orig->FirstChildElement("English")->GetText() == NULL)
-            {
-                english_export->SetText("");
-            }
-            else
-            {
-                english_export->SetText(tag_orig->FirstChildElement("English")->GetText());
-            }
 
-            if(tag_orig->FirstChildElement("French") == NULL)
-            {
-                //french_export->SetText("");
+            foreach (language, languages_list) {
+                if(tag_orig->FirstChildElement(language.toStdString().c_str()) == NULL)
+                {
+                    qDebug() << "No " << language << " element.";
+                    const char* null_value = "";
+                    text_value->FirstChildElement(language.toStdString().c_str())->SetText(null_value);
+                }
+                else if (tag_orig->FirstChildElement(language.toStdString().c_str())->GetText() == NULL)
+                {
+                    qDebug() << "No " << language << " text.";
+                    if(tag_orig->FirstChildElement(language.toStdString().c_str())->FirstChildElement("Text") != NULL)
+                    {
+                        XMLElement* sub_text = xml_export.NewElement("Text");
+                        XMLElement* sub_gender = xml_export.NewElement("Gender");
+                        XMLElement* sub_plural = xml_export.NewElement("Plural");
+                        text_value->FirstChildElement(language.toStdString().c_str())->InsertEndChild(sub_text);
+                        text_value->FirstChildElement(language.toStdString().c_str())->InsertEndChild(sub_gender);
+                        text_value->FirstChildElement(language.toStdString().c_str())->InsertEndChild(sub_plural);
+                        sub_text->SetText(tag_orig->FirstChildElement(language.toStdString().c_str())->FirstChildElement("Text")->GetText());
+                        sub_gender->SetText(tag_orig->FirstChildElement(language.toStdString().c_str())->FirstChildElement("Gender")->GetText());
+                        sub_plural->SetText(tag_orig->FirstChildElement(language.toStdString().c_str())->FirstChildElement("Plural")->GetText());
+                    }
+                }
+                else
+                {
+                    text_value->FirstChildElement(language.toStdString().c_str())->SetText(tag_orig->FirstChildElement(language.toStdString().c_str())->GetText());
+                }
             }
-            if(tag_orig->FirstChildElement("French")->GetText() == NULL)
-            {
-                french_export->SetText("");
-            }
-            else
-            {
-                french_export->SetText(tag_orig->FirstChildElement("French")->GetText());
-            }
-
-            if(tag_orig->FirstChildElement("German") == NULL)
-            {
-                //german_export->SetText("");
-            }
-            if(tag_orig->FirstChildElement("German")->GetText() == NULL)
-            {
-                german_export->SetText("");
-            }
-            else
-            {
-                german_export->SetText(tag_orig->FirstChildElement("German")->GetText());
-            }
-
-            if(tag_orig->FirstChildElement("Italian") == NULL)
-            {
-                //italian_export->SetText("");
-            }
-            if(tag_orig->FirstChildElement("Italian")->GetText() == NULL)
-            {
-                italian_export->SetText("");
-            }
-            else
-            {
-                italian_export->SetText(tag_orig->FirstChildElement("Italian")->GetText());
-            }
-
-            if(tag_orig->FirstChildElement("Spanish") == NULL)
-            {
-                //spanish_export->SetText("");
-            }
-            if(tag_orig->FirstChildElement("Spanish")->GetText() == NULL)
-            {
-                spanish_export->SetText("");
-            }
-            else
-            {
-                spanish_export->SetText(tag_orig->FirstChildElement("Spanish")->GetText());
-            }
-
-            if(tag_orig->FirstChildElement("Polish") == NULL)
-            {
-                //polish_export->SetText("");
-            }
-            if(tag_orig->FirstChildElement("Polish")->GetText() == NULL)
-            {
-                polish_export->SetText("");
-            }
-            else
-            {
-                polish_export->SetText(tag_orig->FirstChildElement("Polish")->GetText());
-            }
-
         }
 
     }
@@ -532,10 +477,10 @@ void languages::SortCategories()
                         {
                             english_export->SetText(tag_orig->FirstChildElement("English")->GetText());
                         }
-                        if(tag_orig->FirstChildElement("French") != NULL)
+                        /*if(tag_orig->FirstChildElement("French") != NULL)
                         {
                             french_export->SetText(tag_orig->FirstChildElement("French")->GetText());
-                        }
+                        }*/
                         //if(german_export->SetText(tag_orig->FirstChildElement("German")->GetText()) != NULL);
                         //if(italian_export->SetText(tag_orig->FirstChildElement("Italian")->GetText()) != NULL);
                         //if(spanish_export->SetText(tag_orig->FirstChildElement("Spanish")->GetText()) != NULL);

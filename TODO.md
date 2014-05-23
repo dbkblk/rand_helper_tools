@@ -1,0 +1,3 @@
+- Add the language routine to ParseAll() and Import
+- Check the behavior of plural forms in the website
+- Define new categories for sorting
