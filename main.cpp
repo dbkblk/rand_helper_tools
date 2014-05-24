@@ -15,6 +15,7 @@ public:
     void SorterHelper(QString prefix);
     void ConvertToUTF8(QString input_file);
     void ConvertToISO8859(QString input_file);
+    void NormalizeISO8859(QString input_file);
     void FindDuplicates();
 
 private:
@@ -34,10 +35,12 @@ int main(int argc, char *argv[])
     QDir dir_export("export/");
     dir_export.removeRecursively();
 
+    qDebug() << "Civilization IV : XML translation tool v0.5\n-------------------------------------------\nNOTA: This executable must be in the same folder than xml files.";
+
     int ch;
     int z = 0;
     do {
-    qDebug() << "\nWhat do you want to do ?\n1 - Export all language\n2 - Export a specific language\n3 - Import a language\n4 - Sort files by categories\n5 - Convert all root files from ISO8859-1 to UTF8\n6 - Convert all root files from UTF8 to ISO8859-1\n7 - Find duplicates files\n8 - Exit program\n\n";
+    qDebug() << "\nMain menu:\n----------\n1 - Export all language [Civ 4 XML -> Individual language XML]\n2 - Export a specific language [Civ 4 XML -> Individual language XML]\n3 - Import a language [Individual language XML -> Civ 4 XML]\n4 - Sort files by categories [Civ 4 XML]\n5 - Find duplicates files\n6 - Exit program\n\n";
     std::cin >> ch;
     std::string lang;
     switch (ch)
@@ -78,32 +81,10 @@ int main(int argc, char *argv[])
             break;
 
         case 5 :
-            std::cout << "This will convert all files in the root directory from encoding ISO8859-1 to UTF8. Are you sure to continue (Y/N) ?\n";
-            std::cin >> lang;
-            if(lang == "Y")
-            {
-                //xml->ConvertToUTF8();
-                break;
-            }
-            else
-                break;
-
-        case 6 :
-            std::cout << "This will convert all files in the root directory from encoding UTF8 to ISO8859-1. Are you sure to continue (Y/N) ?\n";
-            std::cin >> lang;
-            if(lang == "Y")
-            {
-                //xml->ConvertToISO8859();
-                break;
-            }
-            else
-                break;
-
-        case 7 :
             xml->FindDuplicates();
             break;
 
-        case 8 :
+        case 6 :
             return 0;
             break;
 
@@ -162,7 +143,9 @@ void languages::ParseDocument(QString input_file, QString language)
     input_file.replace(".XML", ".xml", Qt::CaseSensitive);
     QString input_temp_file = "__temp__" + input_file;
     QFile::copy(input_file,input_temp_file);
-    ConvertToUTF8(input_temp_file);
+    NormalizeISO8859(input_temp_file);
+    QFile::copy(input_temp_file,"_NM_" + input_temp_file);
+    //ConvertToUTF8(input_temp_file);
     QString output_dir = "lang/" + int_lang + "/";
     QString output_file = output_dir + input_file;
     QDir dir;
@@ -173,6 +156,17 @@ void languages::ParseDocument(QString input_file, QString language)
     input.LoadFile(input_temp_file.toStdString().c_str());
     output.LoadFile(output_file.toStdString().c_str());
 
+    // Check file integrity
+    if (input.FirstChildElement("Civ4GameText")->FirstChildElement("TEXT") == NULL)
+    {
+        qDebug() << input_file << " is not properly formatted";
+        QFile::remove(input_temp_file);
+        return;
+    }
+
+    // Parsing
+    XMLDeclaration *declaration = output.NewDeclaration();
+    output.InsertFirstChild(declaration);
     XMLNode *root = output.NewElement("resources");
     output.InsertEndChild(root);
 
@@ -276,22 +270,19 @@ void languages::ImportDocument(QString language)
         qDebug() << "Checking " << current;
 
         // Check encoding before process
-        QFile file_in(current);
-        QFile file_out(current_copy);
-        file_in.open(QIODevice::ReadOnly | QIODevice::Text);
-        file_out.open(QIODevice::WriteOnly | QIODevice::Truncate);
-        QTextStream in_enc(&file_in);
-        QTextStream out_enc(&file_out);
-        out_enc.setCodec("UTF-8");
-        while(!in_enc.atEnd())
-        {
-            QString line = in_enc.readLine();
-            out_enc << line;
-        }
-        file_in.close();
-        file_out.close();
+        QFile::copy(current,current_copy);
+        ConvertToUTF8(current_copy);
 
         input.LoadFile(current_copy.toStdString().c_str());
+
+        // Check file integrity
+        if (input.FirstChildElement("Civ4GameText")->FirstChildElement("TEXT") == NULL)
+        {
+            qDebug() << current_copy << " is not properly formatted";
+            QFile::remove(current_copy);
+        }
+        else
+        {
 
         // Comparing to each new file
         for(QStringList::Iterator tr = files_translated.begin(); tr != files_translated.end(); tr++)
@@ -403,6 +394,7 @@ void languages::ImportDocument(QString language)
                 }
 
             }
+        }
         }
         input.SaveFile(current_copy.toStdString().c_str());
         if(s == 0)
@@ -682,7 +674,9 @@ void languages::ConvertToUTF8(QString input_file)
     file_out.open(QIODevice::WriteOnly | QIODevice::Truncate);
     QTextStream in_enc(&file_in);
     QTextStream out_enc(&file_out);
+    in_enc.setAutoDetectUnicode(false);
     in_enc.setCodec("ISO 8859-1");
+    out_enc.setAutoDetectUnicode(false);
     out_enc.setCodec("UTF-8");
     while(!in_enc.atEnd())
     {
@@ -720,6 +714,64 @@ void languages::ConvertToISO8859(QString input_file)
     file_out.close();
     temp.LoadFile(output_file.toStdString().c_str());
     temp.SaveFile(output_file.toStdString().c_str());
+    QFile::remove(input_file);
+    QFile::rename(output_file,input_file);
+}
+
+void languages::NormalizeISO8859(QString input_file)
+{
+    XMLDocument temp;
+    QString output_file = "__temp__" + input_file;
+    QFile file_in(input_file);
+    QFile file_out(output_file);
+    file_in.open(QIODevice::ReadOnly | QIODevice::Text);
+    file_out.open(QIODevice::WriteOnly | QIODevice::Truncate);
+    QTextStream in_enc(&file_in);
+    QTextStream out_enc(&file_out);
+    out_enc.setCodec("ISO-8859-1");
+    QStringList exceptions;
+    exceptions << "x0D";
+    QString check_exceptions;
+    while(!in_enc.atEnd())
+    {
+        QString encode = in_enc.readLine();
+
+        // Look for decimal unicode and replace
+        while (encode.contains("&#"))
+        {
+            int i = encode.indexOf("&#");
+            i = i + 2;
+            int j = i;
+            QChar ch;
+            QString decode;
+
+            for(i;i<j+3;i++) {
+              ch = encode.at(i);
+              decode += ch;
+            }
+
+            foreach(check_exceptions,exceptions)
+            {
+                if(decode == check_exceptions)
+                {
+                    decode == NULL;
+                    // The loop does not remove &# so it leads to infinite...
+                    encode.replace("&#"+decode,"#&"+decode);
+                }
+                else
+                {
+                    QChar uni((short)decode.toInt());
+                    encode.replace("&#"+decode+";",uni);
+                }
+            }
+        };
+
+        encode.replace("#&","&#");
+
+        out_enc << encode;
+    }
+    file_in.close();
+    file_out.close();
     QFile::remove(input_file);
     QFile::rename(output_file,input_file);
 }
