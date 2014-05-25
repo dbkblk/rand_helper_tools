@@ -39,6 +39,7 @@ int main(int argc, char *argv[])
 
     int ch;
     int z = 0;
+
     do {
     qDebug() << "\nMain menu:\n----------\n1 - Export all language [Civ 4 XML -> Individual language XML]\n2 - Export a specific language [Civ 4 XML -> Individual language XML]\n3 - Import a language [Individual language XML -> Civ 4 XML]\n4 - Sort files by categories [Civ 4 XML]\n5 - Find duplicates files\n6 - Exit program\n\n";
     std::cin >> ch;
@@ -144,8 +145,6 @@ void languages::ParseDocument(QString input_file, QString language)
     QString input_temp_file = "__temp__" + input_file;
     QFile::copy(input_file,input_temp_file);
     NormalizeISO8859(input_temp_file);
-    QFile::copy(input_temp_file,"_NM_" + input_temp_file);
-    //ConvertToUTF8(input_temp_file);
     QString output_dir = "lang/" + int_lang + "/";
     QString output_file = output_dir + input_file;
     QDir dir;
@@ -210,8 +209,6 @@ void languages::ParseDocument(QString input_file, QString language)
 
     output.SaveFile(output_file.toStdString().c_str());
 
-    languages::ConvertToUTF8(output_file);
-
     // Save input if modified
     if(save)
     {
@@ -265,13 +262,38 @@ void languages::ImportDocument(QString language)
         int s = 0;
 
         QString current = *it;
-        QString current_copy = "imported/" + current;
 
         qDebug() << "Checking " << current;
 
         // Check encoding before process
-        QFile::copy(current,current_copy);
-        ConvertToUTF8(current_copy);
+
+        QString current_copy = "imported/" + current;
+        QFile file_in(current);
+        QFile file_out(current_copy);
+        file_in.open(QIODevice::ReadOnly | QIODevice::Text);
+        file_out.open(QIODevice::WriteOnly | QIODevice::Truncate);
+        QTextStream in_enc(&file_in);
+        QTextStream out_enc(&file_out);
+        out_enc.setAutoDetectUnicode(false);
+        out_enc.setCodec("UTF-8");
+
+        while(!in_enc.atEnd())
+        {
+            QString encode = in_enc.readLine();
+
+            encode.replace(QString::fromWCharArray(L"\u8230"),"...");
+            encode.replace(QString::fromWCharArray(L"\u8217"),"'");
+            encode.replace(QString::fromWCharArray(L"\u8242"),"'");
+            encode.replace(QString::fromWCharArray(L"\u145"),"'");
+            encode.replace(QString::fromWCharArray(L"\u146"),"'");
+            encode.replace(QString::fromWCharArray(L"\u150"),"-");
+            encode.replace("ISO-8859-1","utf-8",Qt::CaseInsensitive);
+
+            out_enc << encode;
+        }
+
+        file_in.close();
+        file_out.close();
 
         input.LoadFile(current_copy.toStdString().c_str());
 
@@ -351,7 +373,7 @@ void languages::ImportDocument(QString language)
                                 QString operation;
                                 operation = "--WARNING-- TAG:" + QString(value_tag)+ " | ORIGINAL FILE: " + QString(current) + " | IMPORT FILE: " + QString(current_new) + " has empty value.";
                                 print_list << operation;
-                                qDebug() << operation;
+                                //qDebug() << operation;
                             }
 
                             // Major cases
@@ -360,7 +382,7 @@ void languages::ImportDocument(QString language)
                                 QString operation;
                                 operation = "FILE: " + current + " | TAG: " + value_tag + " | OLD: " + value_text + " -> NEW: " + value_text_tr;
                                 print_list << operation;
-                                qDebug() << operation;
+                                //qDebug() << operation;
 
                                 // Checking if tag is not subtag, again...
                                 if(tag_orig->FirstChildElement(int_lang.toStdString().c_str()) == NULL)
@@ -666,7 +688,6 @@ void languages::SortCategories()
 
 void languages::ConvertToUTF8(QString input_file)
 {
-    XMLDocument temp;
     QString output_file = input_file + "__temp__";
     QFile file_in(input_file);
     QFile file_out(output_file);
@@ -680,14 +701,11 @@ void languages::ConvertToUTF8(QString input_file)
     out_enc.setCodec("UTF-8");
     while(!in_enc.atEnd())
     {
-        QString line = in_enc.readLine();
-        line.replace("ISO-8859-1","utf-8",Qt::CaseInsensitive);
-        out_enc << line;
+        QString encode = in_enc.readLine();
+        out_enc << encode;
     }
     file_in.close();
     file_out.close();
-    temp.LoadFile(output_file.toStdString().c_str());
-    temp.SaveFile(output_file.toStdString().c_str());
     QFile::remove(input_file);
     QFile::rename(output_file,input_file);
 }
@@ -720,7 +738,6 @@ void languages::ConvertToISO8859(QString input_file)
 
 void languages::NormalizeISO8859(QString input_file)
 {
-    XMLDocument temp;
     QString output_file = "__temp__" + input_file;
     QFile file_in(input_file);
     QFile file_out(output_file);
@@ -728,48 +745,23 @@ void languages::NormalizeISO8859(QString input_file)
     file_out.open(QIODevice::WriteOnly | QIODevice::Truncate);
     QTextStream in_enc(&file_in);
     QTextStream out_enc(&file_out);
-    out_enc.setCodec("ISO-8859-1");
-    QStringList exceptions;
-    exceptions << "x0D";
-    QString check_exceptions;
+    out_enc.setAutoDetectUnicode(false);
+    out_enc.setCodec("UTF-8");
+
     while(!in_enc.atEnd())
     {
         QString encode = in_enc.readLine();
 
-        // Look for decimal unicode and replace
-        while (encode.contains("&#"))
-        {
-            int i = encode.indexOf("&#");
-            i = i + 2;
-            int j = i;
-            QChar ch;
-            QString decode;
-
-            for(i;i<j+3;i++) {
-              ch = encode.at(i);
-              decode += ch;
-            }
-
-            foreach(check_exceptions,exceptions)
-            {
-                if(decode == check_exceptions)
-                {
-                    decode == NULL;
-                    // The loop does not remove &# so it leads to infinite...
-                    encode.replace("&#"+decode,"#&"+decode);
-                }
-                else
-                {
-                    QChar uni((short)decode.toInt());
-                    encode.replace("&#"+decode+";",uni);
-                }
-            }
-        };
-
-        encode.replace("#&","&#");
+        encode.replace(QString::fromWCharArray(L"\u8230"),"...");
+        encode.replace(QString::fromWCharArray(L"\u8217"),"'");
+        encode.replace(QString::fromWCharArray(L"\u8242"),"'");
+        encode.replace(QString::fromWCharArray(L"\u145"),"'");
+        encode.replace(QString::fromWCharArray(L"\u146"),"'");
+        encode.replace(QString::fromWCharArray(L"\u150"),"-");
 
         out_enc << encode;
     }
+
     file_in.close();
     file_out.close();
     QFile::remove(input_file);
