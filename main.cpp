@@ -14,6 +14,7 @@ public:
     void ImportDocument(QString language);
     void SortCategories();
     void SorterHelper(QString prefix);
+    QString EncodeHTML(QString string);
     void ConvertToUTF8(QString input_file);
     void ConvertToISO8859(QString input_file);
     void ConvertBackToFCiv4(QString input_file);
@@ -89,6 +90,11 @@ int main(int argc, char *argv[])
             return 0;
             break;
 
+        case 7 :
+            QFile::copy("Afforess_GameTexts.xml","import/Afforess_GameTexts.xml");
+            xml->ConvertToUTF8("import/Afforess_GameTexts.xml");
+            break;
+
         default :
             break;
 
@@ -144,7 +150,6 @@ void languages::ParseDocument(QString input_file, QString language)
     input_file.replace(".XML", ".xml", Qt::CaseSensitive);
     QString input_temp_file = "__temp__" + input_file;
     QFile::copy(input_file,input_temp_file);
-    //NormalizeISO8859(input_temp_file);
     QString output_dir = "lang/" + int_lang + "/";
     QString output_file = output_dir + input_file;
     QDir dir;
@@ -157,6 +162,10 @@ void languages::ParseDocument(QString input_file, QString language)
     file_input.open(QIODevice::ReadOnly);
     file_output.open(QIODevice::Truncate | QIODevice::WriteOnly);
     input.setContent(&file_input);
+    file_input.close();
+
+    QDomNode declaration = output.createProcessingInstruction("xml",QString("version=\"1.0\" encoding=\"UTF-8\""));
+    output.insertBefore(declaration,output.firstChild());
 
     // Check file integrity
     if (input.firstChildElement("Civ4GameText").firstChildElement("TEXT").isNull())
@@ -168,8 +177,6 @@ void languages::ParseDocument(QString input_file, QString language)
     }
 
     // Parsing
-    /*XMLDeclaration *declaration = output.NewDeclaration();
-    output.InsertFirstChild(declaration);*/
     QDomNode root = output.createElement("resources");
     output.appendChild(root);
 
@@ -212,20 +219,20 @@ void languages::ParseDocument(QString input_file, QString language)
     file_output.close();
 
     // Save input if modified
-    /*if(save)
+    if(save)
     {
         dir.mkdir("modif");
         input_file = "modif/" + input_file;
-        input.SaveFile(input_temp_file.toStdString().c_str());
-    }*/
+        file_input.open(QIODevice::Truncate | QIODevice::WriteOnly);
+        file_input.write(input.toByteArray());
+        file_input.close();
+        file_input.rename(input_file);
+    }
     QFile::remove(input_temp_file);
 }
 
 void languages::ImportDocument(QString language)
 {
-    XMLDocument input;
-    XMLDocument input_tr;
-
     QDir dir_import;
     dir_import.mkdir("imported");
 
@@ -277,12 +284,16 @@ void languages::ImportDocument(QString language)
         qDebug() << "Checking " << current;
 
         // Check encoding before process
-        NormalizeISO8859(current);
+        ConvertToUTF8(current);
 
-        input.LoadFile(current.toStdString().c_str());
+        QDomDocument input;
+        QFile file_input(current);
+        file_input.open(QIODevice::ReadOnly);
+        input.setContent(&file_input);
+        file_input.close();
 
         // Check file integrity
-        if (input.FirstChildElement("Civ4GameText")->FirstChildElement("TEXT") == NULL)
+        if (input.firstChildElement("Civ4GameText").firstChildElement("TEXT").isNull())
         {
             qDebug() << current << " is not properly formatted";
             QFile::remove(current);
@@ -294,39 +305,47 @@ void languages::ImportDocument(QString language)
         for(QStringList::Iterator tr = files_translated.begin(); tr != files_translated.end(); tr++)
         {
             QString current_new = "import/" + *tr;
-            input_tr.LoadFile(current_new.toStdString().c_str());
+            QDomDocument input_tr;
+            QFile file_tr(current_new);
+            file_tr.open(QIODevice::ReadOnly);
+            input_tr.setContent(&file_tr);
+            file_tr.close();
 
-            XMLElement* tag_orig = input.FirstChildElement("Civ4GameText")->FirstChildElement("TEXT")->ToElement();
-            for(tag_orig;tag_orig != NULL;tag_orig = tag_orig->NextSiblingElement())
+            QDomElement root = input_tr.documentElement();
+
+            QDomElement tag_orig = input.firstChildElement("Civ4GameText").firstChildElement("TEXT").toElement();
+            for(tag_orig;!tag_orig.isNull();tag_orig = tag_orig.nextSiblingElement())
             {
                 // Compare each occurence with each tag of the translated file
-                const char* value_tag = tag_orig->FirstChildElement("Tag")->GetText();
-                //qDebug() << value_tag;
-                XMLElement* tag_tr = input_tr.FirstChildElement("resources")->FirstChildElement("string")->ToElement();
-                for(tag_tr;tag_tr != NULL;tag_tr = tag_tr->NextSiblingElement())
-                {
-                    const char* value_tag_tr = tag_tr->Attribute("name");
+                QString value_tag = tag_orig.firstChildElement("Tag").firstChild().nodeValue();
+                QDomElement tag_tr = root.firstChildElement("string").toElement();
+                //qDebug() << tag_tr.attribute("name");
 
-                    if (!std::strcmp(value_tag,value_tag_tr))
+                for(tag_tr;!tag_tr.isNull();tag_tr = tag_tr.nextSiblingElement())
+                {
+                    QString value_tag_tr = tag_tr.attribute("name");
+                    //qDebug() << value_tag_tr;
+
+                    if (value_tag == value_tag_tr)
                     {
                         s++;
-                        const char* value_text_tr = tag_tr->GetText();
-                        const char* value_text;
+                        QString value_text_tr = tag_tr.text();
+                        QString value_text;
 
                         // Checking tag presence
 
-                        if(tag_orig->FirstChildElement(int_lang.toStdString().c_str()) == NULL)
+                        if(tag_orig.firstChildElement(int_lang).isNull())
                         {
                             //qDebug() << "No tag";
                             value_text = "";
                         }
 
-                        else if (tag_orig->FirstChildElement(int_lang.toStdString().c_str())->GetText() == NULL)
+                        else if (tag_orig.firstChildElement(int_lang).text().isNull())
                         {
-                            if(tag_orig->FirstChildElement(int_lang.toStdString().c_str())->FirstChildElement("Text") != NULL)
+                            if(!tag_orig.firstChildElement(int_lang).firstChildElement("Text").isNull())
                             {
                                 //qDebug() << "No value";
-                                value_text = tag_orig->FirstChildElement(int_lang.toStdString().c_str())->FirstChildElement("Text")->GetText();
+                                value_text = tag_orig.firstChildElement(int_lang).firstChildElement("Text").text();
                             }
                             else
                             {
@@ -337,13 +356,13 @@ void languages::ImportDocument(QString language)
                         else
                         {
                             //qDebug() << "Value set";
-                            value_text = tag_orig->FirstChildElement(int_lang.toStdString().c_str())->GetText();
+                            value_text = tag_orig.firstChildElement(int_lang).text();
                         }
 
                         //qDebug() << value_tag << " : " << value_text << " / " << value_text_tr;
 
                         // Normalize value
-                        if(value_text_tr == NULL)
+                        if(value_text_tr.isNull())
                         {
                             value_text_tr = "";
                         }
@@ -361,7 +380,7 @@ void languages::ImportDocument(QString language)
                             }
 
                             // Major cases
-                            else if(strcmp(value_text,value_text_tr))
+                            else if(value_text != value_text_tr)
                             {
                                 QString operation;
                                 operation = "FILE: " + current + " | TAG: " + value_tag + " | OLD: " + value_text + " -> NEW: " + value_text_tr;
@@ -369,28 +388,28 @@ void languages::ImportDocument(QString language)
                                 //qDebug() << operation;
 
                                 // Checking if tag is not subtag, again...
-                                if(tag_orig->FirstChildElement(int_lang.toStdString().c_str()) == NULL)
+                                if(tag_orig.firstChildElement(int_lang).isNull())
                                 {
                                 }
-                                else if (tag_orig->FirstChildElement(int_lang.toStdString().c_str())->GetText() == NULL)
+                                else if (tag_orig.firstChildElement(int_lang).text().isNull())
                                 {
-                                    if(tag_orig->FirstChildElement(int_lang.toStdString().c_str())->FirstChildElement("Text") != NULL)
+                                    if(!tag_orig.firstChildElement(int_lang).firstChildElement("Text").isNull())
                                     {
-                                        tag_orig->FirstChildElement(int_lang.toStdString().c_str())->FirstChildElement("Text")->SetText(value_text_tr);
+                                        tag_orig.firstChildElement(int_lang).firstChildElement("Text").firstChild().setNodeValue(value_text_tr);
                                         // Check for additionnal attributes
-                                        if(tag_tr->Attribute("Gender") != NULL)
+                                        if(!tag_tr.attribute("gender").isNull())
                                         {
-                                            tag_orig->FirstChildElement(int_lang.toStdString().c_str())->FirstChildElement("Gender")->SetText(tag_tr->Attribute("Gender"));
+                                            tag_orig.firstChildElement(int_lang).firstChildElement("Gender").firstChild().setNodeValue(tag_tr.attribute("gender"));
                                         }
-                                        if(tag_tr->Attribute("Plural") != NULL)
+                                        if(!tag_tr.attribute("plural").isNull())
                                         {
-                                            tag_orig->FirstChildElement(int_lang.toStdString().c_str())->FirstChildElement("Plural")->SetText(tag_tr->Attribute("Plural"));
+                                            tag_orig.firstChildElement(int_lang).firstChildElement("Plural").firstChild().setNodeValue(tag_tr.attribute("plural"));
                                         }
                                     }
                                 }
                                 else
                                 {
-                                    tag_orig->FirstChildElement(int_lang.toStdString().c_str())->SetText(value_text_tr);
+                                    tag_orig.firstChildElement(int_lang).firstChild().setNodeValue(value_text_tr);
                                 }
                             }
 
@@ -402,8 +421,16 @@ void languages::ImportDocument(QString language)
             }
         }
         }
-        input.SaveFile(current.toStdString().c_str());
-        ConvertToISO8859(current);
+
+        // Save to file
+        file_input.open(QIODevice::Truncate | QIODevice::WriteOnly);
+        file_input.write(input.toByteArray());
+        file_input.close();
+        /*
+        QTextStream ts(&file_input);
+        input.save(ts,4);
+        file_input.close();*/
+        //ConvertToISO8859(current);
         //ConvertBackToFCiv4(current);
         if(s == 0)
         {
@@ -682,9 +709,6 @@ void languages::ConvertToUTF8(QString input_file)
     file_out.open(QIODevice::WriteOnly | QIODevice::Truncate);
     QTextStream in_enc(&file_in);
     QTextStream out_enc(&file_out);
-    in_enc.setAutoDetectUnicode(false);
-    in_enc.setCodec("ISO 8859-1");
-    out_enc.setAutoDetectUnicode(false);
     out_enc.setCodec("UTF-8");
     while(!in_enc.atEnd())
     {
@@ -695,6 +719,41 @@ void languages::ConvertToUTF8(QString input_file)
     file_out.close();
     QFile::remove(input_file);
     QFile::rename(output_file,input_file);
+}
+
+void languages::RewriteCiv4File(QString file)
+{
+    /* Read all the file
+     * Save the content to another file
+     * Replace the other file with the first */
+
+    QStringList lang;
+    lang << "English" << "French" << "German" << "Italian" << "Spanish" << "Polish";
+
+    // Open the input file
+    QDomDocument read;
+    QFile file_in(file);
+    file_in.open(QIODevice::ReadOnly);
+    read.setContent(&file_in);
+    file_in.close();
+    QDomNode read_text = read.firstChild().firstChild();
+
+    // Create the output file
+    QDomDocument write;
+    QFile file_out("rewrite.xml");
+    file_out.open(QIODevice::WriteOnly | QIODevice::Truncate);
+    QDomNode declaration = write.createProcessingInstruction("xml",QString("version=\"1.0\" encoding=\"UTF-8\""));
+    write.insertBefore(declaration,write.firstChild());
+    QDomNode write_root = write.createElement("Civ4GameText");
+    write.appendChild(write_root);
+
+   // Loop the input file
+    for (read_text;!read_text.isNull();read_text = read_text.nextSibling())
+    {
+        // Create new nodes
+    }
+
+
 }
 
 void languages::ConvertToISO8859(QString input_file)
@@ -739,7 +798,7 @@ void languages::ConvertToISO8859(QString input_file)
 
 void languages::ConvertBackToFCiv4(QString input_file)
 {
-    XMLDocument temp;
+    QDomDocument temp;
     QString output_file = input_file + "__temp__";
     QFile file_in(input_file);
     QFile file_out(output_file);
@@ -747,12 +806,13 @@ void languages::ConvertBackToFCiv4(QString input_file)
     file_out.open(QIODevice::WriteOnly | QIODevice::Truncate);
     QTextStream in_enc(&file_in);
     QTextStream out_enc(&file_out);
-    in_enc.setCodec("ISO 8859-1");
+    in_enc.setCodec("utf-8");
     out_enc.setCodec("ISO 8859-1");
     while(!in_enc.atEnd())
     {
         QString line = in_enc.readLine();
         QString encode;
+        line.replace("utf-8","ISO-8859-1",Qt::CaseInsensitive);
 
         for(int i=0;i<line.size();++i)
         {
@@ -760,7 +820,7 @@ void languages::ConvertBackToFCiv4(QString input_file)
             if(ch.unicode() > 127)
             {
                 encode += QString("&#%1;").arg((int)ch.unicode());
-                //qDebug() << "here";
+                //qDebug() << ch.unicode();
             }
             else
             {
@@ -772,10 +832,27 @@ void languages::ConvertBackToFCiv4(QString input_file)
     }
     file_in.close();
     file_out.close();
-    temp.LoadFile(output_file.toStdString().c_str());
-    temp.SaveFile(output_file.toStdString().c_str());
     QFile::remove(input_file);
     QFile::rename(output_file,input_file);
+}
+
+QString languages::EncodeHTML(QString string)
+{
+    QString encode;
+    for(int i=0;i<string.size();++i)
+    {
+        QChar ch = string.at(i);
+//        if(ch.unicode() > 127)
+//        {
+//            //encode += QString("&#%1;").arg((int)ch.unicode());
+//            encode += ch.unicode();
+//        }
+//        else
+//        {
+            encode += ch;
+//        }
+    }
+    return encode;
 }
 
 void languages::NormalizeISO8859(QString input_file)
