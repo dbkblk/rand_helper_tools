@@ -14,11 +14,9 @@ public:
     void ImportDocument(QString language);
     void SortCategories();
     void SorterHelper(QString prefix);
-    QString EncodeHTML(QString string);
-    void ConvertToUTF8(QString input_file);
-    void ConvertToISO8859(QString input_file);
-    void ConvertBackToFCiv4(QString input_file);
-    void NormalizeISO8859(QString input_file);
+    QString ConvertStringToCiv4(QString string);
+    void ConvertCiv4ToUTF8(QString file);
+    void ConvertUTF8ToCiv4(QString file);
     void FindDuplicates();
 
 private:
@@ -35,6 +33,7 @@ int main(int argc, char *argv[])
     dir.removeRecursively();
     QDir dir_export("export/");
     dir_export.removeRecursively();
+    QDir import_dir;
 
     qDebug() << "Civilization IV : XML translation tool v0.5\n-------------------------------------------\nNOTA: This executable must be in the same folder than xml files.";
 
@@ -91,8 +90,8 @@ int main(int argc, char *argv[])
             break;
 
         case 7 :
-            QFile::copy("Afforess_GameTexts.xml","import/Afforess_GameTexts.xml");
-            xml->ConvertToUTF8("import/Afforess_GameTexts.xml");
+            xml->ConvertUTF8ToCiv4("imported/A_New_Dawn_Concept_Civ4GameText.xml");
+            xml->ConvertUTF8ToCiv4("imported/TEST_A_New_Dawn_Concept_Civ4GameText.xml");
             break;
 
         default :
@@ -261,6 +260,7 @@ void languages::ImportDocument(QString language)
     for(QStringList::Iterator it = root_files.begin(); it != root_files.end(); it++)
     {
         QFile::copy(*it,"imported/"+*it);
+        ConvertCiv4ToUTF8("imported/"+*it);
     }
     import_files = import_dir.entryList(xml_filter, QDir::Files);
 
@@ -284,7 +284,7 @@ void languages::ImportDocument(QString language)
         qDebug() << "Checking " << current;
 
         // Check encoding before process
-        ConvertToUTF8(current);
+        //ConvertToUTF8(current);
 
         QDomDocument input;
         QFile file_input(current);
@@ -426,15 +426,14 @@ void languages::ImportDocument(QString language)
         file_input.open(QIODevice::Truncate | QIODevice::WriteOnly);
         file_input.write(input.toByteArray());
         file_input.close();
-        /*
-        QTextStream ts(&file_input);
-        input.save(ts,4);
-        file_input.close();*/
-        //ConvertToISO8859(current);
-        //ConvertBackToFCiv4(current);
+
         if(s == 0)
         {
             QFile::remove(current);
+        }
+        else
+        {
+
         }
     }
 
@@ -700,43 +699,19 @@ void languages::SortCategories()
     QFile::remove("export/bigfile.xml");
 }
 
-void languages::ConvertToUTF8(QString input_file)
-{
-    QString output_file = input_file + "__temp__";
-    QFile file_in(input_file);
-    QFile file_out(output_file);
-    file_in.open(QIODevice::ReadOnly | QIODevice::Text);
-    file_out.open(QIODevice::WriteOnly | QIODevice::Truncate);
-    QTextStream in_enc(&file_in);
-    QTextStream out_enc(&file_out);
-    out_enc.setCodec("UTF-8");
-    while(!in_enc.atEnd())
-    {
-        QString encode = in_enc.readLine();
-        out_enc << encode;
-    }
-    file_in.close();
-    file_out.close();
-    QFile::remove(input_file);
-    QFile::rename(output_file,input_file);
-}
-
-void languages::RewriteCiv4File(QString file)
+void languages::ConvertCiv4ToUTF8(QString file)
 {
     /* Read all the file
      * Save the content to another file
      * Replace the other file with the first */
-
-    QStringList lang;
-    lang << "English" << "French" << "German" << "Italian" << "Spanish" << "Polish";
 
     // Open the input file
     QDomDocument read;
     QFile file_in(file);
     file_in.open(QIODevice::ReadOnly);
     read.setContent(&file_in);
-    file_in.close();
-    QDomNode read_text = read.firstChild().firstChild();
+    QDomElement read_text = read.firstChildElement("Civ4GameText").firstChildElement("TEXT");
+    //qDebug() << read_text.firstChildElement().tagName();
 
     // Create the output file
     QDomDocument write;
@@ -748,143 +723,100 @@ void languages::RewriteCiv4File(QString file)
     write.appendChild(write_root);
 
    // Loop the input file
-    for (read_text;!read_text.isNull();read_text = read_text.nextSibling())
+    for (read_text;!read_text.isNull();read_text = read_text.nextSiblingElement())
     {
-        // Create new nodes
-    }
+        //qDebug() << read_text.firstChildElement().tagName();
+        QDomElement read_element = read_text.firstChildElement();
+        QDomElement write_node = write.createElement("TEXT");
+        write_root.appendChild(write_node);
 
-
-}
-
-void languages::ConvertToISO8859(QString input_file)
-{
-    XMLDocument temp;
-    QString output_file = input_file + "__temp__";
-    QFile file_in(input_file);
-    QFile file_out(output_file);
-    file_in.open(QIODevice::ReadOnly | QIODevice::Text);
-    file_out.open(QIODevice::WriteOnly | QIODevice::Truncate);
-    QTextStream in_enc(&file_in);
-    QTextStream out_enc(&file_out);
-    //in_enc.setCodec("UTF-8");
-    out_enc.setCodec("ISO-8859-1");
-    while(!in_enc.atEnd())
-    {
-        QString line = in_enc.readLine();
-        QString encode;
-        line.replace("utf-8","ISO-8859-1",Qt::CaseInsensitive);
-
-        for(int i=0;i<line.size();++i)
+        for (read_element;!read_element.isNull();read_element = read_element.nextSiblingElement())
         {
-            QChar ch = line.at(i);
-            if(ch.unicode() > 127)
-            {
-                encode += QString("&#%1;").arg((int)ch.unicode());
-                //qDebug() << "here";
-            }
-            else
-            {
-                encode += ch;
-            }
-
+            //qDebug() << read_element.tagName();
+            QDomElement write_element = write.createElement(read_element.tagName());
+            write_node.appendChild(write_element);
+            QDomText write_text = write.createTextNode(read_element.text());
+            write_element.appendChild(write_text);
         }
-        out_enc << encode;
     }
-    file_in.close();
+    file_out.write(write.toByteArray());
     file_out.close();
-    QFile::remove(input_file);
-    QFile::rename(output_file,input_file);
+    file_in.close();
+    QFile::remove(file);
+    QFile::rename("rewrite.xml",file);
 }
 
-void languages::ConvertBackToFCiv4(QString input_file)
+void languages::ConvertUTF8ToCiv4(QString file)
 {
-    QDomDocument temp;
-    QString output_file = input_file + "__temp__";
-    QFile file_in(input_file);
-    QFile file_out(output_file);
-    file_in.open(QIODevice::ReadOnly | QIODevice::Text);
+    /* Read all the file
+     * Save the content to another file
+     * Replace the other file with the first */
+
+    // Open the input file
+    QDomDocument read;
+    QFile file_in(file);
+    file_in.open(QIODevice::ReadOnly);
+    read.setContent(&file_in);
+    QDomElement read_text = read.firstChildElement("Civ4GameText").firstChildElement("TEXT");
+    //qDebug() << read_text.firstChildElement().tagName();
+
+    // Create the output file
+    QDomDocument write;
+    QFile file_out("rewrite.xml");
     file_out.open(QIODevice::WriteOnly | QIODevice::Truncate);
-    QTextStream in_enc(&file_in);
-    QTextStream out_enc(&file_out);
-    in_enc.setCodec("utf-8");
-    out_enc.setCodec("ISO 8859-1");
-    while(!in_enc.atEnd())
+    QDomNode declaration = write.createProcessingInstruction("xml",QString("version=\"1.0\" encoding=\"ISO-8859-1\""));
+    write.insertBefore(declaration,write.firstChild());
+    QDomNode write_root = write.createElement("Civ4GameText");
+    write.appendChild(write_root);
+
+   // Loop the input file
+    for (read_text;!read_text.isNull();read_text = read_text.nextSiblingElement())
     {
-        QString line = in_enc.readLine();
-        QString encode;
-        line.replace("utf-8","ISO-8859-1",Qt::CaseInsensitive);
+        //qDebug() << read_text.firstChildElement().tagName();
+        QDomElement read_element = read_text.firstChildElement();
+        QDomElement write_node = write.createElement("TEXT");
+        write_root.appendChild(write_node);
 
-        for(int i=0;i<line.size();++i)
+        for (read_element;!read_element.isNull();read_element = read_element.nextSiblingElement())
         {
-            QChar ch = line.at(i);
-            if(ch.unicode() > 127)
-            {
-                encode += QString("&#%1;").arg((int)ch.unicode());
-                //qDebug() << ch.unicode();
-            }
-            else
-            {
-                encode += ch;
-            }
+            //qDebug() << read_element.tagName();
+            QDomElement write_element = write.createElement(read_element.tagName());
+            write_node.appendChild(write_element);
 
+            // Convert the string to latin1
+            QString input = read_element.text();
+            QDomText write_text = write.createTextNode(ConvertStringToCiv4(input));
+            write_element.appendChild(write_text);
         }
-        out_enc << encode;
     }
-    file_in.close();
+
+    QTextStream TextStream(&file_out);
+    QString docString = write.toString().replace("&amp;", "&");
+    TextStream << docString;
     file_out.close();
-    QFile::remove(input_file);
-    QFile::rename(output_file,input_file);
+    file_in.close();
+
+    QFile::remove(file);
+    QFile::rename("rewrite.xml",file);
 }
 
-QString languages::EncodeHTML(QString string)
+QString languages::ConvertStringToCiv4(QString string)
 {
     QString encode;
     for(int i=0;i<string.size();++i)
     {
         QChar ch = string.at(i);
-//        if(ch.unicode() > 127)
-//        {
-//            //encode += QString("&#%1;").arg((int)ch.unicode());
-//            encode += ch.unicode();
-//        }
-//        else
-//        {
+        if(ch.unicode() > 127)
+        {
+            encode += QChar(38);
+            encode += QString("#%1;").arg((int)ch.unicode());
+        }
+        else
+        {
             encode += ch;
-//        }
+        }
     }
     return encode;
-}
-
-void languages::NormalizeISO8859(QString input_file)
-{
-    QString output_file = input_file + "__temp__";
-    QFile file_in(input_file);
-    QFile file_out(output_file);
-    file_in.open(QIODevice::ReadOnly | QIODevice::Text);
-    file_out.open(QIODevice::WriteOnly | QIODevice::Truncate);
-    QTextStream in_enc(&file_in);
-    QTextStream out_enc(&file_out);
-    out_enc.setAutoDetectUnicode(false);
-    out_enc.setCodec("UTF-8");
-
-    while(!in_enc.atEnd())
-    {
-        QString encode = in_enc.readLine();
-
-        encode.replace(QString::fromWCharArray(L"\u8230"),"...");
-        encode.replace(QString::fromWCharArray(L"\u8217"),"'");
-        encode.replace(QString::fromWCharArray(L"\u8242"),"'");
-        encode.replace(QString::fromWCharArray(L"\u145"),"'");
-        encode.replace(QString::fromWCharArray(L"\u146"),"'");
-        encode.replace(QString::fromWCharArray(L"\u150"),"-");
-
-        out_enc << encode;
-    }
-
-    file_in.close();
-    file_out.close();
-    QFile::remove(input_file);
-    QFile::rename(output_file,input_file);
 }
 
 void languages::FindDuplicates()
