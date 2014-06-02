@@ -15,11 +15,7 @@ CONFIG   -= app_bundle
 TEMPLATE = app
 
 
-SOURCES += main.cpp \
-    lib/tinyxml2.cpp
-
-HEADERS += \
-    lib/tinyxml2.h
+SOURCES += main.cpp
 
 OTHER_FILES += \
     TODO.md
