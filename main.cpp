@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
             break;
 
         case 5 :
-            //xml->FindDuplicates();
+            xml->FindDuplicates();
             break;
 
         case 6 :
@@ -813,8 +813,179 @@ QString languages::ConvertStringToCiv4(QString string)
 
 void languages::FindDuplicates()
 {
+    qDebug() << "Checking files...";
+    QDir root(".");
+    root.rmdir("duplicates/");
+    root.mkdir("duplicates/");
+    QStringList tags;
+    QStringList xml_filter;
+    xml_filter << "*.xml";
+    QStringList files;
+    files = root.entryList(xml_filter, QDir::Files);
 
-    // Find duplicate tags
+    for(QStringList::Iterator it = files.begin(); it != files.end(); it++)
+    {
+        QFile file_in(*it);
+        file_in.open(QIODevice::ReadOnly);
+        QDomDocument xml;
+        xml.setContent(&file_in);
+        QDomElement xml_tag = xml.firstChildElement("Civ4GameText").firstChildElement("TEXT").toElement();
+        if(xml_tag.isNull())
+        {
+            qDebug() << *it << " is not properly formatted";
+            file_in.close();
+        }
+
+        for(xml_tag;!xml_tag.isNull();xml_tag = xml_tag.nextSiblingElement())
+        {
+            tags << xml_tag.firstChildElement("Tag").text();
+        }
+        file_in.close();
+    }
+
+    // Output modified list
+    qDebug() << "Printing list of tags...";
+    QString print_value;
+    QFile print_file("duplicates/_list_of_tags.txt");
+
+    tags.sort();
+
+    if ( print_file.open(QIODevice::Truncate | QIODevice::WriteOnly))
+        {
+            QTextStream stream( &print_file );
+
+            foreach(print_value, tags)
+            {
+                stream << print_value << endl;
+            }
+        }
+    print_file.close();
+
+
+    // Double loop to find duplicates
+    qDebug() << "Checking duplicated tags...";
+    QString loop1;
+    QString loop2;
+    QStringList duplicated_tags;
+
+    foreach(loop1,tags)
+    {
+        int c = 0;
+        foreach(loop2,tags)
+        {
+            if(loop1 == loop2)
+            {
+               c++;
+            }
+        }
+        if (c > 1)
+        {
+            duplicated_tags << loop1;
+        }
+    }
+
+    duplicated_tags.removeDuplicates();
+
+    QString print_value2;
+    QFile print_file2("duplicates/_duplicated_tags.txt");
+
+    if ( print_file2.open(QIODevice::Truncate | QIODevice::WriteOnly))
+        {
+            QTextStream stream2( &print_file2 );
+
+            foreach(print_value2, duplicated_tags)
+            {
+                stream2 << print_value2 << endl;
+            }
+        }
+    print_file2.close();
+
+    // Copy identified files
+    qDebug() << "Copying identified files...";
+    QString tag_value;
+
+    for(QStringList::Iterator it = files.begin(); it != files.end(); it++)
+    {
+        QFile file_in(*it);
+        file_in.open(QIODevice::ReadOnly);
+        QDomDocument xml;
+        xml.setContent(&file_in);
+        QDomElement xml_tag = xml.firstChildElement("Civ4GameText").firstChildElement("TEXT").toElement();
+        if(xml_tag.isNull())
+        {
+            qDebug() << *it << " is not properly formatted";
+            file_in.close();
+        }
+        for(xml_tag;!xml_tag.isNull();xml_tag = xml_tag.nextSiblingElement())
+        {
+            QString tag = xml_tag.firstChildElement("Tag").text();
+            foreach (tag_value, duplicated_tags) {
+                if(tag == tag_value)
+                {
+                    QFile::copy(*it,"duplicates/"+*it);
+                }
+            }
+        }
+
+        file_in.close();
+    }
+
+    // Generate a report
+    qDebug() << "Generating report...";
+    QStringList file_list;
+    QDir duplicate_dir("duplicates/");
+    QStringList duplicate_files;
+    duplicate_files = duplicate_dir.entryList(xml_filter, QDir::Files);
+
+    foreach(tag_value,duplicated_tags)
+    {
+        for(QStringList::Iterator it = duplicate_files.begin(); it != duplicate_files.end(); it++)
+        {
+            QFile file_in(*it);
+            file_in.open(QIODevice::ReadOnly);
+            QDomDocument xml;
+            xml.setContent(&file_in);
+            QDomElement xml_tag = xml.firstChildElement("Civ4GameText").firstChildElement("TEXT").toElement();
+
+            if(xml_tag.isNull())
+            {
+                file_in.close();
+            }
+
+            for(xml_tag;!xml_tag.isNull();xml_tag = xml_tag.nextSiblingElement())
+            {
+                QString tag_value;
+                //qDebug() << xml_tag.firstChildElement("Tag").text();
+
+                if (tag_value == xml_tag.firstChildElement("Tag").text());
+                QString operation;
+                operation = "TAG: " + tag_value + " found in " + *it;
+                //qDebug() << operation;
+                file_list << operation;
+
+            }
+            file_in.close();
+        }
+    }
+
+    QString print_value3;
+    QFile print_file3("duplicates/_report.txt");
+
+    file_list.sort();
+
+    if ( print_file3.open(QIODevice::Truncate | QIODevice::WriteOnly))
+        {
+            QTextStream stream3( &print_file3 );
+
+            foreach(print_value3, file_list)
+            {
+                stream3 << print_value3 << endl;
+            }
+        }
+    print_file3.close();
+
+    /* Old function
+     * // Find duplicate tags
     QString dupl_old = "";
     QString dupl_new;
     QFile dupl_in("export/tag_list.txt");
@@ -836,5 +1007,5 @@ void languages::FindDuplicates()
     dupl_in.close();
     dupl_out.close();
 
-    qDebug() << "Duplicates tags have been gathered in 'export/duplicates.txt'";
+    qDebug() << "Duplicates tags have been gathered in 'export/duplicates.txt'";*/
 }
