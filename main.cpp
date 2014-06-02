@@ -1,10 +1,7 @@
 #include <iostream>
 #include <QtCore>
-#include "lib/tinyxml2.h"
 #include <QDebug>
 #include <QtXml/QtXml>
-
-using namespace tinyxml2;
 
 class languages
 {
@@ -41,7 +38,7 @@ int main(int argc, char *argv[])
     int z = 0;
 
     do {
-    qDebug() << "\nMain menu:\n----------\n1 - Export all language [Civ 4 XML -> Individual language XML]\n2 - Export a specific language [Civ 4 XML -> Individual language XML]\n3 - Import a language [Individual language XML -> Civ 4 XML]\n4 - Sort files by categories [Civ 4 XML]\n5 - Find duplicates files\n6 - Exit program\n\n";
+    qDebug() << "\nMain menu:\n----------\n1 - Export all language [Civ 4 XML -> Individual language XML]\n2 - Export a specific language [Civ 4 XML -> Individual language XML]\n3 - Import a language [Individual language XML -> Civ 4 XML]\n4 (Disabled) - Sort files by categories [Civ 4 XML]\n5 (Disabled) - Find duplicates files\n6 - Exit program\n\n";
     std::cin >> ch;
     std::string lang;
     switch (ch)
@@ -78,20 +75,15 @@ int main(int argc, char *argv[])
             break;
 
         case 4 :
-            xml->SortCategories();
+            //xml->SortCategories();
             break;
 
         case 5 :
-            xml->FindDuplicates();
+            //xml->FindDuplicates();
             break;
 
         case 6 :
             return 0;
-            break;
-
-        case 7 :
-            xml->ConvertUTF8ToCiv4("imported/A_New_Dawn_Concept_Civ4GameText.xml");
-            xml->ConvertUTF8ToCiv4("imported/TEST_A_New_Dawn_Concept_Civ4GameText.xml");
             break;
 
         default :
@@ -433,7 +425,7 @@ void languages::ImportDocument(QString language)
         }
         else
         {
-
+            ConvertUTF8ToCiv4(current);
         }
     }
 
@@ -458,7 +450,7 @@ void languages::ImportDocument(QString language)
 
 void languages::SortCategories()
 {
-    QString language;
+    /*QString language;
     QStringList languages_list;
     languages_list << "English" << "French" << "German" << "Italian" << "Spanish" << "Polish";
 
@@ -574,10 +566,10 @@ void languages::SortCategories()
 
     QString tag_search;
     QStringList sort_categories;
-    QString category;
+    QString category;*/
 
     //* --- Known categories --- *//
-    sort_categories << "AI_" << "INTERFACE_" << "USER_" << "TXT_";
+    /*sort_categories << "AI_" << "INTERFACE_" << "USER_" << "TXT_";
                     //<< "TXT_KEY_GREAT_PERSON" << "TXT_KEY_BUILDING" << "TXT_MAIN_MENU" << "TXT_KEY_UNIT";
 
     QStringList tags_process = tags;
@@ -696,7 +688,7 @@ void languages::SortCategories()
     qDebug() << "Find duplicates tags...";
     languages::FindDuplicates();
 
-    QFile::remove("export/bigfile.xml");
+    QFile::remove("export/bigfile.xml");*/
 }
 
 void languages::ConvertCiv4ToUTF8(QString file)
