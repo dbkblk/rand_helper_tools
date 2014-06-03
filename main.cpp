@@ -8,7 +8,8 @@ class languages
 public:
     void ParseDocument(QString input_file, QString language);
     void ParseAllFiles(QString language);
-    void ImportDocument(QString language);
+    void ImportDocumentToAll(QString language);
+    void ImportDocumentToSameName(QString language);
     void SortCategories();
     void SorterHelper(QString prefix);
     QString ConvertStringToCiv4(QString string);
@@ -32,13 +33,13 @@ int main(int argc, char *argv[])
     dir_export.removeRecursively();
     QDir import_dir;
 
-    qDebug() << "Civilization IV : XML translation tool v0.5\n-------------------------------------------\nNOTA: This executable must be in the same folder than xml files.";
+    qDebug() << "Civilization IV : XML translation tool v0.6\n-------------------------------------------\nNOTA: This executable must be in the same folder than xml files.";
 
     int ch;
     int z = 0;
 
     do {
-    qDebug() << "\nMain menu:\n----------\n1 - Export all language [Civ 4 XML -> Individual language XML]\n2 - Export a specific language [Civ 4 XML -> Individual language XML]\n3 - Import a language [Individual language XML -> Civ 4 XML]\n4 (Disabled) - Sort files by categories [Civ 4 XML]\n5 (Disabled) - Find duplicates files\n6 - Exit program\n\n";
+    qDebug() << "\nMain menu:\n----------\n1 - Export all languages [Civ 4 XML -> Language XML]\n2 - Export a specific language [Civ 4 XML -> Language XML]\n3 - Import language strings to ALL files [Language XML -> Civ 4 XML]\n4 - Import language strings to SAME files [Language XML -> Civ 4 XML]\n5 (Disabled) - Sort files by categories [Civ 4 XML]\n6 (Disabled) - Find duplicates files\n6 - Exit program\n\n";
     std::cin >> ch;
     std::string lang;
     switch (ch)
@@ -71,15 +72,22 @@ int main(int argc, char *argv[])
                 qDebug() << "\nA valid language code is required";
                 break;
             }
-            xml->ImportDocument(QString::fromStdString(lang));
+            xml->ImportDocumentToAll(QString::fromStdString(lang));
             break;
 
         case 4 :
-            //xml->SortCategories();
+            xml->FindDuplicates();
             break;
 
         case 5 :
-            xml->FindDuplicates();
+            std::cout << "Which language do you want to IMPORT (en, fr, ge, it, sp, po) ?\nNB: You can only import one language at a time.\n";
+            std::cin >> lang;
+            if(lang == "en" && lang == "fr" && lang == "ge" && lang == "it" && lang == "sp" && lang == "po")
+            {
+                qDebug() << "\nA valid language code is required";
+                break;
+            }
+            xml->ImportDocumentToSameName(QString::fromStdString(lang));
             break;
 
         case 6 :
@@ -222,7 +230,7 @@ void languages::ParseDocument(QString input_file, QString language)
     QFile::remove(input_temp_file);
 }
 
-void languages::ImportDocument(QString language)
+void languages::ImportDocumentToAll(QString language)
 {
     QDir dir_import;
     dir_import.mkdir("imported");
@@ -274,9 +282,6 @@ void languages::ImportDocument(QString language)
         QString current = "imported/" + *it;
 
         qDebug() << "Checking " << current;
-
-        // Check encoding before process
-        //ConvertToUTF8(current);
 
         QDomDocument input;
         QFile file_input(current);
@@ -332,12 +337,12 @@ void languages::ImportDocument(QString language)
                             value_text = "";
                         }
 
-                        else if (tag_orig.firstChildElement(int_lang).text().isNull())
+                        else if (tag_orig.firstChildElement(int_lang).firstChild().nodeValue().isNull())
                         {
-                            if(!tag_orig.firstChildElement(int_lang).firstChildElement("Text").isNull())
+                            if(!tag_orig.firstChildElement(int_lang).firstChildElement("Text").firstChild().nodeValue().isNull())
                             {
                                 //qDebug() << "No value";
-                                value_text = tag_orig.firstChildElement(int_lang).firstChildElement("Text").text();
+                                value_text = tag_orig.firstChildElement(int_lang).firstChildElement("Text").firstChild().nodeValue();
                             }
                             else
                             {
@@ -348,7 +353,7 @@ void languages::ImportDocument(QString language)
                         else
                         {
                             //qDebug() << "Value set";
-                            value_text = tag_orig.firstChildElement(int_lang).text();
+                            value_text = tag_orig.firstChildElement(int_lang).firstChild().nodeValue();
                         }
 
                         //qDebug() << value_tag << " : " << value_text << " / " << value_text_tr;
@@ -383,9 +388,9 @@ void languages::ImportDocument(QString language)
                                 if(tag_orig.firstChildElement(int_lang).isNull())
                                 {
                                 }
-                                else if (tag_orig.firstChildElement(int_lang).text().isNull())
+                                else if (tag_orig.firstChildElement(int_lang).firstChild().nodeValue().isNull())
                                 {
-                                    if(!tag_orig.firstChildElement(int_lang).firstChildElement("Text").isNull())
+                                    if(!tag_orig.firstChildElement(int_lang).firstChildElement("Text").firstChild().nodeValue().isNull())
                                     {
                                         tag_orig.firstChildElement(int_lang).firstChildElement("Text").firstChild().setNodeValue(value_text_tr);
                                         // Check for additionnal attributes
@@ -409,6 +414,237 @@ void languages::ImportDocument(QString language)
                         }
                     }
                 }
+
+            }
+        }
+        }
+
+        // Save to file
+        file_input.open(QIODevice::Truncate | QIODevice::WriteOnly);
+        file_input.write(input.toByteArray());
+        file_input.close();
+
+        if(s == 0)
+        {
+            QFile::remove(current);
+        }
+        else
+        {
+            ConvertUTF8ToCiv4(current);
+        }
+    }
+
+    // Output modified list
+    QString print_value;
+    QFile print_file("imported/imported_values.txt");
+
+    if ( print_file.open(QIODevice::ReadWrite) )
+        {
+            QTextStream stream( &print_file );
+
+            foreach(print_value, print_list)
+            {
+                stream << print_value << endl;
+            }
+        }
+        print_file.close();
+
+        qDebug() << "\n\nFiles successfully processed. Modified files are in 'imported/'.\nA report of the modified values have been generated in 'imported/imported_values.txt'";
+
+}
+
+void languages::ImportDocumentToSameName(QString language)
+{
+    QDir dir_import;
+    dir_import.mkdir("imported");
+
+    // Check language
+    QString int_lang;
+    if(language == "fr"){int_lang = "French";};
+    if(language == "ge"){int_lang = "German";};
+    if(language == "it"){int_lang = "Italian";};
+    if(language == "sp"){int_lang = "Spanish";};
+    if(language == "po"){int_lang = "Polish";};
+    if(language == "en"){int_lang = "English";};
+    qDebug() << "Selected language is " << int_lang;
+
+    /* Search the tag trough existing files and replace with the new value if found */
+    QStringList xml_filter;
+    xml_filter << "*.xml";
+
+    // Root files
+    QDir root(".");
+    QStringList root_files;
+    root_files = root.entryList(xml_filter, QDir::Files);
+
+    // Import files
+    QDir import_dir("imported/");
+    QStringList import_files;
+    for(QStringList::Iterator it = root_files.begin(); it != root_files.end(); it++)
+    {
+        QFile::copy(*it,"imported/"+*it);
+        ConvertCiv4ToUTF8("imported/"+*it);
+    }
+    import_files = import_dir.entryList(xml_filter, QDir::Files);
+
+    // Translated files
+    QDir translated("import/");
+    QStringList files_translated;
+    files_translated = translated.entryList(xml_filter, QDir::Files);
+
+    // Print list
+
+    QStringList print_list;
+
+    // Entering loop
+
+    for(QStringList::Iterator it = import_files.begin(); it != import_files.end(); it++)
+    {
+        int s = 0;
+
+        QString current = "imported/" + *it;
+
+        qDebug() << "Checking " << current;
+
+        QDomDocument input;
+        QFile file_input(current);
+        file_input.open(QIODevice::ReadOnly);
+        input.setContent(&file_input);
+        file_input.close();
+
+        // Check file integrity
+        if (input.firstChildElement("Civ4GameText").firstChildElement("TEXT").isNull())
+        {
+            qDebug() << current << " is not properly formatted";
+            QFile::remove(current);
+        }
+        else
+        {
+
+        // Comparing to each new file
+        for(QStringList::Iterator tr = files_translated.begin(); tr != files_translated.end(); tr++)
+        {
+            //qDebug() << "Comparing " << *it << " to " << *tr;
+            if (*it == *tr)
+            {
+                QString current_new = "import/" + *tr;
+                QDomDocument input_tr;
+                QFile file_tr(current_new);
+                file_tr.open(QIODevice::ReadOnly);
+                input_tr.setContent(&file_tr);
+                file_tr.close();
+
+                QDomElement root = input_tr.documentElement();
+
+                QDomElement tag_orig = input.firstChildElement("Civ4GameText").firstChildElement("TEXT").toElement();
+                for(tag_orig;!tag_orig.isNull();tag_orig = tag_orig.nextSiblingElement())
+                {
+                    // Compare each occurence with each tag of the translated file
+                    QString value_tag = tag_orig.firstChildElement("Tag").firstChild().nodeValue();
+                    QDomElement tag_tr = root.firstChildElement("string").toElement();
+                    //qDebug() << tag_tr.attribute("name");
+
+                    for(tag_tr;!tag_tr.isNull();tag_tr = tag_tr.nextSiblingElement())
+                    {
+                        QString value_tag_tr = tag_tr.attribute("name");
+                        //qDebug() << value_tag_tr;
+
+                        if (value_tag == value_tag_tr)
+                        {
+                            s++;
+                            QString value_text_tr = tag_tr.firstChild().nodeValue();
+                            QString value_text;
+
+                            // Checking tag presence
+
+                            if(tag_orig.firstChildElement(int_lang).isNull())
+                            {
+                                //qDebug() << "No tag";
+                                value_text = "";
+                            }
+
+                            else if (tag_orig.firstChildElement(int_lang).firstChild().nodeValue().isNull())
+                            {
+                                if(!tag_orig.firstChildElement(int_lang).firstChildElement("Text").isNull())
+                                {
+                                    //qDebug() << "No value";
+                                    value_text = tag_orig.firstChildElement(int_lang).firstChildElement("Text").firstChild().nodeValue();
+                                }
+                                else
+                                {
+                                    value_text = "";
+                                }
+                            }
+
+                            else
+                            {
+                                //qDebug() << "Value set";
+                                value_text = tag_orig.firstChildElement(int_lang).firstChild().nodeValue();
+                            }
+
+                            //qDebug() << value_tag << " : " << value_text << " / " << value_text_tr;
+
+                            // Normalize value
+                            if(value_text_tr.isNull())
+                            {
+                                value_text_tr = "";
+                            }
+
+                            // Compare original and modified strings
+                            if(value_text != value_text_tr)
+                            {
+                                // Check if the modified file has a value
+                                if(value_text != "" && value_text_tr == "")
+                                {
+                                    QString operation;
+                                    operation = "--WARNING-- TAG:" + QString(value_tag)+ " | ORIGINAL FILE: " + QString(current) + " | IMPORT FILE: " + QString(current_new) + " has empty value.";
+                                    print_list << operation;
+                                    //qDebug() << operation;
+                                }
+
+                                // Major cases
+                                else if(value_text != value_text_tr)
+                                {
+                                    QString operation;
+                                    operation = "FILE: " + current + " | TAG: " + value_tag + " | OLD: " + value_text + " -> NEW: " + value_text_tr;
+                                    print_list << operation;
+                                    //qDebug() << operation;
+
+                                    // Checking if tag is not subtag, again...
+                                    if(tag_orig.firstChildElement(int_lang).isNull())
+                                    {
+                                    }
+                                    else if (tag_orig.firstChildElement(int_lang).firstChild().nodeValue().isNull())
+                                    {
+                                        if(!tag_orig.firstChildElement(int_lang).firstChildElement("Text").firstChild().nodeValue().isNull())
+                                        {
+                                            tag_orig.firstChildElement(int_lang).firstChildElement("Text").firstChild().setNodeValue(value_text_tr);
+                                            // Check for additionnal attributes
+                                            if(!tag_tr.attribute("gender").isNull())
+                                            {
+                                                tag_orig.firstChildElement(int_lang).firstChildElement("Gender").firstChild().setNodeValue(tag_tr.attribute("gender"));
+                                            }
+                                            if(!tag_tr.attribute("plural").isNull())
+                                            {
+                                                tag_orig.firstChildElement(int_lang).firstChildElement("Plural").firstChild().setNodeValue(tag_tr.attribute("plural"));
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        tag_orig.firstChildElement(int_lang).firstChild().setNodeValue(value_text_tr);
+                                    }
+                                }
+
+
+                            }
+                        }
+                    }
+
+                }
+            }
+            else
+            {
 
             }
         }
@@ -725,10 +961,31 @@ void languages::ConvertCiv4ToUTF8(QString file)
         for (read_element;!read_element.isNull();read_element = read_element.nextSiblingElement())
         {
             //qDebug() << read_element.tagName();
-            QDomElement write_element = write.createElement(read_element.tagName());
-            write_node.appendChild(write_element);
-            QDomText write_text = write.createTextNode(read_element.text());
-            write_element.appendChild(write_text);
+            if(!read_element.firstChildElement("Text").isNull())
+            {
+                QDomElement write_element = write.createElement(read_element.tagName());
+                write_node.appendChild(write_element);
+                QDomElement write_element_text = write.createElement("Text");
+                QDomElement write_element_gender = write.createElement("Gender");
+                QDomElement write_element_plural = write.createElement("Plural");
+                write_element.appendChild(write_element_text);
+                write_element.appendChild(write_element_gender);
+                write_element.appendChild(write_element_plural);
+
+                QDomText write_text = write.createTextNode(read_element.firstChildElement("Text").firstChild().nodeValue());
+                QDomText write_gender = write.createTextNode(read_element.firstChildElement("Gender").firstChild().nodeValue());
+                QDomText write_plural = write.createTextNode(read_element.firstChildElement("Plural").firstChild().nodeValue());
+                write_element_text.appendChild(write_text);
+                write_element_gender.appendChild(write_gender);
+                write_element_plural.appendChild(write_plural);
+            }
+            else
+            {
+                QDomElement write_element = write.createElement(read_element.tagName());
+                write_node.appendChild(write_element);
+                QDomText write_text = write.createTextNode(read_element.firstChild().nodeValue());
+                write_element.appendChild(write_text);
+            }
         }
     }
     file_out.write(write.toByteArray());
@@ -772,13 +1029,31 @@ void languages::ConvertUTF8ToCiv4(QString file)
         for (read_element;!read_element.isNull();read_element = read_element.nextSiblingElement())
         {
             //qDebug() << read_element.tagName();
-            QDomElement write_element = write.createElement(read_element.tagName());
-            write_node.appendChild(write_element);
+            if(!read_element.firstChildElement("Text").isNull())
+            {
+                QDomElement write_element = write.createElement(read_element.tagName());
+                write_node.appendChild(write_element);
+                QDomElement write_element_text = write.createElement("Text");
+                QDomElement write_element_gender = write.createElement("Gender");
+                QDomElement write_element_plural = write.createElement("Plural");
+                write_element.appendChild(write_element_text);
+                write_element.appendChild(write_element_gender);
+                write_element.appendChild(write_element_plural);
 
-            // Convert the string to latin1
-            QString input = read_element.text();
-            QDomText write_text = write.createTextNode(ConvertStringToCiv4(input));
-            write_element.appendChild(write_text);
+                QDomText write_text = write.createTextNode(ConvertStringToCiv4(read_element.firstChildElement("Text").firstChild().nodeValue()));
+                QDomText write_gender = write.createTextNode(ConvertStringToCiv4(read_element.firstChildElement("Gender").firstChild().nodeValue()));
+                QDomText write_plural = write.createTextNode(ConvertStringToCiv4(read_element.firstChildElement("Plural").firstChild().nodeValue()));
+                write_element_text.appendChild(write_text);
+                write_element_gender.appendChild(write_gender);
+                write_element_plural.appendChild(write_plural);
+            }
+            else
+            {
+                QDomElement write_element = write.createElement(read_element.tagName());
+                write_node.appendChild(write_element);
+                QDomText write_text = write.createTextNode(ConvertStringToCiv4(read_element.firstChild().nodeValue()));
+                write_element.appendChild(write_text);
+            }
         }
     }
 
@@ -1008,4 +1283,9 @@ void languages::FindDuplicates()
     dupl_out.close();
 
     qDebug() << "Duplicates tags have been gathered in 'export/duplicates.txt'";*/
+}
+
+void languages::CleanFiles()
+{
+
 }

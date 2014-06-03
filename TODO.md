@@ -1,7 +1,9 @@
 - Define new categories for sorting
 - Add a function to track the duplicate entries
-- Verify encoding for import and sort
+- Cle
 
-- Manual operations:
- -> replace &lt; by &#60; | &gt; by &#62;
+Functions:
+- Sort by category. Move duplicate to a temp file.
+- Remove tags with the same input as english / Remove empty tags
+- Import to tags with same files
 
