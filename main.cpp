@@ -10,6 +10,8 @@ public:
     void ParseAllFiles(QString language);
     void ImportDocumentToAll(QString language);
     void ImportDocumentToSameName(QString language);
+    QStringList ListTags();
+    void CleanFiles();
     void SortCategories();
     void SorterHelper(QString prefix);
     QString ConvertStringToCiv4(QString string);
@@ -39,7 +41,7 @@ int main(int argc, char *argv[])
     int z = 0;
 
     do {
-    qDebug() << "\nMain menu:\n----------\n1 - Export all languages [Civ 4 XML -> Language XML]\n2 - Export a specific language [Civ 4 XML -> Language XML]\n3 - Import language strings to ALL files [Language XML -> Civ 4 XML]\n4 - Import language strings to SAME files [Language XML -> Civ 4 XML]\n5 (Disabled) - Sort files by categories [Civ 4 XML]\n6 (Disabled) - Find duplicates files\n6 - Exit program\n\n";
+    qDebug() << "\nMain menu:\n----------\n1 - Export all languages [Civ 4 XML -> Language XML]\n2 - Export a specific language [Civ 4 XML -> Language XML]\n3 - Import language strings to ALL files [Language XML -> Civ 4 XML]\n4 - Import language strings to SAME files [Language XML -> Civ 4 XML]\n5 - Clean files (remove empty markers and language markers if equal from english) [Civ 4 XML]\n6 (Disabled) - Find duplicates files\n7 - Exit program\n\n";
     std::cin >> ch;
     std::string lang;
     switch (ch)
@@ -76,10 +78,6 @@ int main(int argc, char *argv[])
             break;
 
         case 4 :
-            xml->FindDuplicates();
-            break;
-
-        case 5 :
             std::cout << "Which language do you want to IMPORT (en, fr, ge, it, sp, po) ?\nNB: You can only import one language at a time.\n";
             std::cin >> lang;
             if(lang == "en" && lang == "fr" && lang == "ge" && lang == "it" && lang == "sp" && lang == "po")
@@ -90,8 +88,17 @@ int main(int argc, char *argv[])
             xml->ImportDocumentToSameName(QString::fromStdString(lang));
             break;
 
+
+        case 5 :
+            xml->CleanFiles();
+            break;
+
         case 6 :
-            return 0;
+            xml->FindDuplicates();
+            break;
+
+        case 7 :
+            xml->SortCategories();
             break;
 
         default :
@@ -686,245 +693,128 @@ void languages::ImportDocumentToSameName(QString language)
 
 void languages::SortCategories()
 {
-    /*QString language;
-    QStringList languages_list;
-    languages_list << "English" << "French" << "German" << "Italian" << "Spanish" << "Polish";
-
-    // List all root files
-    qDebug() << "Configuration...";
-    XMLDocument xml_input;
-    XMLDocument xml_export;
-
-    QFile::remove("export/bigfile.xml");
-    QDir root_dir(".");
-    QDir export_dir;
-
-    export_dir.mkdir("export/");
+    // Listing root files
+    qDebug() << "Listing files...";
+    QDir dir_import;
+    dir_import.mkpath("sorted/");
     QStringList xml_filter;
     xml_filter << "*.xml";
-    QStringList files;
-    files = root_dir.entryList(xml_filter, QDir::Files);
-    QStringList tags;
+    QDir root(".");
+    QStringList root_files;
+    root_files = root.entryList(xml_filter, QDir::Files);
 
-    // Creation of the big file
-    qDebug() << "Gathering all values...";
-    xml_export.LoadFile("export/bigfile.xml");
-    xml_export.InsertFirstChild(xml_export.NewDeclaration());
-    XMLNode *root = xml_export.NewElement("Civ4GameText");
-    xml_export.InsertEndChild(root);
-
-    const char* null_value = "";
-    for (QStringList::Iterator it = files.begin(); it != files.end(); it++)
+    // Import files
+    qDebug() << "Copying files...";
+    for(QStringList::Iterator it = root_files.begin(); it != root_files.end(); it++)
     {
-        QString current = *it;
-
-        // Begin iteration
-
-        xml_input.LoadFile(current.toStdString().c_str());
-        XMLElement* tag_orig = xml_input.FirstChildElement("Civ4GameText")->FirstChildElement("TEXT")->ToElement();
-        for(tag_orig;tag_orig != NULL;tag_orig = tag_orig->NextSiblingElement())
-        {
-            //qDebug() << current << " - " << tag_orig->FirstChildElement("Tag")->GetText();
-
-            // Create xml structure
-
-            XMLElement* text_value = xml_export.NewElement("TEXT");
-            root->InsertEndChild(text_value);
-            XMLElement* tag_export = xml_export.NewElement("Tag");
-            text_value->InsertEndChild(tag_export);
-
-            // Read elements and check if NULL
-
-            tags << tag_orig->FirstChildElement("Tag")->GetText();
-            tag_export->SetText(tag_orig->FirstChildElement("Tag")->GetText());
-
-            foreach (language, languages_list) {
-                text_value->InsertEndChild(xml_export.NewElement(language.toStdString().c_str()));
-                if(tag_orig->FirstChildElement(language.toStdString().c_str()) == NULL)
-                {
-                    //qDebug() << "No " << language << " element.";
-                    const char* null_value = "";
-                    text_value->FirstChildElement(language.toStdString().c_str())->SetText(null_value);
-                }
-                else if (tag_orig->FirstChildElement(language.toStdString().c_str())->GetText() == NULL)
-                {
-                    //qDebug() << "No " << language << " text.";
-                    if(tag_orig->FirstChildElement(language.toStdString().c_str())->FirstChildElement("Text") != NULL)
-                    {
-                        XMLElement* sub_text = xml_export.NewElement("Text");
-                        XMLElement* sub_gender = xml_export.NewElement("Gender");
-                        XMLElement* sub_plural = xml_export.NewElement("Plural");
-                        text_value->FirstChildElement(language.toStdString().c_str())->InsertEndChild(sub_text);
-                        text_value->FirstChildElement(language.toStdString().c_str())->InsertEndChild(sub_gender);
-                        text_value->FirstChildElement(language.toStdString().c_str())->InsertEndChild(sub_plural);
-                        sub_text->SetText(tag_orig->FirstChildElement(language.toStdString().c_str())->FirstChildElement("Text")->GetText());
-                        sub_gender->SetText(tag_orig->FirstChildElement(language.toStdString().c_str())->FirstChildElement("Gender")->GetText());
-                        sub_plural->SetText(tag_orig->FirstChildElement(language.toStdString().c_str())->FirstChildElement("Plural")->GetText());
-                    }
-                }
-                else
-                {
-                    text_value->FirstChildElement(language.toStdString().c_str())->SetText(tag_orig->FirstChildElement(language.toStdString().c_str())->GetText());
-                }
-            }
-        }
-
-    }
-    xml_export.SaveFile("export/bigfile.xml");
-
-    // Fix encoding before process
-    qDebug() << "Fixing encoding...";
-    QFile file_in("export/bigfile.xml");
-    QFile file_out("export/__temp__bigfile.xml");
-    file_in.open(QIODevice::ReadOnly | QIODevice::Text);
-    file_out.open(QIODevice::WriteOnly | QIODevice::Truncate);
-    QTextStream in_enc(&file_in);
-    QTextStream out_enc(&file_out);
-    out_enc.setCodec("UTF-8");
-    while(!in_enc.atEnd())
-    {
-        QString line = in_enc.readLine();
-        out_enc << line;
-    }
-    file_in.close();
-    file_out.close();
-    QFile::remove("export/bigfile.xml");
-    QFile::rename("export/__temp__bigfile.xml","export/bigfile.xml");
-
-
-
-    // Sort tags by category
-    int total_tags = tags.size();
-    qDebug() << "Sorting" << total_tags << "tags into categories...";
-    XMLDocument xml_sort;
-    xml_export.LoadFile("export/bigfile.xml");
-    tags.sort();
-
-    QString tag_search;
-    QStringList sort_categories;
-    QString category;*/
-
-    //* --- Known categories --- *//
-    /*sort_categories << "AI_" << "INTERFACE_" << "USER_" << "TXT_";
-                    //<< "TXT_KEY_GREAT_PERSON" << "TXT_KEY_BUILDING" << "TXT_MAIN_MENU" << "TXT_KEY_UNIT";
-
-    QStringList tags_process = tags;
-
-    foreach(category, sort_categories)
-    {
-        // Creation of each file
-        QString category_file = "export/" + category + ".xml";
-        xml_sort.LoadFile(category_file.toStdString().c_str());
-        xml_sort.InsertFirstChild(xml_sort.NewDeclaration());
-        XMLNode *root = xml_sort.NewElement("Civ4GameText");
-        xml_sort.InsertEndChild(root);
-
-        foreach(tag_search, tags)
-        {
-
-            if(tag_search.startsWith(category))
-            {
-                // Look for the correct tag
-                XMLElement* tag_orig = xml_export.FirstChildElement("Civ4GameText")->FirstChildElement("TEXT")->ToElement();
-
-                for(tag_orig;tag_orig != NULL;tag_orig = tag_orig->NextSiblingElement())
-                {
-                    // Create xml structure
-                    const char* tag_value = tag_orig->FirstChildElement("Tag")->GetText();
-
-                    if(!std::strcmp(tag_value,tag_search.toStdString().c_str()))
-                    {
-                        //qDebug() << "Found " << tag_value;
-                        XMLElement* text_value = xml_sort.NewElement("TEXT");
-                        root->InsertEndChild(text_value);
-                        XMLElement* tag_export = xml_sort.NewElement("Tag");
-                        text_value->InsertEndChild(tag_export);
-                        tag_export->SetText(tag_value);
-
-                        // Script to adapt
-                        foreach (language, languages_list) {
-                            text_value->InsertEndChild(xml_sort.NewElement(language.toStdString().c_str()));
-                            if(tag_orig->FirstChildElement(language.toStdString().c_str()) == NULL)
-                            {
-                                //qDebug() << "No " << language << " element.";
-                                const char* null_value = "";
-                                text_value->FirstChildElement(language.toStdString().c_str())->SetText(null_value);
-                            }
-                            else if (tag_orig->FirstChildElement(language.toStdString().c_str())->GetText() == NULL)
-                            {
-                                //qDebug() << "No " << language << " text.";
-                                if(tag_orig->FirstChildElement(language.toStdString().c_str())->FirstChildElement("Text") != NULL)
-                                {
-                                    XMLElement* sub_text = xml_sort.NewElement("Text");
-                                    XMLElement* sub_gender = xml_sort.NewElement("Gender");
-                                    XMLElement* sub_plural = xml_sort.NewElement("Plural");
-                                    text_value->FirstChildElement(language.toStdString().c_str())->InsertEndChild(sub_text);
-                                    text_value->FirstChildElement(language.toStdString().c_str())->InsertEndChild(sub_gender);
-                                    text_value->FirstChildElement(language.toStdString().c_str())->InsertEndChild(sub_plural);
-                                    sub_text->SetText(tag_orig->FirstChildElement(language.toStdString().c_str())->FirstChildElement("Text")->GetText());
-                                    sub_gender->SetText(tag_orig->FirstChildElement(language.toStdString().c_str())->FirstChildElement("Gender")->GetText());
-                                    sub_plural->SetText(tag_orig->FirstChildElement(language.toStdString().c_str())->FirstChildElement("Plural")->GetText());
-                                    xml_export.DeleteNode(tag_orig);
-                                }
-
-                            }
-                            else
-                            {
-                                text_value->FirstChildElement(language.toStdString().c_str())->SetText(tag_orig->FirstChildElement(language.toStdString().c_str())->GetText());
-                                xml_export.DeleteNode(tag_orig);
-                            }
-                        }
-
-                        // Until here
-                    }
-                }
-            }
-        }
-
-        xml_sort.SaveFile(category_file.toStdString().c_str());
+        QFile::copy(*it,"sorted/"+*it);
+        ConvertCiv4ToUTF8("sorted/"+*it);
     }
 
-    xml_export.SaveFile("export/OTHERS.xml");
+    // List all tags
+    qDebug() << "Listing tags...";
+    QStringList tags = ListTags();
 
-    // Count exported tags
-    qDebug() << "Checking exported tags...";
-    int tags_counter = 0;
-    QDir dir_export("export/");
-    QStringList folders;
-    folders = dir_export.entryList(xml_filter, QDir::Files);
-    for(QStringList::Iterator it = folders.begin(); it != folders.end(); it++)
+    // Check categories
+    qDebug() << "Checking categories...";
+    QFile categories("categories.parse");
+    if(!categories.exists())
     {
-        XMLDocument temp;
-        QString current = "export/" + *it;
-        temp.LoadFile(current.toStdString().c_str());
-        XMLElement* root = temp.FirstChildElement("Civ4GameText")->FirstChildElement("TEXT")->FirstChildElement("Tag")->ToElement();
-        for(root;root != NULL;root = root->NextSiblingElement())
-        {
-            tags_counter++;
-        }
+       qDebug() << "The parser need a 'categories.parse' file to continue. Aborting...";
+       return;
     }
-    qDebug() << "Found" << tags_counter << "tags !";
+    QDomDocument xml_categories;
+    categories.open(QIODevice::ReadOnly);
+    xml_categories.setContent(&categories);
+    categories.close();
 
-    // Export tags to file
-    qDebug() << "Exporting tags to a list...";
+    // Initialize XML
+    QDomElement read_categories = xml_categories.firstChildElement().firstChildElement();
+    for(read_categories;!read_categories.isNull(); read_categories = read_categories.nextSiblingElement())
+    {
+        QString filename = read_categories.attribute("file");
+        QFile temp(filename);
+        temp.open(QIODevice::WriteOnly | QIODevice::Truncate);
+        QDomDocument xml_temp;
+        xml_temp.setContent(&temp);
+        xml_temp.createProcessingInstruction("xml",QString("version=\"1.0\" encoding=\"utf-8\""));
+        xml_temp.createElement("Civ4GameText");
+        temp.write(xml_temp.toByteArray());
+        temp.close();
+    }
+
+    /* For each tag in the list, determine category, then check each file and each tag
+     * For each tag, check category and copy all the elements to the corresponding file
+     * If a tag has already been found, copy it in "removed_category" file */
+    qDebug() << "Cat ph1";
+    QDir import_dir("sorted/");
+    QStringList import_files;
+    import_files = import_dir.entryList(xml_filter, QDir::Files);
     QString tag;
-    QFile tag_list("export/tag_list.txt");
-
-    if ( tag_list.open(QIODevice::ReadWrite) )
+    foreach(tag,tags)
     {
-        QTextStream stream( &tag_list );
-
-        foreach(tag, tags)
+        //qDebug() << "Checking " << tag;
+        // Check category of the tag
+        int c = 0;
+        QDomElement xml_category = xml_categories.firstChildElement().firstChildElement();
+        QString category_file;
+        for(xml_category;!xml_category.isNull();xml_category = xml_category.nextSiblingElement())
         {
-            stream << tag << endl;
+            //qDebug() << xml_category.attribute("file");
+            QDomElement xml_category_tag = xml_category.firstChildElement();
+            for(xml_category_tag;!xml_category_tag.isNull();xml_category_tag = xml_category_tag.nextSiblingElement())
+            {
+                //qDebug() << "Comparing " << tag << " to " << xml_category_tag.firstChild().nodeValue();
+                if(tag.startsWith(xml_category_tag.firstChild().nodeValue()))
+                {
+                    category_file = xml_category.attribute("file");
+                    qDebug() << category_file;
+                }
+            }
         }
+        if(category_file.isNull())
+        {
+            category_file = "MISC.xml";
+        }
+        category_file = "sorted/" + category_file;
+
+        // Looking for tag in files
+        for(QStringList::Iterator it = import_files.begin(); it != import_files.end(); it++)
+        {
+            QString current = "sorted/" + *it;
+            QDomDocument input;
+            QFile file_input(current);
+            file_input.open(QIODevice::ReadOnly);
+            input.setContent(&file_input);
+            file_input.close();
+            if (input.firstChildElement("Civ4GameText").firstChildElement("TEXT").isNull())
+            {
+                QFile::remove(current);
+            }
+
+            QDomElement input_text_node = input.firstChildElement().firstChildElement();
+            for(input_text_node;!input_text_node.isNull();input_text_node = input_text_node.nextSiblingElement())
+            {
+                if(tag == input_text_node.firstChildElement("Tag").firstChild().nodeValue())
+                {
+                    // Write the node to the correct category
+                    QFile file_cat(category_file);
+                    file_cat.open(QIODevice::ReadOnly);
+                    QDomDocument xml_detected;
+                    xml_detected.setContent(&file_cat);
+                    file_cat.close();
+                    QDomElement xml_detected_node = xml_detected.firstChildElement();
+                    xml_detected_node.appendChild(input_text_node);
+                    file_cat.open(QIODevice::Truncate | QIODevice::WriteOnly);
+                    file_cat.write(xml_detected.toByteArray());
+                    file_cat.close();
+                }
+            }
+
+        }
+
+
     }
-    tag_list.close();
-
-    qDebug() << "Find duplicates tags...";
-    languages::FindDuplicates();
-
-    QFile::remove("export/bigfile.xml");*/
 }
 
 void languages::ConvertCiv4ToUTF8(QString file)
@@ -1086,16 +976,13 @@ QString languages::ConvertStringToCiv4(QString string)
     return encode;
 }
 
-void languages::FindDuplicates()
+QStringList languages::ListTags()
 {
-    qDebug() << "Checking files...";
-    QDir root(".");
-    root.rmdir("duplicates/");
-    root.mkdir("duplicates/");
     QStringList tags;
     QStringList xml_filter;
     xml_filter << "*.xml";
     QStringList files;
+    QDir root(".");
     files = root.entryList(xml_filter, QDir::Files);
 
     for(QStringList::Iterator it = files.begin(); it != files.end(); it++)
@@ -1117,6 +1004,20 @@ void languages::FindDuplicates()
         }
         file_in.close();
     }
+
+    tags.sort();
+
+    return tags;
+}
+
+void languages::FindDuplicates()
+{
+    qDebug() << "Checking files...";
+    QDir root(".");
+    root.rmdir("duplicates/");
+    root.mkdir("duplicates/");
+
+    QStringList tags = ListTags();
 
     // Output modified list
     qDebug() << "Printing list of tags...";
@@ -1178,6 +1079,11 @@ void languages::FindDuplicates()
     // Copy identified files
     qDebug() << "Copying identified files...";
     QString tag_value;
+
+    QStringList xml_filter;
+    xml_filter << "*.xml";
+    QStringList files;
+    files = root.entryList(xml_filter, QDir::Files);
 
     for(QStringList::Iterator it = files.begin(); it != files.end(); it++)
     {
@@ -1287,5 +1193,127 @@ void languages::FindDuplicates()
 
 void languages::CleanFiles()
 {
+    QDir dir_import;
+    dir_import.mkdir("cleaned");
 
+    /* Search the tag trough existing files and replace with the new value if found */
+    QStringList xml_filter;
+    xml_filter << "*.xml";
+
+    // Root files
+    QDir root(".");
+    QStringList root_files;
+    root_files = root.entryList(xml_filter, QDir::Files);
+
+    // Import files
+    QDir import_dir("cleaned/");
+    QStringList import_files;
+    for(QStringList::Iterator it = root_files.begin(); it != root_files.end(); it++)
+    {
+        QFile::copy(*it,"cleaned/"+*it);
+        ConvertCiv4ToUTF8("cleaned/"+*it);
+    }
+    import_files = import_dir.entryList(xml_filter, QDir::Files);
+
+    // Print list
+
+    QStringList print_list;
+
+    // Entering loop
+
+    for(QStringList::Iterator it = import_files.begin(); it != import_files.end(); it++)
+    {
+        int s = 0;
+
+        QString current = "cleaned/" + *it;
+
+        qDebug() << "Cleaning " << current;
+
+        QDomDocument input;
+        QFile file_input(current);
+        file_input.open(QIODevice::ReadOnly);
+        input.setContent(&file_input);
+        file_input.close();
+
+        QDomElement input_node = input.firstChildElement("Civ4GameText").firstChildElement("TEXT");
+
+        // Check file integrity
+        if (input_node.text().isNull())
+        {
+            qDebug() << current << " is not properly formatted";
+            QFile::remove(current);
+        }
+        else
+        {
+            // Check english tag
+            for(input_node;!input_node.isNull();input_node = input_node.nextSiblingElement())
+            {
+                QString english_tag = input_node.firstChildElement("English").firstChild().nodeValue();
+                QDomElement element = input_node.firstChildElement();
+                int wait = 0;
+                for(element;!element.isNull();element = element.nextSiblingElement())
+                {
+                    // Remove the previous element in the loop if it has been detected
+                    if (wait > 0)
+                    {
+                        element.previousSiblingElement().parentNode().removeChild(element.previousSiblingElement());
+                        wait = 0;
+                    }
+                    if(element.firstChild().nodeValue() == english_tag && element.tagName() != "English")
+                    {
+                        QString operation = "FILE: " + *it + " - TAG: " + input_node.firstChildElement("Tag").firstChild().nodeValue() + " - Removing " + element.tagName();
+                        print_list << operation;
+                        wait++;
+                        s++;
+                    }
+                    else if (element.firstChildElement("Text").isNull() && element.firstChild().nodeValue().isEmpty() && element.tagName() != "English")
+                    {
+                        QString operation = "FILE: " + *it + " - TAG: " + input_node.firstChildElement("Tag").firstChild().nodeValue() + " - Removing " + element.tagName() + " (empty)";
+                        print_list << operation;
+                        wait++;
+                        s++;
+                    }
+                }
+                // Remove the last checked element if it has been detected
+                if (wait > 0)
+                {
+                    element.parentNode().removeChild(element);
+                    wait = 0;
+                }
+            }
+        }
+
+
+
+        // Save to file
+        file_input.open(QIODevice::Truncate | QIODevice::WriteOnly);
+        file_input.write(input.toByteArray());
+        file_input.close();
+
+        if(s == 0)
+        {
+            QFile::remove(current);
+        }
+        else
+        {
+            ConvertUTF8ToCiv4(current);
+        }
+    }
+
+    // Output modified list
+    QString print_value;
+    QFile print_file("cleaned/_cleaned_values.txt");
+
+    if ( print_file.open(QIODevice::ReadWrite) )
+        {
+            QTextStream stream( &print_file );
+
+            foreach(print_value, print_list)
+            {
+                stream << print_value << endl;
+            }
+        }
+        print_file.close();
+
+        qDebug() << "\n\nFiles successfully processed. Modified files are in 'imported/'.\nA report of the modified values have been generated in 'imported/imported_values.txt'";
 }

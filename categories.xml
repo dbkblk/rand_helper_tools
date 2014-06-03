@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<main>
+  <category file="DIPLOMACY.xml">
+    <tag>AI_</tag>
+    <tag>USER_</tag>
+    <tag>TXT_KEY_MISC_ATTITUDE</tag>
+    <tag>TXT_KEY_TRADE</tag>
+  </category>
+  <category file="BUILDINGS.xml">
+    <tag>MOD_TXT_KEY_BUILDING</tag>
+    <tag>TXT_KEY_BUILDING</tag>
+  </category>
+  <category file="INTERFACE.xml">
+    <tag>TXT_KEY_BUG</tag>
+    <tag>TXT_KEY_BUFFY</tag>
+    <tag>TXT_KEY_AUTOLOG</tag>
+    <tag>TXT_KEY_ADVISOR</tag>
+    <tag>TXT_KEY_ANGER</tag>
+    <tag>TXT_KEY_BUILD</tag>
+    <tag>TXT_KEY_CIV4LERTS</tag>
+    <tag>TXT_KEY_COLOR</tag>
+    <tag>TXT_KEY_COMMAND</tag>
+    <tag>TXT_KEY_DOMESTIC</tag>
+    <tag>TXT_KEY_FINANCIAL</tag>
+    <tag>TXT_KEY_FOREIGN</tag>
+    <tag>TXT_KEY_GAMEOPTION</tag>
+    <tag>TXT_KEY_GAMESPEED</tag>
+    <tag>TXT_KEY_GAME_OPTION</tag>
+    <tag>TXT_KEY_HANDICAP</tag>
+    <tag>TXT_KEY_HINT</tag>
+    <tag>TXT_KEY_INFO</tag>
+    <tag>TXT_KEY_INTERFACE</tag>
+    <tag>TXT_KEY_KEYBOARD</tag>
+    <tag>TXT_KEY_LANDMARK</tag>
+    <tag>TXT_KEY_LIST</tag>
+    <tag>TXT_KEY_MAIN_MENU</tag>
+    <tag>TXT_KEY_MAP</tag>
+    <tag>TXT_KEY_MILITARY</tag>
+    <tag>TXT_KEY_MORECIV4LERTS</tag>
+    <tag>TXT_KEY_OPTIONS</tag>
+  </category>
+  <category file="RESSOURCES.xml">
+    <tag>TXT_KEY_BONUS</tag>
+  </category>
+  <category file="ACTIONS.xml">
+    <tag>TXT_KEY_ACTION</tag>
+  </category>
+  <category file="CITY.xml">
+    <tag>TXT_KEY_CITY</tag>
+  </category>
+  <category file="CIVICS.xml">
+    <tag>TXT_KEY_CIVIC</tag>
+  </category>
+  <category file="CIVILIZATIONS.xml">
+    <tag>TXT_KEY_CIV_</tag>
+    <tag>TXT_KEY_TRAIT</tag>
+  </category>
+  <category file="COMBAT.xml">
+    <tag>TXT_KEY_COMBAT</tag>
+    <tag>TXT_KEY_MISC_ATTACKER</tag>
+  </category>
+  <category file="CONCEPTS.xml">
+    <tag>TXT_KEY_CONCEPT</tag>
+  </category>
+  <category file="CORPORATIONS.xml">
+    <tag>TXT_KEY_CORPORATION</tag>
+  </category>
+  <category file="ESPIONNAGE.xml">
+    <tag>TXT_KEY_ESPIONAGE</tag>
+  </category>
+  <category file="EVENTS.xml">
+    <tag>TXT_KEY_EVENT</tag>
+  </category>
+  <category file="GREAT_PERSON.xml">
+    <tag>TXT_KEY_GREAT_PERSON</tag>
+  </category>
+  <category file="IMPROVEMENTS.xml">
+    <tag>TXT_KEY_IMPROVEMENT</tag>
+  </category>
+  <category file="LEADERS.xml">
+    <tag>TXT_KEY_LEADER</tag>
+  </category>
+  <category file="MAP_SCRIPTS.xml">
+    <tag>TXT_KEY_MAP</tag>
+  </category>
+  <category file="MISSIONS.xml">
+    <tag>TXT_KEY_MISSION</tag>
+  </category>
+  <category file="PROJECTS.xml">
+    <tag>TXT_KEY_PROJECT</tag>
+  </category>
+  <category file="PROMOTIONS.xml">
+    <tag>TXT_KEY_PROMOTION</tag>
+  </category>
+  <category file="RELIGIONS.xml">
+    <tag>TXT_KEY_RELIGION</tag>
+  </category>
+  <category file="REVOLUTIONS.xml">
+    <tag>TXT_KEY_REV</tag>
+  </category>
+  <category file="STRATEGIES.xml">
+    <tag>TXT_KEY_STRATEGY</tag>
+  </category>
+  <category file="TECHNOLOGIES.xml">
+    <tag>TXT_KEY_TECH</tag>
+  </category>
+  <category file="UNITS.xml">
+    <tag>TXT_KEY_UNIT</tag>
+  </category>
+</main>
