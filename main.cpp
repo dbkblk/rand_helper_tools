@@ -899,9 +899,9 @@ void languages::SortCategories()
     for(QStringList::Iterator it = dir_sorted_list.begin(); it != dir_sorted_list.end(); it++)
     {
         QString old_file = "sorted/new/" + *it;
-        //ConvertUTF8ToCiv4(old_file);
         QString new_file = "sorted/" + *it;
         QFile::rename(old_file,new_file);
+        ConvertUTF8ToCiv4(new_file);
     }
     dir_sorted.setPath("sorted/");
     dir_sorted.rmdir("new/");
@@ -986,24 +986,25 @@ void languages::ConvertUTF8ToCiv4(QString file)
     QFile file_in(file);
     file_in.open(QIODevice::ReadOnly);
     read.setContent(&file_in);
-    QDomElement read_text = read.firstChildElement("Civ4GameText").firstChildElement("TEXT");
+    QDomNode read_text = read.firstChildElement("Civ4GameText").firstChildElement();
     //qDebug() << read_text.firstChildElement().tagName();
 
     // Create the output file
     QDomDocument write;
-    QFile file_out("rewrite.xml");
+    QFile file_out(file + "_tempconvert_");
     file_out.open(QIODevice::WriteOnly | QIODevice::Truncate);
     QDomNode declaration = write.createProcessingInstruction("xml",QString("version=\"1.0\" encoding=\"ISO-8859-1\""));
     write.insertBefore(declaration,write.firstChild());
     QDomNode write_root = write.createElement("Civ4GameText");
     write.appendChild(write_root);
+    //qDebug() << write.firstChildElement().tagName();
 
    // Loop the input file
-    for (read_text;!read_text.isNull();read_text = read_text.nextSiblingElement())
+    for (read_text;!read_text.isNull();read_text = read_text.nextSibling())
     {
         //qDebug() << read_text.firstChildElement().tagName();
         QDomElement read_element = read_text.firstChildElement();
-        QDomElement write_node = write.createElement("TEXT");
+        QDomNode write_node = write.createElement("TEXT");
         write_root.appendChild(write_node);
 
         for (read_element;!read_element.isNull();read_element = read_element.nextSiblingElement())
@@ -1044,7 +1045,7 @@ void languages::ConvertUTF8ToCiv4(QString file)
     file_in.close();
 
     QFile::remove(file);
-    QFile::rename("rewrite.xml",file);
+    QFile::rename(file + "_tempconvert_",file);
 }
 
 QString languages::ConvertStringToCiv4(QString string)
