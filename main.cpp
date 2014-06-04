@@ -696,7 +696,8 @@ void languages::SortCategories()
     // Listing root files
     qDebug() << "Listing files...";
     QDir dir_import;
-    dir_import.mkpath("sorted/");
+    dir_import.rmpath("sorted/");
+    dir_import.mkpath("sorted/new/");
     QStringList xml_filter;
     xml_filter << "*.xml";
     QDir root(".");
@@ -739,7 +740,7 @@ void languages::SortCategories()
         xml_temp.appendChild(xml_temp.createElement("Civ4GameText"));
 
         QString filename = read_categories.attribute("file");
-        filename = "sorted/" + filename;
+        filename = "sorted/new/" + filename;
         QFile temp(filename);
         temp.open(QIODevice::WriteOnly | QIODevice::Truncate);
         QTextStream ts_temp(&temp);
@@ -750,7 +751,7 @@ void languages::SortCategories()
     QDomDocument xml_misc;
     xml_misc.insertBefore(xml_misc.createProcessingInstruction("xml",QString("version=\"1.0\" encoding=\"utf-8\"")),xml_misc.firstChild());
     xml_misc.appendChild(xml_misc.createElement("Civ4GameText"));
-    QFile misc("sorted/MISC.xml");
+    QFile misc("sorted/new/MISC.xml");
     misc.open(QIODevice::WriteOnly | QIODevice::Truncate);
     QTextStream ts_temp(&misc);
     xml_misc.save(ts_temp,4);
@@ -764,7 +765,7 @@ void languages::SortCategories()
     QStringList import_files;
     import_files = import_dir.entryList(xml_filter, QDir::Files);
     QString tag;
-    int c = 0;
+    int tags_counter = 1;
     foreach(tag,tags)
     {
         //qDebug() << "Checking " << tag;
@@ -785,8 +786,8 @@ void languages::SortCategories()
                 }
             }
         }
-        category_file = "sorted/" + category_file;
-        qDebug() << category_file;
+        category_file = "sorted/new/" + category_file;
+        //qDebug() << category_file;
 
         // Open output file
         QFile file_cat(category_file);
@@ -794,7 +795,7 @@ void languages::SortCategories()
         QDomDocument xml_detected;
         xml_detected.setContent(&file_cat);
         file_cat.close();
-        qDebug() << "Detected " << tag;
+        qDebug() << "Sorting tag" << tags_counter << "of" << tags_total_counter << ":" << tag;
 
         // Looking for tag in files
         for(QStringList::Iterator it = import_files.begin(); it != import_files.end(); it++)
@@ -805,10 +806,6 @@ void languages::SortCategories()
             file_input.open(QIODevice::ReadOnly);
             input.setContent(&file_input);
             file_input.close();
-            if (input.firstChildElement("Civ4GameText").firstChildElement("TEXT").isNull())
-            {
-                QFile::remove(current);
-            }
 
             QDomElement input_text_node = input.firstChildElement().firstChildElement();
             for(input_text_node;!input_text_node.isNull();input_text_node = input_text_node.nextSiblingElement())
@@ -817,17 +814,17 @@ void languages::SortCategories()
                 {
                     // Write the node to the correct category
                     QDomElement input_element_node = input_text_node.firstChildElement();
-                    QDomNode xml_detected_node = xml_detected.firstChild();
+                    QDomElement xml_detected_node = xml_detected.firstChildElement();
                     QDomNode xml_text_node = xml_detected.createElement("Text");
-                    qDebug() << xml_detected.firstChildElement().tagName();
+                    //qDebug() << xml_detected.firstChildElement().tagName();
                     xml_detected_node.appendChild(xml_text_node);
-                    qDebug() << xml_detected_node.firstChildElement().tagName();
+                    //qDebug() << xml_detected_node.firstChildElement().tagName();
                     for(input_element_node;!input_element_node.isNull();input_element_node = input_element_node.nextSiblingElement())
                     {
                         // Check if the node is a plural form
                         if (!input_element_node.firstChildElement("Text").isNull())
                         {
-                            qDebug() << "Multiple tag detected";
+                            //qDebug() << "Multiple tag detected";
                             QString element_name = input_element_node.tagName();
                             QString element_text_name = input_element_node.firstChildElement("Text").tagName();
                             QString element_gender_name = input_element_node.firstChildElement("Gender").tagName();
@@ -876,7 +873,7 @@ void languages::SortCategories()
         QFile::remove(category_file);
         file_cat_temp.rename(category_file);
 
-        qDebug() << "Writed " << category_file;
+        //qDebug() << "Writed " << category_file;
 
         // Debug purpose
         /*c++;
@@ -885,8 +882,29 @@ void languages::SortCategories()
         {
             break;
         }*/
+        tags_counter++;
     }
 
+    // Clean up folder and encoding back
+    qDebug() << "Clean up and preparing files";
+    import_files = import_dir.entryList(xml_filter, QDir::Files);
+    for(QStringList::Iterator it = import_files.begin(); it != import_files.end(); it++)
+    {
+        QString file_remove = "sorted/" + *it;
+        QFile::remove(file_remove);
+    }
+    QDir dir_sorted("sorted/new/");
+    QStringList dir_sorted_list;
+    dir_sorted_list = dir_sorted.entryList(xml_filter, QDir::Files);
+    for(QStringList::Iterator it = dir_sorted_list.begin(); it != dir_sorted_list.end(); it++)
+    {
+        QString old_file = "sorted/new/" + *it;
+        //ConvertUTF8ToCiv4(old_file);
+        QString new_file = "sorted/" + *it;
+        QFile::rename(old_file,new_file);
+    }
+    dir_sorted.setPath("sorted/");
+    dir_sorted.rmdir("new/");
 }
 
 void languages::ConvertCiv4ToUTF8(QString file)
