@@ -1,9 +1,11 @@
-- Define new categories for sorting
-- Add a function to track the duplicate entries
-- Cle
-
-Functions:
-- Sort by category. Move duplicate to a temp file.
-- Remove tags with the same input as english / Remove empty tags
-- Import to tags with same files
+TODO:
+- Support for Japanese, Chinese, Hungarian, Russian, Finnish
+- Merge with the game files
+        -> Sort all files then merge back
+        -> Export all Civ 4 Warlords files
+        -> Import all Civ 4 Warlords to plain game
+        -> Export all Civ 4 BTS files
+        -> Import all Civ 4 BTS to newly warlords
+        -> Export all "french" and "polish" updates
+        -> Import the translated strings to new files
 

@@ -1189,6 +1189,7 @@ QStringList languages::ListTags()
 
 void languages::CleanFiles()
 {
+    qDebug() << "Preparing files...";
     QDir dir_import;
     dir_import.rmdir("cleaned/");
     dir_import.mkdir("cleaned");
@@ -1232,10 +1233,10 @@ void languages::CleanFiles()
         input.setContent(&file_input);
         file_input.close();
 
-        QDomElement input_node = input.firstChildElement("Civ4GameText").firstChildElement("TEXT");
+        QDomNode input_node = input.firstChildElement("Civ4GameText").firstChildElement("TEXT");
 
         // Check file integrity
-        if (input_node.text().isNull())
+        if (input.firstChildElement("Civ4GameText").firstChildElement("TEXT").isNull())
         {
             qDebug() << current << " is not properly formatted";
             QFile::remove(current);
@@ -1243,48 +1244,39 @@ void languages::CleanFiles()
         else
         {
             // Check english tag
-            for(input_node;!input_node.isNull();input_node = input_node.nextSiblingElement())
+            for(input_node.firstChild();!input_node.isNull();input_node = input_node.nextSibling())
             {
                 QString english_tag = input_node.firstChildElement("English").firstChild().nodeValue();
+                //qDebug() << english_tag;
                 QDomElement element = input_node.firstChildElement();
-                int wait = 0;
-                QDomNode remove_element;
+                QStringList list_removal;
+                QString list_element;
                 for(element;!element.isNull();element = element.nextSiblingElement())
                 {
-                    // Remove the previous element in the loop if it has been detected
-                    if (wait > 0)
-                    {
-                        remove_element = element.previousSiblingElement();
-                        element.previousSiblingElement().parentNode().removeChild(remove_element);
-                        wait = 0;
-                    }
                     if(element.firstChild().nodeValue() == english_tag && element.tagName() != "English")
                     {
                         QString operation = "FILE: " + *it + " - TAG: " + input_node.firstChildElement("Tag").firstChild().nodeValue() + " - Removing " + element.tagName();
                         print_list << operation;
-                        wait++;
                         s++;
-                        remove_element = element.previousSiblingElement();
+                        list_removal << element.tagName();
                     }
                     else if (element.firstChildElement("Text").isNull() && element.firstChild().nodeValue().isEmpty() && element.tagName() != "English")
                     {
                         QString operation = "FILE: " + *it + " - TAG: " + input_node.firstChildElement("Tag").firstChild().nodeValue() + " - Removing " + element.tagName() + " (empty)";
                         print_list << operation;
-                        wait++;
                         s++;
-                        remove_element = element.previousSiblingElement();
+                        list_removal << element.tagName();
                     }
                 }
-                // Remove the last checked element if it has been detected
-                if (wait > 0)
+                foreach (list_element, list_removal)
                 {
-                    input_node.removeChild(remove_element);
-                    wait = 0;
+                    QDomNode to_remove = input_node.firstChildElement(list_element);
+                    qDebug() << input_node.firstChildElement(list_element).tagName();
+                    input_node.removeChild(to_remove);
                 }
+
             }
         }
-
-
 
         // Save to file
         file_input.open(QIODevice::Truncate | QIODevice::WriteOnly);
@@ -1316,5 +1308,5 @@ void languages::CleanFiles()
         }
         print_file.close();
 
-        qDebug() << "\n\nFiles successfully processed. Modified files are in 'imported/'.\nA report of the modified values have been generated in 'imported/imported_values.txt'";
+        qDebug() << "\n\nFiles successfully processed. Modified files are in 'cleaned/'.\nA report of the modified values have been generated in 'cleaned/_cleaned_values.txt'";
 }
