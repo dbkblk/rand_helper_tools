@@ -52,10 +52,15 @@ int main(int argc, char *argv[])
             xml->ParseAllFiles("it");
             xml->ParseAllFiles("sp");
             xml->ParseAllFiles("po");
+            xml->ParseAllFiles("ja");
+            xml->ParseAllFiles("cn");
+            xml->ParseAllFiles("ru");
+            xml->ParseAllFiles("fi");
+            xml->ParseAllFiles("hu");
             break;
 
         case 2 :
-            std::cout << "Which language do you want to EXPORT (en, fr, ge, it, sp, po) ?\n";
+            std::cout << "Which language do you want to EXPORT (en, fr, ge, it, sp, po, ja, cn, ru, fi, hu) ?\n";
             std::cin >> lang;
             if(lang == "en" && lang == "fr" && lang == "ge" && lang == "it" && lang == "sp" && lang == "po")
             {
@@ -66,7 +71,7 @@ int main(int argc, char *argv[])
             break;
 
         case 3 :
-            std::cout << "Which language do you want to IMPORT (en, fr, ge, it, sp, po) ?\nNB: You can only import one language at a time.\n";
+            std::cout << "Which language do you want to IMPORT (en, fr, ge, it, sp, po, ja, cn, ru, fi, hu) ?\nNB: You can only import one language at a time.\n";
             std::cin >> lang;
             if(lang == "en" && lang == "fr" && lang == "ge" && lang == "it" && lang == "sp" && lang == "po")
             {
@@ -77,7 +82,7 @@ int main(int argc, char *argv[])
             break;
 
         case 4 :
-            std::cout << "Which language do you want to IMPORT (en, fr, ge, it, sp, po) ?\nNB: You can only import one language at a time.\n";
+            std::cout << "Which language do you want to IMPORT (en, fr, ge, it, sp, po, ja, cn, ru, fi, hu) ?\nNB: You can only import one language at a time.\n";
             std::cin >> lang;
             if(lang == "en" && lang == "fr" && lang == "ge" && lang == "it" && lang == "sp" && lang == "po")
             {
@@ -124,7 +129,7 @@ void languages::ParseAllFiles(QString language)
         ParseDocument(*it,language);
     }
 
-    // For debug purpose
+    // Language settings
     QString int_lang;
     int_lang = "English";
     if(language == "fr"){int_lang = "French";};
@@ -132,7 +137,44 @@ void languages::ParseAllFiles(QString language)
     if(language == "it"){int_lang = "Italian";};
     if(language == "sp"){int_lang = "Spanish";};
     if(language == "po"){int_lang = "Polish";};
+    if(language == "ja"){int_lang = "Japanese";};
+    if(language == "cn"){int_lang = "Chinese";};
+    if(language == "ru"){int_lang = "Russian";};
+    if(language == "fi"){int_lang = "Finnish";};
+    if(language == "hu"){int_lang = "Hungarian";};
     QString output_dir = "lang/" + int_lang + "/";
+
+    // Check output files
+    QStringList output_files;
+    QDir output(output_dir);
+    output_files = output.entryList(xml_filter, QDir::Files);
+    for(QStringList::Iterator it = output_files.begin(); it != output_files.end(); it++)
+    {
+        QString current = output_dir + *it;
+        int not_empty_counter = 0;
+        QDomDocument check;
+        QFile file_check(current);
+        file_check.open(QIODevice::ReadOnly);
+        check.setContent(&file_check);
+        file_check.close();
+        QDomElement node_check = check.firstChildElement("resources").firstChildElement("string");
+        for(node_check;!node_check.isNull();node_check = node_check.nextSiblingElement())
+        {
+            if(node_check.firstChild().nodeValue() != "")
+            {
+                not_empty_counter++;
+            }
+        }
+
+        if(not_empty_counter == 0)
+        {
+            file_check.remove();
+        }
+        check.clear();
+
+    }
+
+
     qDebug() << int_lang << " language successfully exported to " << output_dir;
 }
 
@@ -150,6 +192,11 @@ void languages::ParseDocument(QString input_file, QString language)
     if(language == "it"){int_lang = "Italian";};
     if(language == "sp"){int_lang = "Spanish";};
     if(language == "po"){int_lang = "Polish";};
+    if(language == "ja"){int_lang = "Japanese";};
+    if(language == "cn"){int_lang = "Chinese";};
+    if(language == "ru"){int_lang = "Russian";};
+    if(language == "fi"){int_lang = "Finnish";};
+    if(language == "hu"){int_lang = "Hungarian";};
 
     // Getting filenames
     input_file.replace(".XML", ".xml", Qt::CaseSensitive);
@@ -1274,7 +1321,7 @@ void languages::CleanFiles()
                 foreach (list_element, list_removal)
                 {
                     QDomNode to_remove = input_node.firstChildElement(list_element);
-                    qDebug() << input_node.firstChildElement(list_element).tagName();
+                    //qDebug() << input_node.firstChildElement(list_element).tagName();
                     input_node.removeChild(to_remove);
                 }
 

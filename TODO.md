@@ -1,5 +1,6 @@
 TODO:
-- Support for Japanese, Chinese, Hungarian, Russian, Finnish
+- Function: Find unused tags
+- Misc report after sorting
 - Merge with the game files
         -> Sort all files then merge back
         -> Export all Civ 4 Warlords files
