@@ -201,15 +201,18 @@ void languages::ParseDocument(QString input_file, QString language)
         // Check for NULL values or substrings
         if(tag_el.firstChildElement(int_lang).isNull())
         {
-            new_tag.firstChild().setNodeValue("");
+            QDomText write_empty_node = output.createTextNode("");
+            new_tag.appendChild(write_empty_node);
             new_tag.setAttribute("name", value_tag);
         }
         else if (!tag_el.firstChildElement(int_lang).firstChildElement("Text").firstChild().isNull())
         {
             new_tag.appendChild(output.createTextNode(tag_el.firstChildElement(int_lang).firstChildElement("Text").firstChild().nodeValue()));
-            new_tag.setAttribute("plural", tag_el.firstChildElement(int_lang).firstChildElement("Plural").firstChild().nodeValue());
-            new_tag.setAttribute("gender", tag_el.firstChildElement(int_lang).firstChildElement("Gender").firstChild().nodeValue());
             new_tag.setAttribute("name", value_tag);
+            new_tag.setAttribute("gender", tag_el.firstChildElement(int_lang).firstChildElement("Gender").firstChild().nodeValue());
+            new_tag.setAttribute("plural", tag_el.firstChildElement(int_lang).firstChildElement("Plural").firstChild().nodeValue());
+
+
         }
         else
         {
