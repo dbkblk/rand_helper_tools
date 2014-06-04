@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
     int z = 0;
 
     do {
-    qDebug() << "\nMain menu:\n----------\n1 - Export all languages [Civ 4 XML -> Language XML]\n2 - Export a specific language [Civ 4 XML -> Language XML]\n3 - Import language strings to ALL files [Language XML -> Civ 4 XML]\n4 - Import language strings to SAME files [Language XML -> Civ 4 XML]\n5 - Clean files (remove empty markers and language markers if equal from english) [Civ 4 XML]\n6 (Disabled) - Find duplicates files\n7 - Exit program\n\n";
+    qDebug() << "\nMain menu:\n----------\n1 - Export all languages [Civ 4 XML -> Language XML]\n2 - Export a specific language [Civ 4 XML -> Language XML]\n3 - Import language strings to ALL files [Language XML -> Civ 4 XML]\n4 - Import language strings to SAME files [Language XML -> Civ 4 XML]\n5 - Clean files [Civ 4 XML]\n6 - Sort tags in categories [Civ 4 XML]\n7 - \n8 - Exit program\n\n";
     std::cin >> ch;
     std::string lang;
     switch (ch)
@@ -94,11 +94,15 @@ int main(int argc, char *argv[])
             break;
 
         case 6 :
-            xml->FindDuplicates();
+            xml->SortCategories();
             break;
 
         case 7 :
-            xml->SortCategories();
+            xml->FindDuplicates();
+            break;
+
+        case 8:
+            return a.exec();
             break;
 
         default :
@@ -714,7 +718,9 @@ void languages::SortCategories()
 
     // List all tags
     qDebug() << "Listing tags...";
+    QStringList duplicate_tags;
     QStringList tags = ListTags();
+    tags.removeDuplicates();
     int tags_total_counter = tags.count();
     qDebug() << "Detected" << tags_total_counter << "tags";
 
@@ -731,7 +737,7 @@ void languages::SortCategories()
     xml_categories.setContent(&categories);
     categories.close();
 
-    // Initialize all XML files
+    // Initialize all XML classics, pedia and removed
     QDomElement read_categories = xml_categories.firstChildElement().firstChildElement();
     for(read_categories;!read_categories.isNull(); read_categories = read_categories.nextSiblingElement())
     {
@@ -740,14 +746,26 @@ void languages::SortCategories()
         xml_temp.appendChild(xml_temp.createElement("Civ4GameText"));
 
         QString filename = read_categories.attribute("file");
-        filename = "sorted/new/" + filename;
+        QString filename_pedia = "sorted/new/" + filename + "_PEDIA.xml";
+        QString filename_removed = "sorted/new/_REMOVED_TAGS_" + filename + ".xml";
+        filename = "sorted/new/" + filename + ".xml";
         QFile temp(filename);
         temp.open(QIODevice::WriteOnly | QIODevice::Truncate);
         QTextStream ts_temp(&temp);
         xml_temp.save(ts_temp,4);
         temp.close();
+        QFile temp_pedia(filename_pedia);
+        temp_pedia.open(QIODevice::WriteOnly | QIODevice::Truncate);
+        QTextStream ts_pedia(&temp_pedia);
+        xml_temp.save(ts_pedia,4);
+        temp_pedia.close();
+        QFile temp_removed(filename_removed);
+        temp_removed.open(QIODevice::WriteOnly | QIODevice::Truncate);
+        QTextStream ts_removed(&temp_removed);
+        xml_temp.save(ts_removed,4);
+        temp_removed.close();
     }
-    // Create MISC.xml file
+    // Create MISC classic, pedia, and removed
     QDomDocument xml_misc;
     xml_misc.insertBefore(xml_misc.createProcessingInstruction("xml",QString("version=\"1.0\" encoding=\"utf-8\"")),xml_misc.firstChild());
     xml_misc.appendChild(xml_misc.createElement("Civ4GameText"));
@@ -756,6 +774,16 @@ void languages::SortCategories()
     QTextStream ts_temp(&misc);
     xml_misc.save(ts_temp,4);
     misc.close();
+    QFile misc_pedia("sorted/new/MISC_PEDIA.xml");
+    misc_pedia.open(QIODevice::WriteOnly | QIODevice::Truncate);
+    QTextStream ts_temp_pedia(&misc_pedia);
+    xml_misc.save(ts_temp_pedia,4);
+    misc_pedia.close();
+    QFile misc_removed("sorted/new/_REMOVED_TAGS_MISC.xml");
+    misc_removed.open(QIODevice::WriteOnly | QIODevice::Truncate);
+    QTextStream ts_temp_removed(&misc_removed);
+    xml_misc.save(ts_temp_removed,4);
+    misc_removed.close();
 
     /* For each tag in the list, determine category, then check each file and each tag
      * For each tag, check category and copy all the elements to the corresponding file
@@ -768,10 +796,12 @@ void languages::SortCategories()
     int tags_counter = 1;
     foreach(tag,tags)
     {
+        int tag_occurence = 0;
         //qDebug() << "Checking " << tag;
         // Check category of the tag
         QDomElement xml_category = xml_categories.firstChildElement().firstChildElement();
-        QString category_file = "MISC.xml";
+        QString category = "MISC";
+        QString category_file;
         for(xml_category;!xml_category.isNull();xml_category = xml_category.nextSiblingElement())
         {
             //qDebug() << xml_category.attribute("file");
@@ -781,20 +811,22 @@ void languages::SortCategories()
                 //qDebug() << "Comparing " << tag << " to " << xml_category_tag.firstChild().nodeValue();
                 if(tag.startsWith(xml_category_tag.firstChild().nodeValue()))
                 {
-                    category_file = xml_category.attribute("file");
+                    category = xml_category.attribute("file");
 
                 }
             }
         }
-        category_file = "sorted/new/" + category_file;
+        if(tag.contains("_PEDIA"))
+        {
+            category_file = "sorted/new/" + category + "_PEDIA.xml";
+        }
+        else
+        {
+            category_file = "sorted/new/" + category + ".xml";
+        }
+
         //qDebug() << category_file;
 
-        // Open output file
-        QFile file_cat(category_file);
-        file_cat.open(QIODevice::ReadOnly);
-        QDomDocument xml_detected;
-        xml_detected.setContent(&file_cat);
-        file_cat.close();
         qDebug() << "Sorting tag" << tags_counter << "of" << tags_total_counter << ":" << tag;
 
         // Looking for tag in files
@@ -812,6 +844,29 @@ void languages::SortCategories()
             {
                 if(tag == input_text_node.firstChildElement("Tag").firstChild().nodeValue())
                 {
+                    //qDebug() << "Occurence is " << tag_occurence;
+                    QDomDocument xml_detected;
+                    // If tag has already been checked, move the tag to removed file
+                    if(tag_occurence > 0)
+                    {
+                        qDebug() << "Duplicate detected";
+                        QString operation = "TAG:" + tag + " | FILE:" + category + ".xml";
+                        duplicate_tags << operation;
+                        category_file = "sorted/new/_REMOVED_TAGS_" + category + ".xml";
+                        QFile file_cat(category_file);
+                        file_cat.open(QIODevice::ReadOnly);
+                        xml_detected.setContent(&file_cat);
+                        file_cat.close();
+                    }
+                    else
+                    {
+                        // If it's first time, do it the classical way
+                        QFile file_cat(category_file);
+                        file_cat.open(QIODevice::ReadOnly);
+                        xml_detected.setContent(&file_cat);
+                        file_cat.close();
+                    }
+
                     // Write the node to the correct category
                     QDomElement input_element_node = input_text_node.firstChildElement();
                     QDomElement xml_detected_node = xml_detected.firstChildElement();
@@ -858,30 +913,36 @@ void languages::SortCategories()
                         }
                     }
 
+                    // Save the xml
+                    if(tag_occurence > 0)
+                    {
+                        category_file = "sorted/new/_REMOVED_TAGS_" + category + ".xml";
+                        QFile file_cat_temp(category_file + "_TEMP_.xml");
+                        QFile::remove(category_file + "_TEMP_.xml");
+                        file_cat_temp.open(QIODevice::WriteOnly);
+                        QTextStream ts(&file_cat_temp);
+                        xml_detected.save(ts,4);
+                        file_cat_temp.close();
+                        QFile::remove(category_file);
+                        file_cat_temp.rename(category_file);
+                    }
+                    else
+                    {
+                        QFile file_cat_temp("sorted/new/_TEMP_.xml");
+                        QFile::remove("sorted/new/_TEMP_.xml");
+                        file_cat_temp.open(QIODevice::WriteOnly);
+                        QTextStream ts(&file_cat_temp);
+                        xml_detected.save(ts,4);
+                        file_cat_temp.close();
+                        QFile::remove(category_file);
+                        file_cat_temp.rename(category_file);
+                    }
+                    xml_detected.clear();
+                    tag_occurence++;
                 }
             }
-
+            input.clear();
         }
-
-        // Save the xml
-        QFile file_cat_temp(category_file + "_TEMP_.xml");
-        QFile::remove(category_file + "_TEMP_.xml");
-        file_cat_temp.open(QIODevice::WriteOnly);
-        QTextStream ts(&file_cat_temp);
-        xml_detected.save(ts,4);
-        file_cat_temp.close();
-        QFile::remove(category_file);
-        file_cat_temp.rename(category_file);
-
-        //qDebug() << "Writed " << category_file;
-
-        // Debug purpose
-        /*c++;
-        qDebug() << "C is " << c;
-        if (c > 49)
-        {
-            break;
-        }*/
         tags_counter++;
     }
 
@@ -901,10 +962,38 @@ void languages::SortCategories()
         QString old_file = "sorted/new/" + *it;
         QString new_file = "sorted/" + *it;
         QFile::rename(old_file,new_file);
-        ConvertUTF8ToCiv4(new_file);
+        QDomDocument doc_tester;
+        QFile file_tester(new_file);
+        file_tester.open(QIODevice::ReadOnly);
+        doc_tester.setContent(&file_tester);
+        file_tester.close();
+        if (doc_tester.firstChildElement("Civ4GameText").firstChildElement().isNull())
+        {
+            QFile::remove(new_file);
+        }
+        else
+        {
+            ConvertUTF8ToCiv4(new_file);
+        }
     }
     dir_sorted.setPath("sorted/");
     dir_sorted.rmdir("new/");
+
+    // Print duplicate list
+    qDebug() << "Creating duplicates list";
+    QString print_value;
+    QFile print_file("sorted/_duplicates_list.txt");
+
+    if ( print_file.open(QIODevice::ReadWrite) )
+        {
+            QTextStream stream( &print_file );
+
+            foreach(print_value, duplicate_tags)
+            {
+                stream << print_value << endl;
+            }
+        }
+        print_file.close();
 }
 
 void languages::ConvertCiv4ToUTF8(QString file)

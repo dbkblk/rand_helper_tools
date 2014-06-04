@@ -1,22 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <main>
-  <category file="DIPLOMACY.xml">
+  <category file="DIPLOMACY">
     <tag>AI_</tag>
     <tag>USER_</tag>
     <tag>TXT_KEY_MISC_ATTITUDE</tag>
     <tag>TXT_KEY_TRADE</tag>
   </category>
-  <category file="BUILDINGS.xml">
+  <category file="BUILDINGS">
     <tag>MOD_TXT_KEY_BUILDING</tag>
     <tag>TXT_KEY_BUILDING</tag>
   </category>
-  <category file="INTERFACE.xml">
+  <category file="INTERFACE">
     <tag>TXT_KEY_BUG</tag>
     <tag>TXT_KEY_BUFFY</tag>
     <tag>TXT_KEY_AUTOLOG</tag>
     <tag>TXT_KEY_ADVISOR</tag>
     <tag>TXT_KEY_ANGER</tag>
-    <tag>TXT_KEY_BUILD</tag>
     <tag>TXT_KEY_CIV4LERTS</tag>
     <tag>TXT_KEY_COLOR</tag>
     <tag>TXT_KEY_COMMAND</tag>
@@ -39,72 +38,73 @@
     <tag>TXT_KEY_MORECIV4LERTS</tag>
     <tag>TXT_KEY_OPTIONS</tag>
   </category>
-  <category file="RESSOURCES.xml">
+  <category file="RESSOURCES">
     <tag>TXT_KEY_BONUS</tag>
   </category>
-  <category file="ACTIONS.xml">
+  <category file="ACTIONS">
     <tag>TXT_KEY_ACTION</tag>
   </category>
-  <category file="CITY.xml">
+  <category file="CITY">
     <tag>TXT_KEY_CITY</tag>
   </category>
-  <category file="CIVICS.xml">
+  <category file="CIVICS">
     <tag>TXT_KEY_CIVIC</tag>
   </category>
-  <category file="CIVILIZATIONS.xml">
+  <category file="CIVILIZATIONS">
     <tag>TXT_KEY_CIV_</tag>
     <tag>TXT_KEY_TRAIT</tag>
   </category>
-  <category file="COMBAT.xml">
+  <category file="COMBAT">
     <tag>TXT_KEY_COMBAT</tag>
     <tag>TXT_KEY_MISC_ATTACKER</tag>
+    <tag>TXT_ACO_</tag>
   </category>
-  <category file="CONCEPTS.xml">
+  <category file="CONCEPTS">
     <tag>TXT_KEY_CONCEPT</tag>
   </category>
-  <category file="CORPORATIONS.xml">
+  <category file="CORPORATIONS">
     <tag>TXT_KEY_CORPORATION</tag>
   </category>
-  <category file="ESPIONNAGE.xml">
+  <category file="ESPIONNAGE">
     <tag>TXT_KEY_ESPIONAGE</tag>
   </category>
-  <category file="EVENTS.xml">
+  <category file="EVENTS">
     <tag>TXT_KEY_EVENT</tag>
   </category>
-  <category file="GREAT_PERSON.xml">
+  <category file="GREAT_PERSON">
     <tag>TXT_KEY_GREAT_PERSON</tag>
   </category>
-  <category file="IMPROVEMENTS.xml">
+  <category file="IMPROVEMENTS">
     <tag>TXT_KEY_IMPROVEMENT</tag>
   </category>
-  <category file="LEADERS.xml">
+  <category file="LEADERS">
     <tag>TXT_KEY_LEADER</tag>
   </category>
-  <category file="MAP_SCRIPTS.xml">
+  <category file="MAP_SCRIPTS">
     <tag>TXT_KEY_MAP</tag>
   </category>
-  <category file="MISSIONS.xml">
+  <category file="MISSIONS">
     <tag>TXT_KEY_MISSION</tag>
   </category>
-  <category file="PROJECTS.xml">
+  <category file="PROJECTS">
     <tag>TXT_KEY_PROJECT</tag>
   </category>
-  <category file="PROMOTIONS.xml">
+  <category file="PROMOTIONS">
     <tag>TXT_KEY_PROMOTION</tag>
   </category>
-  <category file="RELIGIONS.xml">
+  <category file="RELIGIONS">
     <tag>TXT_KEY_RELIGION</tag>
   </category>
-  <category file="REVOLUTIONS.xml">
+  <category file="REVOLUTIONS">
     <tag>TXT_KEY_REV</tag>
   </category>
-  <category file="STRATEGIES.xml">
+  <category file="STRATEGIES">
     <tag>TXT_KEY_STRATEGY</tag>
   </category>
-  <category file="TECHNOLOGIES.xml">
+  <category file="TECHNOLOGIES">
     <tag>TXT_KEY_TECH</tag>
   </category>
-  <category file="UNITS.xml">
+  <category file="UNITS">
     <tag>TXT_KEY_UNIT</tag>
   </category>
 </main>
