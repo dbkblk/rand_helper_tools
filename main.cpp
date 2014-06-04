@@ -17,7 +17,6 @@ public:
     QString ConvertStringToCiv4(QString string);
     void ConvertCiv4ToUTF8(QString file);
     void ConvertUTF8ToCiv4(QString file);
-    void FindDuplicates();
 
 private:
     QString language;
@@ -41,7 +40,7 @@ int main(int argc, char *argv[])
     int z = 0;
 
     do {
-    qDebug() << "\nMain menu:\n----------\n1 - Export all languages [Civ 4 XML -> Language XML]\n2 - Export a specific language [Civ 4 XML -> Language XML]\n3 - Import language strings to ALL files [Language XML -> Civ 4 XML]\n4 - Import language strings to SAME files [Language XML -> Civ 4 XML]\n5 - Clean files [Civ 4 XML]\n6 - Sort tags in categories [Civ 4 XML]\n7 - \n8 - Exit program\n\n";
+    qDebug() << "\nMain menu:\n----------\n1 - Export all languages [Civ 4 XML -> Language XML]\n2 - Export a specific language [Civ 4 XML -> Language XML]\n3 - Import language strings to ALL files [Language XML -> Civ 4 XML]\n4 - Import language strings to SAME files [Language XML -> Civ 4 XML]\n5 - Clean files [Civ 4 XML]\n6 - Sort tags in categories [Civ 4 XML]\n7 - Exit program\n\n";
     std::cin >> ch;
     std::string lang;
     switch (ch)
@@ -97,12 +96,8 @@ int main(int argc, char *argv[])
             xml->SortCategories();
             break;
 
-        case 7 :
-            xml->FindDuplicates();
-            break;
-
-        case 8:
-            return a.exec();
+        case 7:
+            return 0;
             break;
 
         default :
@@ -1190,187 +1185,6 @@ QStringList languages::ListTags()
     return tags;
 }
 
-void languages::FindDuplicates()
-{
-    qDebug() << "Checking files...";
-    QDir root(".");
-    root.rmdir("duplicates/");
-    root.mkdir("duplicates/");
-
-    QStringList tags = ListTags();
-
-    // Output modified list
-    qDebug() << "Printing list of tags...";
-    QString print_value;
-    QFile print_file("duplicates/_list_of_tags.txt");
-
-    tags.sort();
-
-    if ( print_file.open(QIODevice::Truncate | QIODevice::WriteOnly))
-        {
-            QTextStream stream( &print_file );
-
-            foreach(print_value, tags)
-            {
-                stream << print_value << endl;
-            }
-        }
-    print_file.close();
-
-
-    // Double loop to find duplicates
-    qDebug() << "Checking duplicated tags...";
-    QString loop1;
-    QString loop2;
-    QStringList duplicated_tags;
-
-    foreach(loop1,tags)
-    {
-        int c = 0;
-        foreach(loop2,tags)
-        {
-            if(loop1 == loop2)
-            {
-               c++;
-            }
-        }
-        if (c > 1)
-        {
-            duplicated_tags << loop1;
-        }
-    }
-
-    duplicated_tags.removeDuplicates();
-
-    QString print_value2;
-    QFile print_file2("duplicates/_duplicated_tags.txt");
-
-    if ( print_file2.open(QIODevice::Truncate | QIODevice::WriteOnly))
-        {
-            QTextStream stream2( &print_file2 );
-
-            foreach(print_value2, duplicated_tags)
-            {
-                stream2 << print_value2 << endl;
-            }
-        }
-    print_file2.close();
-
-    // Copy identified files
-    qDebug() << "Copying identified files...";
-    QString tag_value;
-
-    QStringList xml_filter;
-    xml_filter << "*.xml";
-    QStringList files;
-    files = root.entryList(xml_filter, QDir::Files);
-
-    for(QStringList::Iterator it = files.begin(); it != files.end(); it++)
-    {
-        QFile file_in(*it);
-        file_in.open(QIODevice::ReadOnly);
-        QDomDocument xml;
-        xml.setContent(&file_in);
-        QDomElement xml_tag = xml.firstChildElement("Civ4GameText").firstChildElement("TEXT").toElement();
-        if(xml_tag.isNull())
-        {
-            qDebug() << *it << " is not properly formatted";
-            file_in.close();
-        }
-        for(xml_tag;!xml_tag.isNull();xml_tag = xml_tag.nextSiblingElement())
-        {
-            QString tag = xml_tag.firstChildElement("Tag").text();
-            foreach (tag_value, duplicated_tags) {
-                if(tag == tag_value)
-                {
-                    QFile::copy(*it,"duplicates/"+*it);
-                }
-            }
-        }
-
-        file_in.close();
-    }
-
-    // Generate a report
-    qDebug() << "Generating report...";
-    QStringList file_list;
-    QDir duplicate_dir("duplicates/");
-    QStringList duplicate_files;
-    duplicate_files = duplicate_dir.entryList(xml_filter, QDir::Files);
-
-    foreach(tag_value,duplicated_tags)
-    {
-        for(QStringList::Iterator it = duplicate_files.begin(); it != duplicate_files.end(); it++)
-        {
-            QFile file_in(*it);
-            file_in.open(QIODevice::ReadOnly);
-            QDomDocument xml;
-            xml.setContent(&file_in);
-            QDomElement xml_tag = xml.firstChildElement("Civ4GameText").firstChildElement("TEXT").toElement();
-
-            if(xml_tag.isNull())
-            {
-                file_in.close();
-            }
-
-            for(xml_tag;!xml_tag.isNull();xml_tag = xml_tag.nextSiblingElement())
-            {
-                QString tag_value;
-                //qDebug() << xml_tag.firstChildElement("Tag").text();
-
-                if (tag_value == xml_tag.firstChildElement("Tag").text());
-                QString operation;
-                operation = "TAG: " + tag_value + " found in " + *it;
-                //qDebug() << operation;
-                file_list << operation;
-
-            }
-            file_in.close();
-        }
-    }
-
-    QString print_value3;
-    QFile print_file3("duplicates/_report.txt");
-
-    file_list.sort();
-
-    if ( print_file3.open(QIODevice::Truncate | QIODevice::WriteOnly))
-        {
-            QTextStream stream3( &print_file3 );
-
-            foreach(print_value3, file_list)
-            {
-                stream3 << print_value3 << endl;
-            }
-        }
-    print_file3.close();
-
-    /* Old function
-     * // Find duplicate tags
-    QString dupl_old = "";
-    QString dupl_new;
-    QFile dupl_in("export/tag_list.txt");
-    QFile dupl_out("export/duplicates.txt");
-    dupl_in.open(QIODevice::ReadOnly | QIODevice::Text);
-    dupl_out.open(QIODevice::WriteOnly | QIODevice::Truncate);
-    QTextStream in_dupl(&dupl_in);
-    QTextStream out_dupl(&dupl_out);
-    while(!in_dupl.atEnd())
-    {
-        dupl_new = in_dupl.readLine();
-        if(!strcmp(dupl_new.toStdString().c_str(),dupl_old.toStdString().c_str()))
-        {
-            //qDebug() << dupl_new;
-            out_dupl << dupl_new << endl;
-        }
-        dupl_old = dupl_new;
-    }
-    dupl_in.close();
-    dupl_out.close();
-
-    qDebug() << "Duplicates tags have been gathered in 'export/duplicates.txt'";*/
-}
-
 void languages::CleanFiles()
 {
     QDir dir_import;
@@ -1431,12 +1245,14 @@ void languages::CleanFiles()
                 QString english_tag = input_node.firstChildElement("English").firstChild().nodeValue();
                 QDomElement element = input_node.firstChildElement();
                 int wait = 0;
+                QDomNode remove_element;
                 for(element;!element.isNull();element = element.nextSiblingElement())
                 {
                     // Remove the previous element in the loop if it has been detected
                     if (wait > 0)
                     {
-                        element.previousSiblingElement().parentNode().removeChild(element.previousSiblingElement());
+                        remove_element = element.previousSiblingElement();
+                        element.previousSiblingElement().parentNode().removeChild(remove_element);
                         wait = 0;
                     }
                     if(element.firstChild().nodeValue() == english_tag && element.tagName() != "English")
@@ -1445,6 +1261,7 @@ void languages::CleanFiles()
                         print_list << operation;
                         wait++;
                         s++;
+                        remove_element = element.previousSiblingElement();
                     }
                     else if (element.firstChildElement("Text").isNull() && element.firstChild().nodeValue().isEmpty() && element.tagName() != "English")
                     {
@@ -1452,12 +1269,13 @@ void languages::CleanFiles()
                         print_list << operation;
                         wait++;
                         s++;
+                        remove_element = element.previousSiblingElement();
                     }
                 }
                 // Remove the last checked element if it has been detected
                 if (wait > 0)
                 {
-                    element.parentNode().removeChild(element);
+                    input_node.removeChild(remove_element);
                     wait = 0;
                 }
             }
