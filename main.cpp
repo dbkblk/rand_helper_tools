@@ -239,6 +239,7 @@ void languages::ParseDocument(QString input_file, QString language)
 void languages::ImportDocumentToAll(QString language)
 {
     QDir dir_import;
+    dir_import.rmdir("imported/");
     dir_import.mkdir("imported");
 
     // Check language
@@ -462,6 +463,7 @@ void languages::ImportDocumentToAll(QString language)
 void languages::ImportDocumentToSameName(QString language)
 {
     QDir dir_import;
+    dir_import.rmdir("imported/");
     dir_import.mkdir("imported");
 
     // Check language
@@ -695,7 +697,7 @@ void languages::SortCategories()
     // Listing root files
     qDebug() << "Listing files...";
     QDir dir_import;
-    dir_import.rmpath("sorted/");
+    dir_import.rmdir("sorted/");
     dir_import.mkpath("sorted/new/");
     QStringList xml_filter;
     xml_filter << "*.xml";
@@ -1188,6 +1190,7 @@ QStringList languages::ListTags()
 void languages::CleanFiles()
 {
     QDir dir_import;
+    dir_import.rmdir("cleaned/");
     dir_import.mkdir("cleaned");
 
     /* Search the tag trough existing files and replace with the new value if found */
