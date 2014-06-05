@@ -44,7 +44,7 @@
   <category file="ACTIONS">
     <tag>TXT_KEY_ACTION</tag>
   </category>
-  <category file="CITY">
+  <category file="CITIES">
     <tag>TXT_KEY_CITY</tag>
   </category>
   <category file="CIVICS">
@@ -65,13 +65,13 @@
   <category file="CORPORATIONS">
     <tag>TXT_KEY_CORPORATION</tag>
   </category>
-  <category file="ESPIONNAGE">
+  <category file="ESPIONAGE">
     <tag>TXT_KEY_ESPIONAGE</tag>
   </category>
   <category file="EVENTS">
     <tag>TXT_KEY_EVENT</tag>
   </category>
-  <category file="GREAT_PERSON">
+  <category file="GREAT_PERSONS">
     <tag>TXT_KEY_GREAT_PERSON</tag>
   </category>
   <category file="IMPROVEMENTS">

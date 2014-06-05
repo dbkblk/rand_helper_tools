@@ -8,7 +8,7 @@ QT       += core xml
 
 QT       -= gui
 
-TARGET = xml_parser
+TARGET = _xml_parser
 CONFIG   += console
 CONFIG   -= app_bundle
 

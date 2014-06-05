@@ -47,12 +47,12 @@ int main(int argc, char *argv[])
             dir_parse.removeRecursively();
             xml->ParseAllFiles("en");
             xml->ParseAllFiles("fr");
-            xml->ParseAllFiles("ge");
+            xml->ParseAllFiles("de");
             xml->ParseAllFiles("it");
-            xml->ParseAllFiles("sp");
-            xml->ParseAllFiles("po");
+            xml->ParseAllFiles("es");
+            xml->ParseAllFiles("zh");
+            xml->ParseAllFiles("pl");
             xml->ParseAllFiles("ja");
-            xml->ParseAllFiles("cn");
             xml->ParseAllFiles("ru");
             xml->ParseAllFiles("fi");
             xml->ParseAllFiles("hu");
@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
 
         case 2 :
             dir_parse.removeRecursively();
-            std::cout << "Which language do you want to EXPORT (en, fr, ge, it, sp, po, ja, cn, ru, fi, hu) ?\n";
+            std::cout << "Which language do you want to EXPORT (en, fr, de, it, es, pl, ja, zh, ru, fi, hu) ?\n";
             std::cin >> lang;
             xml->ParseAllFiles(QString::fromStdString(lang));
             break;
@@ -122,17 +122,17 @@ void languages::ParseAllFiles(QString language)
     QString int_lang;
     if(language == "en"){int_lang = "English";}
     else if(language == "fr"){int_lang = "French";}
-    else if(language == "ge"){int_lang = "German";}
+    else if(language == "de"){int_lang = "German";}
     else if(language == "it"){int_lang = "Italian";}
-    else if(language == "sp"){int_lang = "Spanish";}
-    else if(language == "po"){int_lang = "Polish";}
+    else if(language == "es"){int_lang = "Spanish";}
+    else if(language == "pl"){int_lang = "Polish";}
     else if(language == "ja"){int_lang = "Japanese";}
-    else if(language == "cn"){int_lang = "Chinese";}
+    else if(language == "zh"){int_lang = "Chinese";}
     else if(language == "ru"){int_lang = "Russian";}
     else if(language == "fi"){int_lang = "Finnish";}
     else if(language == "hu"){int_lang = "Hungarian";}
     else { qDebug() << "Invalid language code. Aborting..."; return;}
-    QString output_dir = "lang/" + int_lang + "/";
+    QString output_dir = "lang/" + language + "/";
 
     // Check output files
     QStringList output_files;
@@ -150,7 +150,7 @@ void languages::ParseAllFiles(QString language)
         QDomElement node_check = check.firstChildElement("resources").firstChildElement("string");
         for(node_check;!node_check.isNull();node_check = node_check.nextSiblingElement())
         {
-            if(node_check.firstChild().nodeValue() != "")
+            if(!node_check.firstChild().nodeValue().isEmpty())
             {
                 not_empty_counter++;
             }
@@ -178,12 +178,12 @@ void languages::ParseDocument(QString input_file, QString language)
 
     // Check language
     if(language == "fr"){int_lang = "French";};
-    if(language == "ge"){int_lang = "German";};
+    if(language == "de"){int_lang = "German";};
     if(language == "it"){int_lang = "Italian";};
-    if(language == "sp"){int_lang = "Spanish";};
-    if(language == "po"){int_lang = "Polish";};
+    if(language == "es"){int_lang = "Spanish";};
+    if(language == "pl"){int_lang = "Polish";};
     if(language == "ja"){int_lang = "Japanese";};
-    if(language == "cn"){int_lang = "Chinese";};
+    if(language == "zh"){int_lang = "Chinese";};
     if(language == "ru"){int_lang = "Russian";};
     if(language == "fi"){int_lang = "Finnish";};
     if(language == "hu"){int_lang = "Hungarian";};
@@ -192,7 +192,7 @@ void languages::ParseDocument(QString input_file, QString language)
     input_file.replace(".XML", ".xml", Qt::CaseSensitive);
     QString input_temp_file = "__temp__" + input_file;
     QFile::copy(input_file,input_temp_file);
-    QString output_dir = "lang/" + int_lang + "/";
+    QString output_dir = "lang/" + language + "/";
     QString output_file = output_dir + input_file;
     QDir dir;
     dir.mkpath(output_dir);
@@ -282,7 +282,7 @@ QStringList languages::CheckImportLanguages()
     QDir dir_import;
     dir_import.setPath("import/");
     QStringList compatible_languages;
-    compatible_languages << "French" << "German" << "Italian" << "Spanish" << "Polish" << "English" << "Japanese" << "Chinese" << "Russian" << "Finnish" << "Hungarian";
+    compatible_languages << "fr" << "de" << "it" << "es" << "pl" << "en" << "ja" << "zh" << "ru" << "fi" << "hu";
     QStringList language_list;
     language_list = dir_import.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
     QStringList language_found;
@@ -465,10 +465,10 @@ void languages::ImportDocumentToAll(QString int_lang, QStringList file_list)
 
                         else if (tag_orig.firstChildElement(int_lang).firstChild().nodeValue().isNull())
                         {
-                            if(!tag_orig.firstChildElement(int_lang).firstChildElement("Text").firstChild().nodeValue().isNull())
+                            if(!tag_orig.firstChildElement(int_lang).firstChildElement().firstChild().nodeValue().isNull())
                             {
                                 //qDebug() << "No value";
-                                value_text = tag_orig.firstChildElement(int_lang).firstChildElement("Text").firstChild().nodeValue();
+                                value_text = tag_orig.firstChildElement(int_lang).firstChildElement().firstChild().nodeValue();
                             }
                             else
                             {
@@ -1182,9 +1182,14 @@ void languages::ConvertCiv4ToUTF8(QString file)
                 write_element.appendChild(write_element_gender);
                 write_element.appendChild(write_element_plural);
 
-                QDomText write_text = write.createTextNode(read_element.firstChildElement("Text").firstChild().nodeValue());
-                QDomText write_gender = write.createTextNode(read_element.firstChildElement("Gender").firstChild().nodeValue());
-                QDomText write_plural = write.createTextNode(read_element.firstChildElement("Plural").firstChild().nodeValue());
+                QString write_text_value = read_element.firstChildElement("Text").firstChild().nodeValue();
+                QString write_gender_value = read_element.firstChildElement("Gender").firstChild().nodeValue();
+                QString write_plural_value = read_element.firstChildElement("Plural").firstChild().nodeValue();
+                write_text_value.replace(QString::fromWCharArray(L"\u38"), "&amp;");
+
+                QDomText write_text = write.createTextNode(write_text_value);
+                QDomText write_gender = write.createTextNode(write_gender_value);
+                QDomText write_plural = write.createTextNode(write_plural_value);
                 write_element_text.appendChild(write_text);
                 write_element_gender.appendChild(write_gender);
                 write_element_plural.appendChild(write_plural);
@@ -1193,7 +1198,9 @@ void languages::ConvertCiv4ToUTF8(QString file)
             {
                 QDomElement write_element = write.createElement(read_element.tagName());
                 write_node.appendChild(write_element);
-                QDomText write_text = write.createTextNode(read_element.firstChild().nodeValue());
+                QString write_text_value = read_element.firstChild().nodeValue();
+                write_text_value.replace(QString::fromWCharArray(L"\u38"), "&amp;");
+                QDomText write_text = write.createTextNode(write_text_value);
                 write_element.appendChild(write_text);
             }
         }
@@ -1334,9 +1341,9 @@ QStringList languages::ListTags()
 void languages::CleanFiles()
 {
     qDebug() << "Preparing files...";
-    QDir dir_import;
-    dir_import.rmdir("cleaned/");
-    dir_import.mkdir("cleaned");
+    QDir dir_import("cleaned/");
+    dir_import.removeRecursively();
+    dir_import.mkdir(".");
 
     /* Search the tag trough existing files and replace with the new value if found */
     QStringList xml_filter;
@@ -1361,7 +1368,7 @@ void languages::CleanFiles()
 
     QStringList print_list;
 
-    // Entering loop
+    // Loop through all files
 
     for(QStringList::Iterator it = import_files.begin(); it != import_files.end(); it++)
     {
@@ -1388,22 +1395,40 @@ void languages::CleanFiles()
         else
         {
             // Check english tag
-            for(input_node.firstChild();!input_node.isNull();input_node = input_node.nextSibling())
+            while(!input_node.isNull())
             {
-                QString english_tag = input_node.firstChildElement("English").firstChild().nodeValue();
-                //qDebug() << english_tag;
-                QDomElement element = input_node.firstChildElement();
-                QStringList list_removal;
-                QString list_element;
-                for(element;!element.isNull();element = element.nextSiblingElement())
+                QString english_tag;
+                // Check plural form english
+                if(!input_node.firstChildElement("English").firstChildElement("Text").isNull())
                 {
-                    if(element.firstChild().nodeValue() == english_tag && element.tagName() != "English")
+                    english_tag = input_node.firstChildElement("English").firstChildElement("Text").firstChild().nodeValue();
+                    //qDebug() << "Found special node" << english_tag;
+                }
+                else
+                {
+                    english_tag = input_node.firstChildElement("English").firstChild().nodeValue();
+                }
+
+                // Compare all elements to english
+                QDomElement element = input_node.firstChildElement();
+                QString list_element;
+                QStringList list_removal;
+                while(!element.isNull())
+                {
+                    // Case: Language subtag with value equal to english
+                    if(!element.firstChildElement("Text").isNull() && element.tagName() != "English" && english_tag == element.firstChildElement("Text").firstChild().nodeValue())
                     {
-                        QString operation = "FILE: " + *it + " - TAG: " + input_node.firstChildElement("Tag").firstChild().nodeValue() + " - Removing " + element.tagName();
+                        // Do nothing
+                    }
+                    // Case: Normal tag with same value as english
+                    else if(element.firstChild().nodeValue() == english_tag && element.tagName() != "English")
+                    {
+                        QString operation = "FILE: " + *it + " - TAG: " + input_node.firstChildElement("Tag").firstChild().nodeValue() + " - Removing " + element.tagName() + " (identical)";
                         print_list << operation;
                         s++;
                         list_removal << element.tagName();
                     }
+                    // Case: Language tag is normal and empty
                     else if (element.firstChildElement("Text").isNull() && element.firstChild().nodeValue().isEmpty() && element.tagName() != "English")
                     {
                         QString operation = "FILE: " + *it + " - TAG: " + input_node.firstChildElement("Tag").firstChild().nodeValue() + " - Removing " + element.tagName() + " (empty)";
@@ -1411,13 +1436,25 @@ void languages::CleanFiles()
                         s++;
                         list_removal << element.tagName();
                     }
+                    // Case: Language tag is subtag and empty
+                    else if (!element.firstChildElement("Text").isNull() && element.firstChildElement("Text").firstChild().nodeValue().isEmpty() && element.tagName() != "English")
+                    {
+                        QString operation = "FILE: " + *it + " - TAG: " + input_node.firstChildElement("Tag").firstChild().nodeValue() + " - Removing " + element.tagName() + " (empty subtag)";
+                        print_list << operation;
+                        s++;
+                        list_removal << element.tagName();
+                    }
+                    element = element.nextSiblingElement();
                 }
-                foreach (list_element, list_removal)
-                {
-                    QDomNode to_remove = input_node.firstChildElement(list_element);
-                    //qDebug() << input_node.firstChildElement(list_element).tagName();
-                    input_node.removeChild(to_remove);
-                }
+
+            foreach (list_element, list_removal)
+            {
+                QDomNode to_remove = input_node.firstChildElement(list_element);
+                //qDebug() << input_node.firstChildElement(list_element).tagName();
+                to_remove.parentNode().removeChild(to_remove);
+            }
+
+            input_node = input_node.nextSibling();
 
             }
         }
