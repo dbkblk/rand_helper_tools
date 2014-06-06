@@ -1,10 +1,10 @@
 TODO:
-- Add arguments to automatize the tool
 - Activate the importation of empty tags
 - Recheck the output if subtag (output but don't do anything)
 - Fix clean up
 - Function: Find unused tags
 - Misc report after sorting
+- Find tag in all files
 - Merge with the game files
         -> Sort all files then merge back
         -> Export all Civ 4 Warlords files
