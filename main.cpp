@@ -32,73 +32,196 @@ int main(int argc, char *argv[])
     languages *xml = new languages();
     QDir dir_parse("lang/");
 
-    qDebug() << "Civilization IV : XML translation tool v0.6\n-------------------------------------------\nNOTA: This executable must be in the same folder than xml files.";
-
-    int ch;
-    int z = 0;
-
-    do {
-    qDebug() << "\nMain menu:\n----------\n1 - Export all languages [Civ 4 XML -> Language XML]\n2 - Export a specific language [Civ 4 XML -> Language XML]\n3 - Import language strings to ALL files [Language XML -> Civ 4 XML]\n4 - Import language strings to SAME files [Language XML -> Civ 4 XML]\n5 (!!WARNING!! WIP)- Clean files [Civ 4 XML]\n6 - Sort tags in categories [Civ 4 XML]\n7 - Find unused tags [Civ 4 XML]\n8 - Exit program\n\n";
-    std::cin >> ch;
-    std::string lang;
-    switch (ch)
+    if(argc > 1)
     {
-        case 1 :
-            dir_parse.removeRecursively();
-            xml->ParseAllFiles("en");
-            xml->ParseAllFiles("fr");
-            xml->ParseAllFiles("de");
-            xml->ParseAllFiles("it");
-            xml->ParseAllFiles("es");
-            xml->ParseAllFiles("zh");
-            xml->ParseAllFiles("pl");
-            xml->ParseAllFiles("ja");
-            xml->ParseAllFiles("ru");
-            xml->ParseAllFiles("fi");
-            xml->ParseAllFiles("hu");
-            break;
-
-        case 2 :
-            dir_parse.removeRecursively();
-            std::cout << "Which language do you want to EXPORT (en, fr, de, it, es, pl, ja, zh, ru, fi, hu) ?\n";
-            std::cin >> lang;
-            xml->ParseAllFiles(QString::fromStdString(lang));
-            break;
-
-        case 3 :
-            xml->ImportAllDocuments(1);;
-            break;
-
-        case 4 :
-            xml->ImportAllDocuments(0);
-            break;
-
-
-        case 5 :
-            xml->CleanFiles();
-            break;
-
-        case 6 :
-            xml->SortCategories();
-            break;
-
-        case 7:
-            xml->FindUnusedTags();
-            break;
-
-        case 8:
-            return 0;
-            break;
-
-        case 9:
-            xml->CheckImportLanguages();
-            break;
-
-        default :
-            break;
-
+        QString arg1 = argv[1];
+        QString arg2 = argv[2];
+        if(arg1 == "export")
+        {
+            if(arg2 == "all")
+            {
+                qDebug() << "Exporting all languages";
+                dir_parse.removeRecursively();
+                xml->ParseAllFiles("en");
+                xml->ParseAllFiles("fr");
+                xml->ParseAllFiles("de");
+                xml->ParseAllFiles("it");
+                xml->ParseAllFiles("es");
+                xml->ParseAllFiles("zh");
+                xml->ParseAllFiles("pl");
+                xml->ParseAllFiles("ja");
+                xml->ParseAllFiles("ru");
+                xml->ParseAllFiles("fi");
+                xml->ParseAllFiles("hu");
+                return 0;
+            }
+            else if(arg2 == "en")
+            {
+                qDebug() << "Exporting English";
+                xml->ParseAllFiles("en");
+                return 0;
+            }
+            else if(arg2 == "fr")
+            {
+                qDebug() << "Exporting French";
+                xml->ParseAllFiles("fr");
+                return 0;
+            }
+            else if(arg2 == "de")
+            {
+                qDebug() << "Exporting German";
+                xml->ParseAllFiles("de");
+                return 0;
+            }
+            else if(arg2 == "it")
+            {
+                qDebug() << "Exporting Italian";
+                xml->ParseAllFiles("it");
+                return 0;
+            }
+            else if(arg2 == "es")
+            {
+                qDebug() << "Exporting Spanish";
+                xml->ParseAllFiles("es");
+                return 0;
+            }
+            else if(arg2 == "zh")
+            {
+                qDebug() << "Exporting Chinese";
+                xml->ParseAllFiles("zh");
+                return 0;
+            }
+            else if(arg2 == "pl")
+            {
+                qDebug() << "Exporting Polish";
+                xml->ParseAllFiles("pl");
+                return 0;
+            }
+            else if(arg2 == "ja")
+            {
+                qDebug() << "Exporting Japanese";
+                xml->ParseAllFiles("ja");
+                return 0;
+            }
+            else if(arg2 == "ru")
+            {
+                qDebug() << "Exporting Russian";
+                xml->ParseAllFiles("ru");
+                return 0;
+            }
+            else if(arg2 == "fi")
+            {
+                qDebug() << "Exporting Finnish";
+                xml->ParseAllFiles("fi");
+                return 0;
+            }
+            else if(arg2 == "hu")
+            {
+                qDebug() << "Exporting Hungarian";
+                xml->ParseAllFiles("hu");
+                return 0;
+            }
+            else
+            {
+                qDebug() << "Language not recognized";
+            }
+        }
+        else if(arg1 == "import")
+        {
+            if(arg2 == "all")
+            {
+                qDebug() << "Importing files to all documents";
+                xml->ImportAllDocuments(1);
+                return 0;
+            }
+            else if(arg2 == "same")
+            {
+                qDebug() << "Importing files to documents with same name only";
+                xml->ImportAllDocuments(0);
+                return 0;
+            }
+            else
+            {
+                qDebug() << "Unknown argument for import (all / same)";
+            }
+        }
+        else if (arg1 == "clean") { xml->CleanFiles(); return 0;}
+        else if (arg1 == "sort") { xml->SortCategories(); return 0;}
+        else
+        {
+            qDebug() << "Unknown argument (all / <lang>)";
+        }
     }
-    } while (z=1);
+    else
+    {
+        qDebug() << "Civilization IV : XML translation tool v0.6\n-------------------------------------------\nNOTA: This executable must be in the same folder than xml files.";
+
+        int ch;
+        int z = 0;
+
+        do {
+        qDebug() << "\nMain menu:\n----------\n1 - Export all languages [Civ 4 XML -> Language XML]\n2 - Export a specific language [Civ 4 XML -> Language XML]\n3 - Import language strings to ALL files [Language XML -> Civ 4 XML]\n4 - Import language strings to SAME files [Language XML -> Civ 4 XML]\n5 (!!WARNING!! WIP)- Clean files [Civ 4 XML]\n6 - Sort tags in categories [Civ 4 XML]\n7 - Find unused tags [Civ 4 XML]\n8 - Exit program\n\n";
+        std::cin >> ch;
+        std::string lang;
+        switch (ch)
+        {
+            case 1 :
+                dir_parse.removeRecursively();
+                xml->ParseAllFiles("en");
+                xml->ParseAllFiles("fr");
+                xml->ParseAllFiles("de");
+                xml->ParseAllFiles("it");
+                xml->ParseAllFiles("es");
+                xml->ParseAllFiles("zh");
+                xml->ParseAllFiles("pl");
+                xml->ParseAllFiles("ja");
+                xml->ParseAllFiles("ru");
+                xml->ParseAllFiles("fi");
+                xml->ParseAllFiles("hu");
+                break;
+
+            case 2 :
+                dir_parse.removeRecursively();
+                std::cout << "Which language do you want to EXPORT (en, fr, de, it, es, pl, ja, zh, ru, fi, hu) ?\n";
+                std::cin >> lang;
+                xml->ParseAllFiles(QString::fromStdString(lang));
+                break;
+
+            case 3 :
+                xml->ImportAllDocuments(1);
+                break;
+
+            case 4 :
+                xml->ImportAllDocuments(0);
+                break;
+
+
+            case 5 :
+                xml->CleanFiles();
+                break;
+
+            case 6 :
+                xml->SortCategories();
+                break;
+
+            case 7:
+                xml->FindUnusedTags();
+                break;
+
+            case 8:
+                return 0;
+                break;
+
+            case 9:
+                xml->CheckImportLanguages();
+                break;
+
+            default :
+                break;
+
+        }
+        } while (z=1);
+    }
 
     return a.exec();
 }
