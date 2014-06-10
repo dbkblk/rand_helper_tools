@@ -164,7 +164,7 @@ int main(int argc, char *argv[])
         int z = 0;
 
         do {
-        qDebug() << "\nMain menu:\n----------\n1 - Export all languages [Civ 4 XML -> Language XML]\n2 - Export a specific language [Civ 4 XML -> Language XML]\n3 - Import language strings to ALL files [Language XML -> Civ 4 XML]\n4 - Import language strings to SAME files [Language XML -> Civ 4 XML]\n5 - Clean files [Civ 4 XML]\n6 - Sort tags in categories [Civ 4 XML]\n7 - Find unused tags [Civ 4 XML]\n8 - Exit program\n\n";
+        qDebug() << "\nMain menu:\n----------\n1 - Export all languages [Civ 4 XML -> Language XML]\n2 - Export a specific language [Civ 4 XML -> Language XML]\n3 - Import language strings to ALL files [Language XML -> Civ 4 XML]\n4 - Import language strings to SAME files [Language XML -> Civ 4 XML]\n5 - Clean files [Civ 4 XML]\n6 - Sort tags in categories [Civ 4 XML]\n7 (WIP) - Find unused tags [Civ 4 XML]\n8 - Exit program\n\n";
         std::cin >> ch;
         std::string lang;
         switch (ch)
@@ -209,15 +209,12 @@ int main(int argc, char *argv[])
                 break;
 
             case 7:
-                xml->FindUnusedTags();
+                std::cout << "Function disabled. Still work in progress\n";
+                //xml->FindUnusedTags();
                 break;
 
             case 8:
                 return 0;
-                break;
-
-            case 9:
-                xml->CheckFiles();
                 break;
 
             default :
@@ -371,7 +368,9 @@ void languages::ParseDocument(QString input_file, QString language)
         }
         else if (!tag_el.firstChildElement(int_lang).firstChildElement("Text").firstChild().isNull())
         {
-            new_tag.appendChild(output.createTextNode(tag_el.firstChildElement(int_lang).firstChildElement("Text").firstChild().nodeValue()));
+            QString node_text_value = tag_el.firstChildElement(int_lang).firstChildElement("Text").firstChild().nodeValue();
+            node_text_value.replace("\"","\\\"");
+            new_tag.appendChild(output.createTextNode(node_text_value));
             new_tag.setAttribute("name", value_tag);
             new_tag.setAttribute("gender", tag_el.firstChildElement(int_lang).firstChildElement("Gender").firstChild().nodeValue());
             new_tag.setAttribute("plural", tag_el.firstChildElement(int_lang).firstChildElement("Plural").firstChild().nodeValue());
@@ -380,7 +379,9 @@ void languages::ParseDocument(QString input_file, QString language)
         }
         else
         {
-            QDomText node_value = output.createTextNode(tag_el.firstChildElement(int_lang).firstChild().nodeValue());
+            QString node_text_value = tag_el.firstChildElement(int_lang).firstChild().nodeValue();
+            node_text_value.replace("\"","\\\"");
+            QDomText node_value = output.createTextNode(node_text_value);
             new_tag.appendChild(node_value);
             new_tag.setAttribute("name", value_tag);
         }
@@ -588,7 +589,7 @@ void languages::ImportDocumentToAll(QString int_lang, QStringList file_list)
                         s++;
                         int skip = 0;
                         QString value_text_tr = tag_tr.firstChild().nodeValue();
-                        value_text_tr.replace("\\'","\'");
+                        value_text_tr.replace("\\'","\'").replace("\\\"","\"").replace("\\t","[TAB]");
                         QString value_text;
 
                         if(value_text_tr == tag_orig.firstChildElement("English").firstChild().nodeValue())
@@ -707,7 +708,8 @@ void languages::ImportDocumentToAll(QString int_lang, QStringList file_list)
 
         // Save to file
         file_input.open(QIODevice::Truncate | QIODevice::WriteOnly);
-        file_input.write(input.toByteArray());
+        QTextStream ts(&file_input);
+        input.save(ts, 3);
         file_input.close();
     }
 
@@ -1284,7 +1286,8 @@ void languages::ConvertCiv4ToUTF8(QString file)
     while(!amp_in.atEnd())
     {
         QString line = amp_in.readLine();
-        line.replace("&#xd;","").replace(QLatin1Char('&'), "&amp;").replace("&amp;amp;","&amp;");
+        line.replace("&#xd;","").replace(QLatin1Char('&'), "&amp;").replace("&amp;amp;","&amp;").replace("&amp;#","&#").replace("&amp;lt;","&lt;").replace("&amp;gt;","&gt;");
+        line.simplified();
         amp_out << line;
     }
     amp_read.close();
@@ -1352,7 +1355,8 @@ void languages::ConvertCiv4ToUTF8(QString file)
             }
         }
     }
-    file_out.write(write.toByteArray());
+    QTextStream ts(&file_out);
+    write.save(ts, 3);
     file_out.close();
     file_in.close();
     QFile::remove(file + "_amptemp_");
@@ -1409,6 +1413,7 @@ void languages::ConvertUTF8ToCiv4(QString file)
                 QDomText write_text = write.createTextNode(ConvertStringToCiv4(read_element.firstChildElement("Text").firstChild().nodeValue()));
                 QDomText write_gender = write.createTextNode(ConvertStringToCiv4(read_element.firstChildElement("Gender").firstChild().nodeValue()));
                 QDomText write_plural = write.createTextNode(ConvertStringToCiv4(read_element.firstChildElement("Plural").firstChild().nodeValue()));
+
                 write_element_text.appendChild(write_text);
                 write_element_gender.appendChild(write_gender);
                 write_element_plural.appendChild(write_plural);
@@ -1423,9 +1428,10 @@ void languages::ConvertUTF8ToCiv4(QString file)
         }
     }
 
-    QTextStream TextStream(&file_out);
-    QString docString = write.toString().replace("&amp;", "&").replace(QLatin1Char('&'), "&amp;").replace("&amp;#","&#").replace("&amp;lt;","&lt;").replace("&amp;gt;","&gt;"); // Fix ampersand crash
-    TextStream << docString;
+    QTextStream ts(&file_out);
+    QString docString = write.toString().replace("&amp;", "&").replace(QLatin1Char('&'), "&amp;").replace("&amp;#","&#").replace("&amp;lt;","&lt;").replace("&amp;gt;","&gt;").replace("&amp;amp;","&amp;");
+    ts << docString;
+    //write.save(ts, 3);
     file_out.close();
     file_in.close();
 
@@ -1449,6 +1455,7 @@ QString languages::ConvertStringToCiv4(QString string)
             encode += ch;
         }
     }
+    encode.replace("&amp;", "&").replace(QLatin1Char('&'), "&amp;").replace("&amp;#","&#").replace("&amp;lt;","&lt;").replace("&amp;gt;","&gt;");
     return encode;
 }
 
