@@ -1274,9 +1274,26 @@ void languages::ConvertCiv4ToUTF8(QString file)
      * Save the content to another file
      * Replace the other file with the first */
 
+    // First, pure read to remove faulty characters
+    QFile amp_read(file);
+    QFile amp_write(file + "_amptemp_");
+    amp_read.open(QIODevice::ReadOnly);
+    amp_write.open(QIODevice::WriteOnly);
+    QTextStream amp_in(&amp_read);
+    QTextStream amp_out(&amp_write);
+    while(!amp_in.atEnd())
+    {
+        QString line = amp_in.readLine();
+        line.replace("&#xd;","").replace(QLatin1Char('&'), "&amp;").replace("&amp;amp;","&amp;");
+        amp_out << line;
+    }
+    amp_read.close();
+    amp_write.close();
+
+
     // Open the input file
     QDomDocument read;
-    QFile file_in(file);
+    QFile file_in(file + "_amptemp_");
     file_in.open(QIODevice::ReadOnly);
     read.setContent(&file_in);
     QDomElement read_text = read.firstChildElement("Civ4GameText").firstChildElement("TEXT");
@@ -1316,7 +1333,6 @@ void languages::ConvertCiv4ToUTF8(QString file)
                 QString write_text_value = read_element.firstChildElement("Text").firstChild().nodeValue();
                 QString write_gender_value = read_element.firstChildElement("Gender").firstChild().nodeValue();
                 QString write_plural_value = read_element.firstChildElement("Plural").firstChild().nodeValue();
-                write_text_value.replace(QString::fromWCharArray(L"\u38"), "&amp;");
 
                 QDomText write_text = write.createTextNode(write_text_value);
                 QDomText write_gender = write.createTextNode(write_gender_value);
@@ -1330,7 +1346,7 @@ void languages::ConvertCiv4ToUTF8(QString file)
                 QDomElement write_element = write.createElement(read_element.tagName());
                 write_node.appendChild(write_element);
                 QString write_text_value = read_element.firstChild().nodeValue();
-                write_text_value.replace(QString::fromWCharArray(L"\u38"), "&amp;");
+
                 QDomText write_text = write.createTextNode(write_text_value);
                 write_element.appendChild(write_text);
             }
@@ -1339,6 +1355,7 @@ void languages::ConvertCiv4ToUTF8(QString file)
     file_out.write(write.toByteArray());
     file_out.close();
     file_in.close();
+    QFile::remove(file + "_amptemp_");
     QFile::remove(file);
     QFile::rename("rewrite.xml",file);
 }
