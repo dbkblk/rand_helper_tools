@@ -969,6 +969,36 @@ void languages::ImportDocumentToSameName(QString int_lang, QStringList file_list
 
 void languages::SortCategories()
 {
+    /* Sorting logic */
+    /* Check parse file presence
+     * Prepare original files by converting them to UTF8
+     * List all tags in a QStringList
+     * Initialize all XML files by category plus MISC. Add a _PEDIA and _REMOVED_ for all categories
+     * For each tag (until the end of the list):
+        * Check category
+        * Open category file
+        * Check all files looking for the tag
+        * Check if the tag has already been found
+        * Add the tag to the category file
+        * Save category file
+    * Convert the files back to Civ4
+    * Print the duplicate list */
+
+    /* New logic:
+     * =Check parse file presence
+     * Prepare original files by converting them to UTF8
+     * List all tags in a QStringList
+     * Initialize all XML files by category plus MISC. Add a _PEDIA and _REMOVED_ for all categories
+     * Open all XMLDocuments categories in memory
+     * For each tag (until the end of the list):
+        * Check category
+        * Check all files looking for the tag
+        * Check if the tag has already been found
+        * Add the tag to the XML Document
+    * Save all XML Documents
+    * Convert the files back to Civ4
+    * Print the duplicate list */
+
     // Check requirements
     QFile categories("_categories.parse");
     if(!categories.exists())
