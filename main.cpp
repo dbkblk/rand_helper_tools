@@ -989,6 +989,77 @@ void languages::SortCategories()
         ConvertCiv4ToUTF8("sorted/"+*it);
     }
 
+    /* Collect all tags in a bigfile */
+    qDebug() << "Collecting all tags to a file";
+    QDomDocument xml_collect;
+    QFile xml_collect_file("sorted/TEMP");
+    xml_collect_file.open(QIODevice::WriteOnly | QIODevice::Truncate);
+
+    // Create the output file
+    QDomNode declaration = xml_collect.createProcessingInstruction("xml",QString("version=\"1.0\" encoding=\"UTF-8\""));
+    xml_collect.insertBefore(declaration,xml_collect.firstChild());
+    QDomNode collect_root = xml_collect.createElement("Civ4GameText");
+    xml_collect.appendChild(collect_root);
+
+   // Loop the input file
+    for(QStringList::Iterator it = root_files.begin(); it != root_files.end(); it++)
+    {
+        QString current = "sorted/" + *it;
+        QDomDocument read;
+        QFile file_in(current);
+        file_in.open(QIODevice::ReadOnly);
+        read.setContent(&file_in);
+        QDomNode read_text = read.firstChildElement("Civ4GameText").firstChildElement();
+
+        for (read_text;!read_text.isNull();read_text = read_text.nextSiblingElement())
+        {
+            QDomElement read_element = read_text.firstChildElement();
+            QDomElement collect_node = xml_collect.createElement("TEXT");
+            collect_root.appendChild(collect_node);
+
+            for (read_element;!read_element.isNull();read_element = read_element.nextSiblingElement())
+            {
+                //qDebug() << read_element.tagName();
+                if(!read_element.firstChildElement("Text").isNull())
+                {
+                    QDomElement collect_element = xml_collect.createElement(read_element.tagName());
+                    collect_node.appendChild(collect_element);
+                    QDomElement collect_element_text = xml_collect.createElement("Text");
+                    QDomElement collect_element_gender = xml_collect.createElement("Gender");
+                    QDomElement collect_element_plural = xml_collect.createElement("Plural");
+                    collect_element.appendChild(collect_element_text);
+                    collect_element.appendChild(collect_element_gender);
+                    collect_element.appendChild(collect_element_plural);
+
+                    QString collect_text_value = read_element.firstChildElement("Text").firstChild().nodeValue();
+                    QString collect_gender_value = read_element.firstChildElement("Gender").firstChild().nodeValue();
+                    QString collect_plural_value = read_element.firstChildElement("Plural").firstChild().nodeValue();
+
+                    QDomText collect_text = xml_collect.createTextNode(collect_text_value);
+                    QDomText collect_gender = xml_collect.createTextNode(collect_gender_value);
+                    QDomText collect_plural = xml_collect.createTextNode(collect_plural_value);
+                    collect_element_text.appendChild(collect_text);
+                    collect_element_gender.appendChild(collect_gender);
+                    collect_element_plural.appendChild(collect_plural);
+                }
+                else
+                {
+                    QDomElement collect_element = xml_collect.createElement(read_element.tagName());
+                    collect_node.appendChild(collect_element);
+
+                    QString collect_text_value = read_element.firstChild().nodeValue();
+
+                    QDomText collect_text = xml_collect.createTextNode(collect_text_value);
+                    collect_element.appendChild(collect_text);
+                }
+            }
+        }
+        file_in.close();
+    }
+    QTextStream ts(&xml_collect_file);
+    xml_collect.save(ts, 3);
+    xml_collect_file.close();
+
     // List all tags
     qDebug() << "Listing tags...";
     QStringList duplicate_tags;
@@ -1056,11 +1127,15 @@ void languages::SortCategories()
      * For each tag, check category and copy all the elements to the corresponding file
      * If a tag has already been found, copy it in "removed_category" file */
 
+    QString tag;
+    int tags_counter = 1;
     QDir import_dir("sorted/");
     QStringList import_files;
     import_files = import_dir.entryList(xml_filter, QDir::Files);
-    QString tag;
-    int tags_counter = 1;
+
+    xml_collect_file.open(QIODevice::ReadOnly);
+    QDomDocument input;
+    input.setContent(&xml_collect_file);
     foreach(tag,tags)
     {
         int tag_occurence = 0;
@@ -1096,16 +1171,7 @@ void languages::SortCategories()
 
         qDebug() << "Sorting tag" << tags_counter << "of" << tags_total_counter << ":" << tag;
 
-        // Looking for tag in files
-        for(QStringList::Iterator it = import_files.begin(); it != import_files.end(); it++)
-        {
-            QString current = "sorted/" + *it;
-            QDomDocument input;
-            QFile file_input(current);
-            file_input.open(QIODevice::ReadOnly);
-            input.setContent(&file_input);
-            file_input.close();
-
+        // Looking for tag in the file
             QDomElement input_text_node = input.firstChildElement().firstChildElement();
             for(input_text_node;!input_text_node.isNull();input_text_node = input_text_node.nextSiblingElement())
             {
@@ -1208,14 +1274,13 @@ void languages::SortCategories()
                     tag_occurence++;
                 }
             }
-            input.clear();
-        }
         tags_counter++;
     }
 
     // Clean up folder and encoding back
     qDebug() << "Clean up and preparing files";
     import_files = import_dir.entryList(xml_filter, QDir::Files);
+    QFile::remove("sorted/TEMP");
     for(QStringList::Iterator it = import_files.begin(); it != import_files.end(); it++)
     {
         QString file_remove = "sorted/" + *it;
