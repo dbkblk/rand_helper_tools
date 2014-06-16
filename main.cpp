@@ -15,7 +15,7 @@ public:
     void ImportAllDocuments(bool all_files);
     void ImportDocumentToAll(QString int_lang, QStringList file_list);
     void ImportDocumentToSameName(QString int_lang, QStringList file_list);
-    QStringList ListTags();
+    QStringList ListTags(QString dir);
     void CleanFiles();
     void SortCategories();
     void SortCategoriesExperimental();
@@ -1063,7 +1063,7 @@ void languages::SortCategories()
     // List all tags
     qDebug() << "Listing tags...";
     QStringList duplicate_tags;
-    QStringList tags = ListTags();
+    QStringList tags = ListTags(".");
     tags.removeDuplicates();
     int tags_total_counter = tags.count();
     qDebug() << "Detected" << tags_total_counter << "tags";
@@ -1388,6 +1388,12 @@ void languages::SortCategories()
             }
         }
     print_file.close();
+
+    QStringList tags_output = ListTags("sorted/");
+    tags_output.removeDuplicates();
+    int tags_output_counter = tags_output.count();
+
+    qDebug() << "Original tag number:" << tags_total_counter << "| New tag number:" << tags_output_counter;
 }
 
 void languages::ConvertCiv4ToUTF8(QString file)
@@ -1776,13 +1782,13 @@ QString languages::ConvertRussianToLatin1(QString string)
     return encode;
 }
 
-QStringList languages::ListTags()
+QStringList languages::ListTags(QString dir)
 {
     QStringList tags;
     QStringList xml_filter;
     xml_filter << "*.xml";
     QStringList files;
-    QDir root(".");
+    QDir root(dir);
     files = root.entryList(xml_filter, QDir::Files);
 
     for(QStringList::Iterator it = files.begin(); it != files.end(); it++)
@@ -1976,7 +1982,7 @@ void languages::FindUnusedTags()
 
     // List tags
     qDebug() << "Listing tags...";
-    QStringList list_tags = ListTags();
+    QStringList list_tags = ListTags(".");
     QString tag;
     list_tags.removeDuplicates();
     int tags_total_counter = list_tags.count();
@@ -1997,393 +2003,9 @@ void languages::FindUnusedTags()
         {
             qDebug() << iterator.fileName();
             QFile file(iterator.filePath());
-            /*if(!file.open(QFile::ReadOnly))
-            {
-                qDebug() << "Can't open" << iterator.filePath();
-            }
-            QTextStream ts(&file);
-            while(!ts.atEnd())
-            {
-                QString tag_check = ts.readLine();
-                if(tag_check.contains(tag))
-                {
-                    qDebug() << "Tag:" << tag << "found in" << iterator.filePath();
-                    found++;
-                }
-            }*/
-
 
         }while (iterator.hasNext() || found == 0);
     }
 
 
-}
-
-void languages::SortCategoriesExperimental()
-{
-    /* New logic:
-     * Check parse file presence
-     * Prepare original files by converting them to UTF8
-     * List all tags in a QStringList
-     * Initialize all XML files by category plus MISC. Add a _PEDIA and _REMOVED_ for all categories
-     * For each category:
-        * Open the XML document in memory
-        * Look for each tag which is contained in category
-            * Check all files looking for the tag
-            * Check if the tag has already been found
-            * Add the tag to the XML Document
-        * Save the XML document
-    * Convert the files back to Civ4
-    * Print the duplicate list */
-
-    // Check requirements
-
-    QFile categories("_categories.parse");
-    if(!categories.exists())
-    {
-       qDebug() << "The parser need a '_categories.parse' file to continue. Aborting...";
-       return;
-    }
-
-    // Prepare original files by converting them to UTF8
-
-    qDebug() << "Listing files...";
-    QDir dir_import("sorted/");
-    dir_import.removeRecursively();
-    dir_import.mkpath("new/");
-    QStringList xml_filter;
-    xml_filter << "*.xml";
-    QDir root(".");
-    QStringList root_files;
-    root_files = root.entryList(xml_filter, QDir::Files);
-
-    qDebug() << "Copying files...";
-    for(QStringList::Iterator it = root_files.begin(); it != root_files.end(); it++)
-    {
-        QFile::copy(*it,"sorted/"+*it);
-        ConvertCiv4ToUTF8("sorted/"+*it);
-    }
-
-    // List all tags in a QStringList
-
-    qDebug() << "Listing tags...";
-    QStringList duplicate_tags;
-    QStringList tags = ListTags();
-    tags.removeDuplicates();
-    int tags_total_counter = tags.count();
-    qDebug() << "Detected" << tags_total_counter << "tags";
-
-    // Initialize all XML files by category plus MISC. Add a _PEDIA and _REMOVED_ for all categories
-
-    qDebug() << "Checking categories...";
-    QDomDocument xml_categories;
-    categories.open(QIODevice::ReadOnly);
-    xml_categories.setContent(&categories);
-    categories.close();
-
-    QStringList categories_list;
-
-    QDomElement read_categories = xml_categories.firstChildElement().firstChildElement();
-    for(read_categories;!read_categories.isNull(); read_categories = read_categories.nextSiblingElement())
-    {
-        QDomDocument xml_temp;
-        xml_temp.insertBefore(xml_temp.createProcessingInstruction("xml",QString("version=\"1.0\" encoding=\"utf-8\"")),xml_temp.firstChild());
-        xml_temp.appendChild(xml_temp.createElement("Civ4GameText"));
-
-        QString filename = read_categories.attribute("file");
-        QString filename_pedia = "sorted/new/" + filename + "_PEDIA.xml";
-        QString filename_removed = "sorted/new/_REMOVED_TAGS_" + filename + ".xml";
-        filename = "sorted/new/" + filename + ".xml";
-        categories_list << filename << filename + "_PEDIA";
-        QFile temp(filename);
-        temp.open(QIODevice::WriteOnly | QIODevice::Truncate);
-        QTextStream ts_temp(&temp);
-        xml_temp.save(ts_temp,4);
-        temp.close();
-        QFile temp_pedia(filename_pedia);
-        temp_pedia.open(QIODevice::WriteOnly | QIODevice::Truncate);
-        QTextStream ts_pedia(&temp_pedia);
-        xml_temp.save(ts_pedia,4);
-        temp_pedia.close();
-        QFile temp_removed(filename_removed);
-        temp_removed.open(QIODevice::WriteOnly | QIODevice::Truncate);
-        QTextStream ts_removed(&temp_removed);
-        xml_temp.save(ts_removed,4);
-        temp_removed.close();
-    }
-    // Create MISC classic, pedia, and removed
-    QDomDocument xml_misc;
-    xml_misc.insertBefore(xml_misc.createProcessingInstruction("xml",QString("version=\"1.0\" encoding=\"utf-8\"")),xml_misc.firstChild());
-    xml_misc.appendChild(xml_misc.createElement("Civ4GameText"));
-    QFile misc("sorted/new/MISC.xml");
-    misc.open(QIODevice::WriteOnly | QIODevice::Truncate);
-    QTextStream ts_temp(&misc);
-    xml_misc.save(ts_temp,4);
-    misc.close();
-    QFile misc_pedia("sorted/new/MISC_PEDIA.xml");
-    misc_pedia.open(QIODevice::WriteOnly | QIODevice::Truncate);
-    QTextStream ts_temp_pedia(&misc_pedia);
-    xml_misc.save(ts_temp_pedia,4);
-    misc_pedia.close();
-    QFile misc_removed("sorted/new/_REMOVED_TAGS_MISC.xml");
-    misc_removed.open(QIODevice::WriteOnly | QIODevice::Truncate);
-    QTextStream ts_temp_removed(&misc_removed);
-    xml_misc.save(ts_temp_removed,4);
-    misc_removed.close();
-    categories_list << "MISC" << "MISC_PEDIA";
-
-    QDir import_dir("sorted/");
-    QStringList import_files;
-    import_files = import_dir.entryList(xml_filter, QDir::Files);
-
-    /* For each category:
-        * Open the XML document in memory
-        * Look for each tag which is contained in category
-            * Check all files looking for the tag
-            * Check if the tag has already been found
-            * Add the tag to the XML Document
-        * Save the XML document */
-    QString tag;
-    int tags_counter = 1;
-    QString category;
-
-    foreach(category,categories_list){
-        int pedia = 0;
-
-        // Check civilopedia entry
-
-        if(category.contains("_PEDIA")){
-            pedia = 1;
-        }
-
-        // Open document in memory
-        QString xml_path = "sorted/new/" + category + ".xml";
-        QFile xml_file(xml_path);
-        xml_file.open(QIODevice::ReadOnly);
-        QDomDocument xml_cat;
-        xml_cat.setContent(&xml_file);
-        xml_file.close();
-
-        // Look for each element in category
-        QStringList categories_list_exceptions;
-        QDomElement xml_category = xml_categories.firstChildElement().firstChildElement();
-        for(xml_category;!xml_category.isNull();xml_category = xml_category.nextSiblingElement())
-        {
-            QDomElement xml_category_tag = xml_category.firstChildElement();
-            for(xml_category_tag;!xml_category_tag.isNull();xml_category_tag = xml_category_tag.nextSiblingElement())
-            {
-                categories_list_exceptions << xml_category_tag.firstChild().nodeValue();
-            }
-        }
-
-        // Look for each tag which is contained in category
-
-        foreach(tag,tags)
-        {
-            int tag_occurence = 0;
-            // Check if tag is in category
-            //if()
-
-            // Check all files looking for the tag
-
-            // Check category of the tag
-            QDomElement xml_category = xml_categories.firstChildElement().firstChildElement();
-            QString category = "MISC";
-            QString category_file;
-            for(xml_category;!xml_category.isNull();xml_category = xml_category.nextSiblingElement())
-            {
-                //qDebug() << xml_category.attribute("file");
-                QDomElement xml_category_tag = xml_category.firstChildElement();
-                for(xml_category_tag;!xml_category_tag.isNull();xml_category_tag = xml_category_tag.nextSiblingElement())
-                {
-                    //qDebug() << "Comparing " << tag << " to " << xml_category_tag.firstChild().nodeValue();
-                    if(tag.startsWith(xml_category_tag.firstChild().nodeValue()))
-                    {
-                        category = xml_category.attribute("file");
-
-                    }
-                }
-            }
-            if(tag.contains("_PEDIA"))
-            {
-                category_file = "sorted/new/" + category + "_PEDIA.xml";
-            }
-            else
-            {
-                category_file = "sorted/new/" + category + ".xml";
-            }
-
-            //qDebug() << category_file;
-
-            qDebug() << "Sorting tag" << tags_counter << "of" << tags_total_counter << ":" << tag;
-
-            // Looking for tag in files
-            for(QStringList::Iterator it = import_files.begin(); it != import_files.end(); it++)
-            {
-                QString current = "sorted/" + *it;
-                QDomDocument input;
-                QFile file_input(current);
-                file_input.open(QIODevice::ReadOnly);
-                input.setContent(&file_input);
-                file_input.close();
-
-                QDomElement input_text_node = input.firstChildElement().firstChildElement();
-                for(input_text_node;!input_text_node.isNull();input_text_node = input_text_node.nextSiblingElement())
-                {
-                    if(tag == input_text_node.firstChildElement("Tag").firstChild().nodeValue())
-                    {
-                        //qDebug() << "Occurence is " << tag_occurence;
-                        QDomDocument xml_detected;
-                        // If tag has already been checked, move the tag to removed file
-                        if(tag_occurence > 0)
-                        {
-                            qDebug() << "Duplicate detected";
-                            QString operation = "TAG:" + tag + " | FILE:" + category + ".xml";
-                            duplicate_tags << operation;
-                            category_file = "sorted/new/_REMOVED_TAGS_" + category + ".xml";
-                            QFile file_cat(category_file);
-                            file_cat.open(QIODevice::ReadOnly);
-                            xml_detected.setContent(&file_cat);
-                            file_cat.close();
-                        }
-                        else
-                        {
-                            // If it's first time, do it the classical way
-                            QFile file_cat(category_file);
-                            file_cat.open(QIODevice::ReadOnly);
-                            xml_detected.setContent(&file_cat);
-                            file_cat.close();
-                        }
-
-                        // Write the node to the correct category
-                        QDomElement input_element_node = input_text_node.firstChildElement();
-                        QDomElement xml_detected_node = xml_detected.firstChildElement();
-                        QDomNode xml_text_node = xml_detected.createElement("Text");
-                        //qDebug() << xml_detected.firstChildElement().tagName();
-                        xml_detected_node.appendChild(xml_text_node);
-                        //qDebug() << xml_detected_node.firstChildElement().tagName();
-                        for(input_element_node;!input_element_node.isNull();input_element_node = input_element_node.nextSiblingElement())
-                        {
-                            // Check if the node is a plural form
-                            if (!input_element_node.firstChildElement("Text").isNull())
-                            {
-                                //qDebug() << "Multiple tag detected";
-                                QString element_name = input_element_node.tagName();
-                                QString element_text_name = input_element_node.firstChildElement("Text").tagName();
-                                QString element_gender_name = input_element_node.firstChildElement("Gender").tagName();
-                                QString element_plural_name = input_element_node.firstChildElement("Plural").tagName();
-
-                                QDomNode node_element_name = xml_detected.createElement(element_name);
-                                QDomElement node_element_text_name = xml_detected.createElement(element_text_name);
-                                QDomElement node_element_gender_name = xml_detected.createElement(element_gender_name);
-                                QDomElement node_element_plural_name = xml_detected.createElement(element_plural_name);
-
-                                xml_text_node.appendChild(node_element_name);
-                                node_element_name.appendChild(node_element_text_name);
-                                node_element_name.appendChild(node_element_gender_name);
-                                node_element_name.appendChild(node_element_plural_name);
-
-                                QString element_text_value = input_element_node.firstChildElement("Text").firstChild().nodeValue();
-                                QString element_gender_value = input_element_node.firstChildElement("Gender").firstChild().nodeValue();
-                                QString element_plural_value = input_element_node.firstChildElement("Plural").firstChild().nodeValue();
-
-                                node_element_text_name.appendChild(xml_detected.createTextNode(element_text_value));
-                                node_element_gender_name.appendChild(xml_detected.createTextNode(element_gender_value));
-                                node_element_plural_name.appendChild(xml_detected.createTextNode(element_plural_value));
-                            }
-                            else
-                            {
-                                QString element_name = input_element_node.tagName();
-                                QString element_value = input_element_node.firstChild().nodeValue();
-                                QDomElement node_element_name = xml_detected.createElement(element_name);
-                                xml_text_node.appendChild(node_element_name);
-                                node_element_name.appendChild(xml_detected.createTextNode(element_value));
-                            }
-                        }
-
-                        // Save the xml
-                        if(tag_occurence > 0)
-                        {
-                            category_file = "sorted/new/_REMOVED_TAGS_" + category + ".xml";
-                            QFile file_cat_temp(category_file + "_TEMP_.xml");
-                            QFile::remove(category_file + "_TEMP_.xml");
-                            file_cat_temp.open(QIODevice::WriteOnly);
-                            QTextStream ts(&file_cat_temp);
-                            xml_detected.save(ts,4);
-                            file_cat_temp.close();
-                            QFile::remove(category_file);
-                            file_cat_temp.rename(category_file);
-                        }
-                        else
-                        {
-                            QFile file_cat_temp("sorted/new/_TEMP_.xml");
-                            QFile::remove("sorted/new/_TEMP_.xml");
-                            file_cat_temp.open(QIODevice::WriteOnly);
-                            QTextStream ts(&file_cat_temp);
-                            xml_detected.save(ts,4);
-                            file_cat_temp.close();
-                            QFile::remove(category_file);
-                            file_cat_temp.rename(category_file);
-                        }
-                        xml_detected.clear();
-                        tag_occurence++;
-                    }
-                }
-                input.clear();
-            }
-            tags_counter++;
-        }
-    }
-
-
-
-
-    // Clean up folder and encoding back
-    qDebug() << "Clean up and preparing files";
-    import_files = import_dir.entryList(xml_filter, QDir::Files);
-    for(QStringList::Iterator it = import_files.begin(); it != import_files.end(); it++)
-    {
-        QString file_remove = "sorted/" + *it;
-        QFile::remove(file_remove);
-    }
-    QDir dir_sorted("sorted/new/");
-    QStringList dir_sorted_list;
-    dir_sorted_list = dir_sorted.entryList(xml_filter, QDir::Files);
-    for(QStringList::Iterator it = dir_sorted_list.begin(); it != dir_sorted_list.end(); it++)
-    {
-        QString old_file = "sorted/new/" + *it;
-        QString new_file = "sorted/" + *it;
-        QFile::rename(old_file,new_file);
-        QDomDocument doc_tester;
-        QFile file_tester(new_file);
-        file_tester.open(QIODevice::ReadOnly);
-        doc_tester.setContent(&file_tester);
-        file_tester.close();
-        if (doc_tester.firstChildElement("Civ4GameText").firstChildElement().isNull())
-        {
-            QFile::remove(new_file);
-        }
-        else
-        {
-            ConvertUTF8ToCiv4(new_file);
-        }
-    }
-    dir_sorted.setPath("sorted/");
-    dir_sorted.rmdir("new/");
-
-    // Print duplicate list
-    qDebug() << "Creating duplicates list";
-    QString print_value;
-    QFile print_file("sorted/_duplicates_list.txt");
-
-    if ( print_file.open(QIODevice::ReadWrite) )
-        {
-            QTextStream stream( &print_file );
-
-            foreach(print_value, duplicate_tags)
-            {
-                stream << print_value << endl;
-            }
-        }
-        print_file.close();
 }
