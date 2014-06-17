@@ -240,5 +240,6 @@ At the end, you will have sorted files with the last strings values known. That'
 
 ## FURTHER DEVELOPMENT
 
--> Backup and remove a specific language
--> Detect unused tag based on python and xml files in «Assets»
+- Backup and remove a specific language
+- Detect unused tag based on python and xml files in «Assets»
+- Support of Sinhala language
