@@ -58,11 +58,13 @@ It need to have files in the folder Text/import/<lang>/. In fact, it just read a
 For the example above, it will read <French>Mod montagnes</French> and compare it to the text in the Text/import/<lang>/ file tag it is computing.
 If the import file tag is <string name="TXT_KEY_CONCEPT_MOUNTAINS_TEXT">Mod montagnes</string>, then it will find that strings are identical then go to the next tag.
 The parser is also capable to read subtags, like
-<French>
-	<Text>Mod montagnes</Text>
-	<Gender>Female</Gender>
-	<Plural>0</Plural>
-</French>
+
+	<French>
+		<Text>Mod montagnes</Text>
+		<Gender>Female</Gender>
+		<Plural>0</Plural>
+	</French>
+
 It will compare the subtag text with the android xml files.
 If the values are different, it simply put the value from the android xml tag to the "Text/imported/" file. If the "Text/import/<lang>/" is empty, it will import an empty (this is preferable if someone removed a bad translation).
 
@@ -71,7 +73,9 @@ If the tag for the language doesn't exist, just create it and put the value.
  - Then it goes to the next tag in the same "Text/import/<lang>/" file it was reading. At the end of the file, it goes to the next file.
 
  - When it has read all the tags in "Text/import/<lang>/" files, it generate a report that contains lines like that:
- FILE: imported/A_New_Dawn_Concept_Civ4GameText.xml | TAG: TXT_KEY_CONCEPT_MOUNTAINS_TEXT | OLD: Berge-Mod -> NEW: qsqgdsqgdsg
+
+	FILE: imported/A_New_Dawn_Concept_Civ4GameText.xml | TAG: TXT_KEY_CONCEPT_MOUNTAINS_TEXT | OLD: Berge-Mod -> NEW: qsqgdsqgdsg
+
  You can read the file concerned, the tag, the old value and the new value so you can quickly have an overview of what have changed !
 
  - The "Text/imported/" files are converted back to ISO-8859-1 to make sure that EVERY special character is encoded ("&#235;", "&amp;", etc.).
@@ -84,27 +88,27 @@ If the tag for the language doesn't exist, just create it and put the value.
 ### Import to same file
 
 This function is nearly identical as the classic import except it only check the files that have the same name.
-If the file is "import/fr/A_New_Dawn_Concept_Civ4GameText.xml», then it will
-only check «A_New_Dawn_Concept_Civ4GameText.xml» in root folder instead of checking all files in root folder.
+If the file is "import/fr/A_New_Dawn_Concept_Civ4GameText.xml», then it will only check «A_New_Dawn_Concept_Civ4GameText.xml» in root folder instead of checking all files in root folder.
 
 ### Tag sorting
 
 The goal of this one is extremely important as it keep the "Text/" folder clean. The parser need to have a "_categories.parse" is the same folder as the executable. Basically, it's just a XML file with another extension.
 Inside this file, you can read:
-<?xml version="1.0" encoding="utf-8"?>
-<main>
-  <category file="DIPLOMACY">
-    <tag>AI_</tag>
-    <tag>USER_</tag>
-    <tag>TXT_KEY_MISC_ATTITUDE</tag>
-    <tag>TXT_KEY_TRADE</tag>
-  </category>
-  <category file="BUILDINGS">
-    <tag>MOD_TXT_KEY_BUILDING</tag>
-    <tag>TXT_KEY_BUILDING</tag>
-  </category>
-  ...
-</main>
+
+	<?xml version="1.0" encoding="utf-8"?>
+	<main>
+	  <category file="DIPLOMACY">
+	    <tag>AI_</tag>
+	    <tag>USER_</tag>
+	    <tag>TXT_KEY_MISC_ATTITUDE</tag>
+	    <tag>TXT_KEY_TRADE</tag>
+	  </category>
+	  <category file="BUILDINGS">
+	    <tag>MOD_TXT_KEY_BUILDING</tag>
+	    <tag>TXT_KEY_BUILDING</tag>
+	  </category>
+	  ...
+	</main>
 
 It is composed of a tag "category" with an attribute "file", which is the name of the category. Below, there are tag with prefix value "AI_", "USER_". That mean, when a parser will read a tag in "Text/" files, if the tag begin with that prefix, it will consider that the tag is in the category "DIPLOMACY". I've tried to make this easily editable for modders.
 
@@ -112,31 +116,37 @@ Now, let's see how it works:
 - The parser read all files in "Text/" and list all tags.
 - It start with the first tag in the list, look for it.
 - When it's found, it add all the tags and subtags in the corresponding category we've seen just before. For example,
-<TEXT>
-  <Tag>AI_DIPLO_ACCEPT_1</Tag>
-  <English>Agreed.</English>
-  <French>C'est d'accord.</French>
-  <German>Einverstanden!</German>
-  <Italian>D'accordo.</Italian>
-  <Spanish>Hecho.</Spanish>
-  <Finnish>Hyv&#228;ksytty.</Finnish>
-  <Hungarian>Megegyezt&#252;nk.</Hungarian>
-  <Polish>Zgoda.</Polish>
-  <Russian>&#209;&#238;&#227;&#235;&#224;&#241;&#229;&#237;.</Russian>
- </TEXT>
+
+	<TEXT>
+	  <Tag>AI_DIPLO_ACCEPT_1</Tag>
+	  <English>Agreed.</English>
+	  <French>C'est d'accord.</French>
+	  <German>Einverstanden!</German>
+	  <Italian>D'accordo.</Italian>
+	  <Spanish>Hecho.</Spanish>
+	  <Finnish>Hyv&#228;ksytty.</Finnish>
+	  <Hungarian>Megegyezt&#252;nk.</Hungarian>
+	  <Polish>Zgoda.</Polish>
+	  <Russian>&#209;&#238;&#227;&#235;&#224;&#241;&#229;&#237;.</Russian>
+	 </TEXT>
+
 ... will be added in the file "DIPLOMACY.xml" because the tag begin with "AI_". All the language tags and subtags will be added as well.
 
 If the tag contains "_PEDIA" in its name, it is moved in "CATEGORY_PEDIA.xml" so we can split the essential translations from civilopedia translations. For example,
- <TEXT>
-  <Tag>TXT_KEY_BUILDING_ABU_SIMBEL_PEDIA</Tag>
-  <English>The Abu Simbel temples are two huge rock temples in southern Egypt. The temples were carved from mountainsides between 1264 and 1244 BCE, built by Pharoah Ramesses II to commemorate the Battle of Kadesh. In the 1960's, the entire temples were dug up and relocated to avoid their being submerged in the lake created by the Aswan High Dam.</English>
-  <French>Les temples d'Abou Simbel sont deux temples de roche &#233;normes dans le sud de l'Egypte. Les temples ont &#233;t&#233; sculpt&#233;s aux flancs entre 1264 et 1244 avant notre &#232;re, construit par le pharaon Rams&#232;s II pour comm&#233;morer la bataille de Qadesh. Dans les ann&#233;es 1960, des temples entiers ont &#233;t&#233; d&#233;terr&#233;s et d&#233;plac&#233;s pour &#233;viter d'&#234;tre submerg&#233;s dans le lac cr&#233;&#233; par le barrage d'Assouan.</French>
- </TEXT>
- .. is in "BUILDINGS" category...
- <category file="BUILDINGS">
-    <tag>MOD_TXT_KEY_BUILDING</tag>
-    <tag>TXT_KEY_BUILDING</tag>
-  </category>
+
+	 <TEXT>
+	  <Tag>TXT_KEY_BUILDING_ABU_SIMBEL_PEDIA</Tag>
+	  <English>The Abu Simbel temples are two huge rock temples in southern Egypt. The temples were carved from mountainsides between 1264 and 1244 BCE, built by Pharoah Ramesses II to commemorate the Battle of Kadesh. In the 1960's, the entire temples were dug up and relocated to avoid their being submerged in the lake created by the Aswan High Dam.</English>
+	  <French>Les temples d'Abou Simbel sont deux temples de roche &#233;normes dans le sud de l'Egypte. Les temples ont &#233;t&#233; sculpt&#233;s aux flancs entre 1264 et 1244 avant notre &#232;re, construit par le pharaon Rams&#232;s II pour comm&#233;morer la bataille de Qadesh. Dans les ann&#233;es 1960, des temples entiers ont &#233;t&#233; d&#233;terr&#233;s et d&#233;plac&#233;s pour &#233;viter d'&#234;tre submerg&#233;s dans le lac cr&#233;&#233; par le barrage d'Assouan.</French>
+	 </TEXT>
+
+.. is in "BUILDINGS" category...
+
+	<category file="BUILDINGS">
+		<tag>MOD_TXT_KEY_BUILDING</tag>
+		<tag>TXT_KEY_BUILDING</tag>
+	</category>
+  
   ... but have been moved to "BUILDINGS_PEDIA.xml" file.
   
   - Then it continue to scan files to check if the tags is present multiple times. Now, what happens if the tag is found two times ?
@@ -155,32 +165,38 @@ The goal is to removed all languages tags that are empty or identical to english
 
  - Check every language tag value and compare it to English. If the test is positive, removed language tags. 
 For example, for:
-<TEXT>
-	<Tag>TXT_KEY_CONCEPT_MOUNTAINS_TEXT</Tag>
-	<English>Mountains Mod</English>
-	<French>Mountains Mod</French>
-	<German>Mountains Mod</German>
-</TEXT>
+
+	<TEXT>
+		<Tag>TXT_KEY_CONCEPT_MOUNTAINS_TEXT</Tag>
+		<English>Mountains Mod</English>
+		<French>Mountains Mod</French>
+		<German>Mountains Mod</German>
+	</TEXT>
+
 ... the resulting files will have:
- <TEXT>
-	<Tag>TXT_KEY_CONCEPT_MOUNTAINS_TEXT</Tag>
-	<English>Mountains Mod</English>
-</TEXT>
+
+	<TEXT>
+		<Tag>TXT_KEY_CONCEPT_MOUNTAINS_TEXT</Tag>
+		<English>Mountains Mod</English>
+	</TEXT>
 
 - If the language contains empty tag, remove it:
 For example, for:
-<TEXT>
-	<Tag>TXT_KEY_CONCEPT_MOUNTAINS_TEXT</Tag>
-	<English>Mountains Mod</English>
-	<French>Mod montagnes</French>
-	<German></German>
-</TEXT>
+
+	<TEXT>
+		<Tag>TXT_KEY_CONCEPT_MOUNTAINS_TEXT</Tag>
+		<English>Mountains Mod</English>
+		<French>Mod montagnes</French>
+		<German></German>
+	</TEXT>
+
 ... the resulting files will have:
- <TEXT>
-	<Tag>TXT_KEY_CONCEPT_MOUNTAINS_TEXT</Tag>
-	<English>Mountains Mod</English>
-	<French>Mod montagnes</French>
-</TEXT>
+
+	 <TEXT>
+		<Tag>TXT_KEY_CONCEPT_MOUNTAINS_TEXT</Tag>
+		<English>Mountains Mod</English>
+		<French>Mod montagnes</French>
+	</TEXT>
 
 - Convert back to ISO-8859-1
 
