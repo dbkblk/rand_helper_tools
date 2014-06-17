@@ -254,7 +254,3 @@ I plan to add functions to detect and remove duplicates tag.
 
 -> Backup and remove a specific language
 -> Detect unused tag based on python and xml files in «Assets»
-
-[URL="https://dl.dropboxusercontent.com/u/369241/Civ4-XMLParser_v0.5.7z"]DOWNLOAD LINK (v0.5)[/URL]
-
-[URL="https://github.com/dbkblk/civ4_xml_parser/"]GITHUB LINK[/URL]
