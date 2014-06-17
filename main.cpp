@@ -147,7 +147,7 @@ int main(int argc, char *argv[])
     }
     else
     {
-        qDebug() << "Civilization IV : XML translation tool v" + QString(constants::VERSION) + "\n-------------------------------------------\nNOTA: This executable must be in the same folder than xml files.";
+        qDebug() << QString("Civilization IV : XML translation tool v") + QString(constants::VERSION) + QString("\n-------------------------------------------\nBy dbkblk (A New Dawn team)\nNOTA: This executable must be in the same folder than xml files");
 
         int ch;
         int z = 0;
@@ -1969,7 +1969,7 @@ void languages::CleanFiles()
 
         qDebug() << "\n\nFiles successfully processed. Modified files are in 'cleaned/'.\nA report of the modified values have been generated in 'cleaned/_cleaned_values.txt'";
 }
-
+/*
 void languages::FindUnusedTags()
 {
     // Check the directory
@@ -2008,4 +2008,4 @@ void languages::FindUnusedTags()
     }
 
 
-}
+}*/
