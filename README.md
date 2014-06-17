@@ -90,6 +90,8 @@ If the tag for the language doesn't exist, just create it and put the value.
 This function is nearly identical as the classic import except it only check the files that have the same name.
 If the file is "import/fr/A_New_Dawn_Concept_Civ4GameText.xml», then it will only check «A_New_Dawn_Concept_Civ4GameText.xml» in root folder instead of checking all files in root folder.
 
+If you have duplicated tags and don't want to use the sort function, it is recommended to use this function.
+
 ### Tag sorting
 
 The goal of this one is extremely important as it keep the "Text/" folder clean. The parser need to have a "_categories.parse" is the same folder as the executable. Basically, it's just a XML file with another extension.
@@ -235,20 +237,6 @@ At the end, you will have sorted files with the last strings values known. That'
 - Start the parser and sort files. Go read a book while processing :D
 - At the end, check the "_REMOVED_TAGS_CATEGORY.xml" files to see if duplicates have been found and manually choose what tag values to keep.
 - The sorted files are in "sorted/". Just replace original.
-
-## KNOWN PROBLEMS
-
-If a tag to import is used multiple times in original files (really, that shouldn't be that way), the import function will inject the value from the import file to every original file.
-
-Example:
-The TAG: TXT_BLABLA is in original file A and original file B
-The values are
-Original file A: BABA
-Original file B: BIBI
-
-If a file to import contains the tag TXT_BLABLA with the value «BABA» (even if this tag haven't been modified during the export and the import) the value «BABA» will be injected to file A and to file B.
-
-I plan to add functions to detect and remove duplicates tag.
 
 ## FURTHER DEVELOPMENT
 
