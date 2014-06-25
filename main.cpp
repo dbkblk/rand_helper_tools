@@ -10,7 +10,7 @@ const QString VERSION = "0.8";
 class languages
 {
 public:
-    void ParseDocument(QString input_file, QString language);
+    void ParseDocument(QString input_file, QString int_lang);
     void ParseAllFiles(QString language);
     void ImportAllDocuments(bool all_files);
     void ImportDocumentToAll(QString int_lang, QStringList file_list);
@@ -29,6 +29,7 @@ public:
     QStringList CheckImportLanguages();
     void RemoveLanguage();
     QStringList ListLanguages(QString dir);
+    QString AutomaticLanguageDetection(QString dir);
 
 private:
     QString language;
@@ -158,6 +159,7 @@ int main(int argc, char *argv[])
         qDebug() << "\nMain menu:\n----------\n1 - Export all languages [Civ 4 XML -> Language XML]\n2 - Export a specific language [Civ 4 XML -> Language XML]\n3 - Import language strings to ALL files [Language XML -> Civ 4 XML]\n4 - Import language strings to SAME files [Language XML -> Civ 4 XML]\n5 - Clean files [Civ 4 XML]\n6 - Sort tags in categories [Civ 4 XML]\n7 - Remove a specific language [Civ 4 XML]\n8 - Exit program\n\n";
         std::cin >> ch;
         std::string lang;
+        QString lang_remove;
         switch (ch)
         {
             case 1 :
@@ -175,9 +177,9 @@ int main(int argc, char *argv[])
 
             case 2 :
                 dir_parse.removeRecursively();
-                std::cout << "Which language do you want to EXPORT (en, fr, de, it, es, pl, ru, fi, hu) ?\n";
-                std::cin >> lang;
-                xml->ParseAllFiles(QString::fromStdString(lang));
+                lang_remove = xml->AutomaticLanguageDetection(".");
+                if (lang_remove == "error"){break;}
+                xml->ParseAllFiles(lang_remove);
                 break;
 
             case 3 :
@@ -215,21 +217,21 @@ int main(int argc, char *argv[])
     return a.exec();
 }
 
-void languages::ParseAllFiles(QString language)
+void languages::ParseAllFiles(QString int_lang)
 {
     // Language settings
-    QString int_lang;
-    if(language == "en"){int_lang = "English";}
-    else if(language == "fr"){int_lang = "French";}
-    else if(language == "de"){int_lang = "German";}
-    else if(language == "it"){int_lang = "Italian";}
-    else if(language == "es"){int_lang = "Spanish";}
-    else if(language == "pl"){int_lang = "Polish";}
-    else if(language == "ru"){int_lang = "Russian";}
-    else if(language == "fi"){int_lang = "Finnish";}
-    else if(language == "hu"){int_lang = "Hungarian";}
-    else { qDebug() << "Invalid language code. Aborting..."; return;}
-    QString output_dir = "lang/" + language + "/";
+    QString language_code;
+    if(int_lang == "English"){language_code = "en";}
+    else if(int_lang == "French"){language_code = "fr";}
+    else if(int_lang == "German"){language_code = "de";}
+    else if(int_lang == "Italian"){language_code = "it";}
+    else if(int_lang == "Spanish"){language_code = "es";}
+    else if(int_lang == "Polish"){language_code = "pl";}
+    else if(int_lang == "Russian"){language_code = "ru";}
+    else if(int_lang == "Finnish"){language_code = "fi";}
+    else if(int_lang == "Hungarian"){language_code = "hu";}
+    else { qDebug() << "Language not supported. Please report on the forum. Aborting..."; return;}
+    QString output_dir = "lang/" + language_code + "/";
 
     // List all files
     qDebug() << "Preparing files...";
@@ -243,7 +245,7 @@ void languages::ParseAllFiles(QString language)
     {
         QFile::copy(*it,*it + "_TEMP_");
         ConvertCiv4ToUTF8(*it);
-        ParseDocument(*it,language);
+        ParseDocument(*it,int_lang);
         QFile::remove(*it);
         QFile::rename(*it + "_TEMP_",*it);
     }
@@ -282,29 +284,27 @@ void languages::ParseAllFiles(QString language)
     qDebug() << int_lang << " language successfully exported to " << output_dir;
 }
 
-void languages::ParseDocument(QString input_file, QString language)
+void languages::ParseDocument(QString input_file, QString int_lang)
 {
     QDomDocument input;
     QDomDocument output;
 
-    QString int_lang;
-
-    // Check language
-    int_lang = "English";
-    if(language == "fr"){int_lang = "French";};
-    if(language == "de"){int_lang = "German";};
-    if(language == "it"){int_lang = "Italian";};
-    if(language == "es"){int_lang = "Spanish";};
-    if(language == "pl"){int_lang = "Polish";};
-    if(language == "ru"){int_lang = "Russian";};
-    if(language == "fi"){int_lang = "Finnish";};
-    if(language == "hu"){int_lang = "Hungarian";};
+    QString language_code;
+    if(int_lang == "English"){language_code = "en";}
+    else if(int_lang == "French"){language_code = "fr";}
+    else if(int_lang == "German"){language_code = "de";}
+    else if(int_lang == "Italian"){language_code = "it";}
+    else if(int_lang == "Spanish"){language_code = "es";}
+    else if(int_lang == "Polish"){language_code = "pl";}
+    else if(int_lang == "Russian"){language_code = "ru";}
+    else if(int_lang == "Finnish"){language_code = "fi";}
+    else if(int_lang == "Hungarian"){language_code = "hu";}
 
     // Getting filenames
     input_file.replace(".XML", ".xml", Qt::CaseSensitive);
     QString input_temp_file = "__temp__" + input_file;
     QFile::copy(input_file,input_temp_file);
-    QString output_dir = "lang/" + language + "/";
+    QString output_dir = "lang/" + language_code + "/";
     QString output_file = output_dir + input_file;
     QDir dir;
     dir.mkpath(output_dir);
@@ -2024,44 +2024,8 @@ void languages::CleanFiles()
 
 void languages::RemoveLanguage()
 {
-    // Print menu
-    QStringList known_languages = ListLanguages(".");
-    QString lang;
-    QString lang_remove;
-    std::string answer;
-    int lang_counter = 0;
-
-    qDebug("\nWhich language do you want to remove ?\n");
-
-    foreach(lang, known_languages)
-    {
-        lang_counter++;
-        qDebug() << lang_counter << ") " << lang;
-    }
-    qDebug() << lang_counter+1 << ") Exit";
-
-    std::cin >> answer;
-    lang_counter = 0;
-
-    if(QString::fromStdString(answer).toInt() > known_languages.count()+1)
-    {
-        qDebug("Invalid selection");
-        return;
-    }
-    else if (QString::fromStdString(answer).toInt() == known_languages.count()+1)
-    {
-        return;
-    }
-
-    foreach(lang, known_languages)
-    {
-        lang_counter++;
-        if(lang_counter == QString::fromStdString(answer).toInt())
-        {
-            qDebug() << "Removing" << lang;
-            lang_remove = lang;
-        }
-    }
+    QString lang_remove = AutomaticLanguageDetection(".");
+    if (lang_remove == "error"){return;}
 
     // Prepare folder
     qDebug() << "Preparing files...";
@@ -2122,6 +2086,49 @@ void languages::RemoveLanguage()
     }
 
     qDebug() << "All modified files are in the \"backup\" folder";
+}
+
+QString languages::AutomaticLanguageDetection(QString dir)
+{
+    // Automatic language detection / menu
+    QStringList known_languages = ListLanguages(dir);
+    QString lang;
+    QString lang_check;
+    std::string answer;
+    int lang_counter = 0;
+
+    qDebug("\nWhich language do you want to process ?\n");
+
+    foreach(lang, known_languages)
+    {
+        lang_counter++;
+        qDebug() << lang_counter << ")" << lang;
+    }
+    qDebug() << lang_counter+1 << ")  Exit";
+
+    std::cin >> answer;
+    lang_counter = 0;
+
+    if(QString::fromStdString(answer).toInt() > known_languages.count()+1)
+    {
+        qDebug("Invalid selection");
+        return "error";
+    }
+    else if (QString::fromStdString(answer).toInt() == known_languages.count()+1)
+    {
+        return "error";
+    }
+
+    foreach(lang, known_languages)
+    {
+        lang_counter++;
+        if(lang_counter == QString::fromStdString(answer).toInt())
+        {
+            qDebug() << "Processing" << lang;
+            lang_check = lang;
+        }
+    }
+    return lang_check;
 }
 
 /*
