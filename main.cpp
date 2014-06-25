@@ -204,6 +204,10 @@ int main(int argc, char *argv[])
                 break;
 
             case 8:
+                xml->FindUnusedTags();
+                break;
+
+            case 9:
                 return 0;
                 break;
 
@@ -969,10 +973,10 @@ void languages::SortCategories()
     * Print the duplicate list */
 
     // Check requirements
-    QFile categories("_categories.parse");
+    QFile categories("_xml_parser.config");
     if(!categories.exists())
     {
-       qDebug() << "The parser need a '_categories.parse' file to continue. Aborting...";
+       qDebug() << "The parser need a '_xml_parser.config' file to continue. Aborting...";
        return;
     }
 
@@ -1083,7 +1087,7 @@ void languages::SortCategories()
     categories.close();
 
     // Initialize all XML classics, pedia and removed
-    QDomElement read_categories = xml_categories.firstChildElement().firstChildElement();
+    QDomElement read_categories = xml_categories.firstChildElement().firstChildElement("category");
     for(read_categories;!read_categories.isNull(); read_categories = read_categories.nextSiblingElement())
     {
         QDomDocument xml_temp;
@@ -2131,7 +2135,6 @@ QString languages::AutomaticLanguageDetection(QString dir)
     return lang_check;
 }
 
-/*
 void languages::FindUnusedTags()
 {
     // Check the directory
@@ -2142,32 +2145,139 @@ void languages::FindUnusedTags()
         return;
     }
 
+    // Getting game path
+    QFile categories("_xml_parser.config");
+    if(!categories.exists())
+    {
+       qDebug() << "The parser need a '_xml_parser.config' file to continue. Aborting...";
+       return;
+    }
+    QDomDocument xml_categories;
+    categories.open(QIODevice::ReadOnly);
+    xml_categories.setContent(&categories);
+    categories.close();
+    QString gamepath = xml_categories.firstChildElement().firstChildElement("gamepath").firstChild().nodeValue();
+    if (gamepath.isEmpty())
+    {
+        qDebug() << "You need to add the base game path to the '_xml_parser.config' file";
+        return;
+    }
+
     // List tags
     qDebug() << "Listing tags...";
     QStringList list_tags = ListTags(".");
     QString tag;
     list_tags.removeDuplicates();
-    int tags_total_counter = list_tags.count();
+    int tags_total_counter = list_tags.count() + 1;
 
-    // List files
-    qDebug() << "Checking Python and XML files for tags...";
+    qDebug() << "Collecting Python and XML files...";
     QStringList list_ext;
     list_ext << "*.xml" << "*.py";
 
+    // List files in mod folder
     QStringList exclusion_list;
     exclusion_list << "Assets/XML/Text/";
-    root.setPath("../../../");
-    QDirIterator iterator(root.absolutePath(), list_ext, QDir::Files | QDir::NoDotAndDotDot,  QDirIterator::Subdirectories);
-    foreach(tag,list_tags)
+    root.setCurrent("../../../");
+    QDir game_folder(gamepath);
+
+    /* Collect all files in a bigfile */
+    QDirIterator mod_iterator(root.absolutePath(), list_ext, QDir::Files | QDir::NoDotAndDotDot,  QDirIterator::Subdirectories);
+    QDirIterator game_iterator(game_folder.path(), list_ext, QDir::Files | QDir::NoDotAndDotDot,  QDirIterator::Subdirectories);
+    QFile output("TEMPFILE");
+    output.open(QIODevice::WriteOnly | QIODevice::Truncate);
+    QTextStream stream(&output);
+    int file_counter = 0;
+    while (mod_iterator.hasNext())
     {
-        int found = 0;
-        do
+        // Check if it isn't in the text folder
+        if(mod_iterator.filePath().contains("Assets/XML/Text"))
         {
-            qDebug() << iterator.fileName();
-            QFile file(iterator.filePath());
+            mod_iterator.next();
+        }
+        else {
+            file_counter++;
+            QFile file(mod_iterator.filePath());
 
-        }while (iterator.hasNext() || found == 0);
+            file.open(QIODevice::ReadOnly);
+            QTextStream temp(&file);
+            while(!temp.atEnd())
+            {
+                QString line = temp.readLine();
+                stream << line;
+            }
+            file.close();
+
+            mod_iterator.next();
+        }
     }
+    while (game_iterator.hasNext())
+    {
+        // Check if it isn't in the text folder
+        if(game_iterator.filePath().contains("Assets/XML/Text"))
+        {
+            game_iterator.next();
+        }
+        else {
+            file_counter++;
+            QFile file(game_iterator.filePath());
 
+            file.open(QIODevice::ReadOnly);
+            QTextStream temp(&file);
+            while(!temp.atEnd())
+            {
+                QString line = temp.readLine();
+                stream << line;
+            }
+            file.close();
 
-}*/
+            game_iterator.next();
+        }
+    }
+    output.close();
+
+    // Looking for tags
+    qDebug() << "Looking for tags...";
+    output.open(QIODevice::ReadOnly);
+    QTextStream read_stream(&output);
+    int found = 0;
+    while (!read_stream.atEnd())
+    {
+        QString line = read_stream.readLine();
+        foreach(tag,list_tags)
+        {
+            if (line.contains(tag))
+            {
+                //qDebug() << "Found" << tag;
+                list_tags.removeAll(tag);
+                found++;
+                tags_total_counter--;
+                if(tags_total_counter%100==0)
+                {
+                    qDebug() << "Still" << tags_total_counter << "tags to process";
+                }
+            }
+        }
+
+    }
+    output.close();
+    output.remove();
+
+    qDebug() << tags_total_counter << "have not been found. Printing list: _tags_not_found.txt in text folder";
+
+    root.setCurrent("Assets/XML/Text/");
+
+    // Print not found list
+    QString print_value;
+    QFile print_file("_tags_not_found.txt");
+
+    if ( print_file.open(QIODevice::ReadWrite) )
+        {
+            QTextStream stream( &print_file );
+
+            foreach(print_value, list_tags)
+            {
+                stream << print_value << endl;
+            }
+        }
+    print_file.close();
+}
