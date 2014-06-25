@@ -27,6 +27,8 @@ public:
     void ConvertCiv4ToUTF8(QString file);
     void ConvertUTF8ToCiv4(QString file);
     QStringList CheckImportLanguages();
+    void RemoveLanguage();
+    QStringList ListLanguages(QString dir);
 
 private:
     QString language;
@@ -153,7 +155,7 @@ int main(int argc, char *argv[])
         int z = 0;
 
         do {
-        qDebug() << "\nMain menu:\n----------\n1 - Export all languages [Civ 4 XML -> Language XML]\n2 - Export a specific language [Civ 4 XML -> Language XML]\n3 - Import language strings to ALL files [Language XML -> Civ 4 XML]\n4 - Import language strings to SAME files [Language XML -> Civ 4 XML]\n5 - Clean files [Civ 4 XML]\n6 - Sort tags in categories [Civ 4 XML]\n7 - Exit program\n\n";
+        qDebug() << "\nMain menu:\n----------\n1 - Export all languages [Civ 4 XML -> Language XML]\n2 - Export a specific language [Civ 4 XML -> Language XML]\n3 - Import language strings to ALL files [Language XML -> Civ 4 XML]\n4 - Import language strings to SAME files [Language XML -> Civ 4 XML]\n5 - Clean files [Civ 4 XML]\n6 - Sort tags in categories [Civ 4 XML]\n7 - Remove a specific language [Civ 4 XML]\n8 - Exit program\n\n";
         std::cin >> ch;
         std::string lang;
         switch (ch)
@@ -196,6 +198,10 @@ int main(int argc, char *argv[])
                 break;
 
             case 7:
+                xml->RemoveLanguage();
+                break;
+
+            case 8:
                 return 0;
                 break;
 
@@ -211,6 +217,20 @@ int main(int argc, char *argv[])
 
 void languages::ParseAllFiles(QString language)
 {
+    // Language settings
+    QString int_lang;
+    if(language == "en"){int_lang = "English";}
+    else if(language == "fr"){int_lang = "French";}
+    else if(language == "de"){int_lang = "German";}
+    else if(language == "it"){int_lang = "Italian";}
+    else if(language == "es"){int_lang = "Spanish";}
+    else if(language == "pl"){int_lang = "Polish";}
+    else if(language == "ru"){int_lang = "Russian";}
+    else if(language == "fi"){int_lang = "Finnish";}
+    else if(language == "hu"){int_lang = "Hungarian";}
+    else { qDebug() << "Invalid language code. Aborting..."; return;}
+    QString output_dir = "lang/" + language + "/";
+
     // List all files
     qDebug() << "Preparing files...";
     QDir root(".");
@@ -227,20 +247,6 @@ void languages::ParseAllFiles(QString language)
         QFile::remove(*it);
         QFile::rename(*it + "_TEMP_",*it);
     }
-
-    // Language settings
-    QString int_lang;
-    if(language == "en"){int_lang = "English";}
-    else if(language == "fr"){int_lang = "French";}
-    else if(language == "de"){int_lang = "German";}
-    else if(language == "it"){int_lang = "Italian";}
-    else if(language == "es"){int_lang = "Spanish";}
-    else if(language == "pl"){int_lang = "Polish";}
-    else if(language == "ru"){int_lang = "Russian";}
-    else if(language == "fi"){int_lang = "Finnish";}
-    else if(language == "hu"){int_lang = "Hungarian";}
-    else { qDebug() << "Invalid language code. Aborting..."; return;}
-    QString output_dir = "lang/" + language + "/";
 
     // Check output files
     QStringList output_files;
@@ -1816,6 +1822,52 @@ QStringList languages::ListTags(QString dir)
     return tags;
 }
 
+QStringList languages::ListLanguages(QString dir)
+{
+    QStringList tags;
+    QStringList xml_filter;
+    xml_filter << "*.xml";
+    QStringList files;
+    QDir root(dir);
+    files = root.entryList(xml_filter, QDir::Files);
+
+    for(QStringList::Iterator it = files.begin(); it != files.end(); it++)
+    {
+        QFile file_in(*it);
+        file_in.open(QIODevice::ReadOnly);
+        QDomDocument xml;
+        xml.setContent(&file_in);
+        QDomElement xml_tag = xml.firstChildElement("Civ4GameText").firstChildElement("TEXT").toElement();
+        if(xml_tag.isNull())
+        {
+            qDebug() << *it << " is not properly formatted";
+            file_in.close();
+        }
+
+        for(xml_tag;!xml_tag.isNull();xml_tag = xml_tag.nextSiblingElement())
+        {
+            QDomElement xml_language = xml_tag.firstChildElement();
+            for(xml_language;!xml_language.isNull();xml_language = xml_language.nextSiblingElement())
+            {
+                QString tag;
+                tag = xml_language.tagName();
+                if(tag == "English" || tag == "Tag" || tag == "Text" || tag == "Gender" || tag == "Plural") {}
+                else {
+                    //qDebug() << xml_language.tagName();
+                    tags << tag;
+                }
+            }
+
+        }
+        file_in.close();
+    }
+
+    tags.sort();
+    tags.removeDuplicates();
+
+    return tags;
+}
+
 void languages::CleanFiles()
 {
     qDebug() << "Preparing files...";
@@ -1969,6 +2021,109 @@ void languages::CleanFiles()
 
         qDebug() << "\n\nFiles successfully processed. Modified files are in 'cleaned/'.\nA report of the modified values have been generated in 'cleaned/_cleaned_values.txt'";
 }
+
+void languages::RemoveLanguage()
+{
+    // Print menu
+    QStringList known_languages = ListLanguages(".");
+    QString lang;
+    QString lang_remove;
+    std::string answer;
+    int lang_counter = 0;
+
+    qDebug("\nWhich language do you want to remove ?\n");
+
+    foreach(lang, known_languages)
+    {
+        lang_counter++;
+        qDebug() << lang_counter << ") " << lang;
+    }
+    qDebug() << lang_counter+1 << ") Exit";
+
+    std::cin >> answer;
+    lang_counter = 0;
+
+    if(QString::fromStdString(answer).toInt() > known_languages.count()+1)
+    {
+        qDebug("Invalid selection");
+        return;
+    }
+    else if (QString::fromStdString(answer).toInt() == known_languages.count()+1)
+    {
+        return;
+    }
+
+    foreach(lang, known_languages)
+    {
+        lang_counter++;
+        if(lang_counter == QString::fromStdString(answer).toInt())
+        {
+            qDebug() << "Removing" << lang;
+            lang_remove = lang;
+        }
+    }
+
+    // Prepare folder
+    qDebug() << "Preparing files...";
+    QDir dir_import("backup/");
+    dir_import.removeRecursively();
+    dir_import.mkdir(".");
+
+    // List root files
+    QStringList xml_filter;
+    xml_filter << "*.xml";
+    QDir root(".");
+    QStringList root_files;
+    root_files = root.entryList(xml_filter, QDir::Files);
+
+    // Copy and convert files to backup dir
+    QStringList import_files;
+    for(QStringList::Iterator it = root_files.begin(); it != root_files.end(); it++)
+    {
+        QFile::copy(*it,"backup/"+*it);
+        ConvertCiv4ToUTF8("backup/"+*it);
+    }
+    import_files = dir_import.entryList(xml_filter, QDir::Files);
+
+    for(QStringList::Iterator it = import_files.begin(); it != import_files.end(); it++)
+    {
+        QString current = "backup/" + *it;
+        QDomDocument input;
+        QFile file_input(current);
+        file_input.open(QIODevice::ReadOnly);
+        input.setContent(&file_input);
+        file_input.close();
+
+        QDomNode input_node = input.firstChildElement("Civ4GameText").firstChildElement("TEXT");
+
+        int counter = 0;
+        while(!input_node.isNull())
+        {
+            if(!input_node.firstChildElement(lang_remove).isNull())
+            {
+                input_node.removeChild(input_node.firstChildElement(lang_remove));
+                counter++;
+            }
+
+            input_node = input_node.nextSibling();
+        }
+        file_input.open(QIODevice::Truncate | QIODevice::WriteOnly);
+        file_input.write(input.toByteArray());
+        file_input.close();
+
+        if(counter == 0)
+        {
+            QFile::remove(current);
+        }
+        else
+        {
+            ConvertUTF8ToCiv4(current);
+        }
+    }
+
+    qDebug() << "All modified files are in the \"backup\" folder";
+}
+
 /*
 void languages::FindUnusedTags()
 {

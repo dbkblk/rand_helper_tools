@@ -2,12 +2,10 @@ TODO:
 DONE - Activate the importation of empty tags
 DONE - Recheck the output if subtag (output but don't do anything)
 DONE - Fix clean up
-- Function: Find unused tags
-- Find tag in all files
-- Backup and remove a specific language
+DONE - Backup and remove a specific language
 - Detect unused tag based on python and xml files in «Assets»
 - Support of Sinhala language
-
+- Find tag in all files
 
 ## Process to merge the game files
 - Merge with the game files

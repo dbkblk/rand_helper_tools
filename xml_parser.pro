@@ -14,6 +14,7 @@ CONFIG   -= app_bundle
 
 TEMPLATE = app
 
+RC_FILE = icon.rc
 
 SOURCES += main.cpp
 
