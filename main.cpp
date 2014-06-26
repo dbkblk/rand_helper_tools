@@ -2,6 +2,7 @@
 #include <QtCore>
 #include <QDebug>
 #include <QtXml/QtXml>
+#include "dll_finder.h"
 
 namespace constants {
 const QString VERSION = "0.8";
@@ -2194,6 +2195,9 @@ void languages::FindUnusedTags()
         {
             mod_iterator.next();
         }
+
+        // Check for dll
+
         else {
             file_counter++;
             QFile file(mod_iterator.filePath());
@@ -2236,10 +2240,10 @@ void languages::FindUnusedTags()
     output.close();
 
     // Looking for tags
+    int found = 0;
     qDebug() << "Looking for tags...";
     output.open(QIODevice::ReadOnly);
     QTextStream read_stream(&output);
-    int found = 0;
     while (!read_stream.atEnd())
     {
         QString line = read_stream.readLine();
@@ -2261,6 +2265,68 @@ void languages::FindUnusedTags()
     }
     output.close();
     output.remove();
+
+    // Checking DLL
+    qDebug() << "Checking DLL";
+    foreach(tag,list_tags)
+    {
+        int temp = 0;
+        while(temp == 0)
+        {
+            // Mod
+            if(FindTagsInDLL(tag.toStdString(), QString("Assets/CvGameCoreDLL.dll").toStdString()))
+            {
+                list_tags.removeAll(tag);
+                found++;
+                tags_total_counter--;
+                if(tags_total_counter%50==0)
+                {
+                    qDebug() << "Still" << tags_total_counter << "tags to process";
+                }
+            }
+
+            // Classic game
+            QString game_path_std = game_folder.path() + "/Assets/CvGameCoreDLL.dll";
+            if(FindTagsInDLL(tag.toStdString(), game_path_std.toStdString()))
+            {
+                list_tags.removeAll(tag);
+                tags_total_counter--;
+                if(tags_total_counter%50==0)
+                {
+                    qDebug() << "Still" << tags_total_counter << "tags to process";
+                }
+                temp++;
+            }
+
+            // Beyond the sword
+            game_path_std = game_folder.path() + "/Beyond the Sword/Assets/CvGameCoreDLL.dll";
+            if(FindTagsInDLL(tag.toStdString(), game_path_std.toStdString()))
+            {
+                list_tags.removeAll(tag);
+                tags_total_counter--;
+                if(tags_total_counter%50==0)
+                {
+                    qDebug() << "Still" << tags_total_counter << "tags to process";
+                }
+                temp++;
+            }
+
+            // Warlords
+            game_path_std = game_folder.path() + "/Warlords/Assets/CvGameCoreDLL.dll";
+            if(FindTagsInDLL(tag.toStdString(), game_path_std.toStdString()))
+            {
+                list_tags.removeAll(tag);
+                tags_total_counter--;
+                if(tags_total_counter%50==0)
+                {
+                    qDebug() << "Still" << tags_total_counter << "tags to process";
+                }
+                temp++;
+            }
+            temp++;
+        }
+
+    }
 
     qDebug() << tags_total_counter << "have not been found. Printing list: _tags_not_found.txt in text folder";
 

@@ -16,7 +16,11 @@ TEMPLATE = app
 
 RC_FILE = icon.rc
 
-SOURCES += main.cpp
+SOURCES += main.cpp \
+    dll_finder.cpp
 
 OTHER_FILES += \
     TODO.md
+
+HEADERS += \
+    dll_finder.h
