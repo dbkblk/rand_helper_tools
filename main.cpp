@@ -5,7 +5,7 @@
 #include "dll_finder.h"
 
 namespace constants {
-const QString VERSION = "0.8";
+const QString VERSION = "0.9";
 }
 
 class languages
@@ -157,7 +157,7 @@ int main(int argc, char *argv[])
         int z = 0;
 
         do {
-        qDebug() << "\nMain menu:\n----------\n1 - Export all languages [Civ 4 XML -> Language XML]\n2 - Export a specific language [Civ 4 XML -> Language XML]\n3 - Import language strings to ALL files [Language XML -> Civ 4 XML]\n4 - Import language strings to SAME files [Language XML -> Civ 4 XML]\n5 - Clean files [Civ 4 XML]\n6 - Sort tags in categories [Civ 4 XML]\n7 - Remove a specific language [Civ 4 XML]\n8 - Exit program\n\n";
+        qDebug() << "\nMain menu:\n----------\n1 - Export all languages [Civ 4 XML -> Language XML]\n2 - Export a specific language [Civ 4 XML -> Language XML]\n3 - Import language strings to ALL files [Language XML -> Civ 4 XML]\n4 - Import language strings to SAME files [Language XML -> Civ 4 XML]\n5 - Clean files [Civ 4 XML]\n6 - Sort tags in categories [Civ 4 XML]\n7 - Remove a specific language [Civ 4 XML]\n8 - Find unused tags in files [WARNING: Experimental]\n9 - Exit program\n\n";
         std::cin >> ch;
         std::string lang;
         QString lang_remove;
@@ -2283,6 +2283,7 @@ void languages::FindUnusedTags()
                 {
                     qDebug() << "Still" << tags_total_counter << "tags to process";
                 }
+				temp++;
             }
 
             // Classic game
