@@ -1,0 +1,72 @@
+MAIN:
+    // Checking DLL
+    qDebug() << "Checking mod DLL (please be patient)";
+    list_tags = FindTagsInDLL(list_tags, QString("Assets/CvGameCoreDLL.dll").toStdString());
+
+    // Classic game
+    qDebug() << "Checking base game DLL (please be patient)";
+    QString game_path_std = game_folder.path() + "/Assets/CvGameCoreDLL.dll";
+    list_tags = FindTagsInDLL(list_tags, game_path_std.toStdString());
+
+    // Beyond the sword
+    qDebug() << "Checking BTS DLL (please be patient)";
+    game_path_std = game_folder.path() + "/Beyond the Sword/Assets/CvGameCoreDLL.dll";
+    list_tags = FindTagsInDLL(list_tags, game_path_std.toStdString());
+
+    // Warlords
+    qDebug() << "Checking warlords DLL (please be patient)";
+    game_path_std = game_folder.path() + "/Beyond the Sword/Assets/CvGameCoreDLL.dll";
+    list_tags = FindTagsInDLL(list_tags, game_path_std.toStdString());
+
+
+DLL:
+QStringList FindTagsInDLL(QStringList values, std::string dllpath)
+{
+    std::vector<char> v = ReadAllBytes(dllpath.c_str());
+    QString tag;
+    QStringList tags_not_found;
+    int tags_total_counter = values.count();
+    foreach(tag,values)
+    {
+        if(tags_total_counter%25==0)
+        {
+            qDebug() << "Still" << tags_total_counter << "tags to process";
+        }
+        int str_len = strlen(tag.toStdString().c_str());
+        char myString[1024];
+        int iOffset = 0;
+        int found = 0;
+        while(found == 0)
+        {
+            for(std::vector<char>::iterator it = v.begin(); it != v.end(); ++it)
+            {
+                myString[iOffset] = *it;
+                iOffset++;
+
+                if (iOffset <= str_len) {
+                    if (tag.toStdString().compare(0, iOffset, myString, iOffset) != 0) {
+                        iOffset = 0;
+                    }
+
+                }
+                else
+                {
+                    if (*it == 0) {
+                        iOffset = 0;
+                        //printf("%s\n", myString);
+                        found++;
+                    }
+                    else if (iOffset == 1023)
+                    {
+                        // string name is more than 1024 characters.... something is likely wrong here.
+                        iOffset = 0;
+                    }
+                }
+            }
+            tags_total_counter--;
+            found++;
+        }
+        tags_not_found << tag;
+    }
+    return tags_not_found;
+}

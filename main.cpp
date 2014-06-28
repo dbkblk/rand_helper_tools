@@ -2,7 +2,6 @@
 #include <QtCore>
 #include <QDebug>
 #include <QtXml/QtXml>
-#include "dll_finder.h"
 
 namespace constants {
 const QString VERSION = "0.9";
@@ -20,7 +19,7 @@ public:
     void CleanFiles();
     void SortCategories();
     void SortCategoriesExperimental();
-    void FindUnusedTags();
+    QStringList FindUnusedTags();
     QString ConvertLatin1ToRussian(QString string);
     QString ConvertRussianToLatin1(QString string);
     void SorterHelper(QString prefix);
@@ -31,6 +30,7 @@ public:
     void RemoveLanguage();
     QStringList ListLanguages(QString dir);
     QString AutomaticLanguageDetection(QString dir);
+    void RemoveUnusedTags();
 
 private:
     QString language;
@@ -160,6 +160,7 @@ int main(int argc, char *argv[])
         qDebug() << "\nMain menu:\n----------\n1 - Export all languages [Civ 4 XML -> Language XML]\n2 - Export a specific language [Civ 4 XML -> Language XML]\n3 - Import language strings to ALL files [Language XML -> Civ 4 XML]\n4 - Import language strings to SAME files [Language XML -> Civ 4 XML]\n5 - Clean files [Civ 4 XML]\n6 - Sort tags in categories [Civ 4 XML]\n7 - Remove a specific language [Civ 4 XML]\n8 - Find unused tags in files [WARNING: Experimental]\n9 - Exit program\n\n";
         std::cin >> ch;
         std::string lang;
+        std::string answer;
         QString lang_remove;
         switch (ch)
         {
@@ -206,10 +207,20 @@ int main(int argc, char *argv[])
 
             case 8:
                 xml->FindUnusedTags();
+                qDebug() << "Would you like to remove the unused tags from text files (Y/N)?";
+                std::cin >> answer;
+                if (answer == "Y")
+                {
+                    xml->RemoveUnusedTags();
+                }
                 break;
 
             case 9:
                 return 0;
+                break;
+
+            case 10:
+                xml->RemoveUnusedTags();
                 break;
 
             default :
@@ -2136,22 +2147,23 @@ QString languages::AutomaticLanguageDetection(QString dir)
     return lang_check;
 }
 
-void languages::FindUnusedTags()
+QStringList languages::FindUnusedTags()
 {
     // Check the directory
     QDir root(".");
+    QStringList empty;
     if(!root.exists("../../../Assets/"))
     {
         qDebug() << "The parser need to be in 'Assets/XML/Text/' folder for this function to work. Aborting...";
-        return;
+        return empty;
     }
 
-    // Getting game path
+    // Getting game path and source path
     QFile categories("_xml_parser.config");
     if(!categories.exists())
     {
        qDebug() << "The parser need a '_xml_parser.config' file to continue. Aborting...";
-       return;
+       return empty;
     }
     QDomDocument xml_categories;
     categories.open(QIODevice::ReadOnly);
@@ -2161,29 +2173,41 @@ void languages::FindUnusedTags()
     if (gamepath.isEmpty())
     {
         qDebug() << "You need to add the base game path to the '_xml_parser.config' file";
-        return;
+        return empty;
     }
-
+    QString srcpath = xml_categories.firstChildElement().firstChildElement("sourcepath").firstChild().nodeValue();
+    if (srcpath.isEmpty())
+    {
+        qDebug() << "You need to add the dll source path to the '_xml_parser.config' file";
+        return empty;
+    }
+    gamepath.replace("\\","/");
+    srcpath.replace("\\","/");
     // List tags
     qDebug() << "Listing tags...";
     QStringList list_tags = ListTags(".");
     QString tag;
     list_tags.removeDuplicates();
-    int tags_total_counter = list_tags.count() + 1;
+    int tags_total_counter = list_tags.count();
 
-    qDebug() << "Collecting Python and XML files...";
+    qDebug() << "Collecting Python, XML and source files...";
     QStringList list_ext;
-    list_ext << "*.xml" << "*.py";
+    list_ext << "*.xml" << "*.py" << "*.CivBeyondSwordWBSave" << "*.Civ4WorldBuilderSave" << "*.CivWarlordsWBSave";
+    QStringList list_cpp;
+    list_cpp << "*.cpp" << "*.h";
+
 
     // List files in mod folder
     QStringList exclusion_list;
     exclusion_list << "Assets/XML/Text/";
     root.setCurrent("../../../");
     QDir game_folder(gamepath);
+    QDir source_folder(srcpath);
 
     /* Collect all files in a bigfile */
     QDirIterator mod_iterator(root.absolutePath(), list_ext, QDir::Files | QDir::NoDotAndDotDot,  QDirIterator::Subdirectories);
     QDirIterator game_iterator(game_folder.path(), list_ext, QDir::Files | QDir::NoDotAndDotDot,  QDirIterator::Subdirectories);
+    QDirIterator source_iterator(source_folder.path(), list_cpp, QDir::Files | QDir::NoDotAndDotDot,  QDirIterator::Subdirectories);
     QFile output("TEMPFILE");
     output.open(QIODevice::WriteOnly | QIODevice::Truncate);
     QTextStream stream(&output);
@@ -2191,12 +2215,10 @@ void languages::FindUnusedTags()
     while (mod_iterator.hasNext())
     {
         // Check if it isn't in the text folder
-        if(mod_iterator.filePath().contains("Assets/XML/Text"))
+        if(mod_iterator.filePath().contains("Assets/XML/Text") || mod_iterator.filePath() == "")
         {
             mod_iterator.next();
         }
-
-        // Check for dll
 
         else {
             file_counter++;
@@ -2217,7 +2239,7 @@ void languages::FindUnusedTags()
     while (game_iterator.hasNext())
     {
         // Check if it isn't in the text folder
-        if(game_iterator.filePath().contains("Assets/XML/Text"))
+        if(game_iterator.filePath().contains("Assets/XML/Text") || game_iterator.filePath().contains("Mods/") || game_iterator.filePath() == "")
         {
             game_iterator.next();
         }
@@ -2233,8 +2255,30 @@ void languages::FindUnusedTags()
                 stream << line;
             }
             file.close();
-
+            //qDebug() << game_iterator.filePath();
             game_iterator.next();
+        }
+    }
+    while (source_iterator.hasNext())
+    {
+        if(source_iterator.filePath() == "")
+        {
+            source_iterator.next();
+        }
+        else {
+            file_counter++;
+            QFile file(source_iterator.filePath());
+
+            file.open(QIODevice::ReadOnly);
+            QTextStream temp(&file);
+            while(!temp.atEnd())
+            {
+                QString line = temp.readLine();
+                stream << line;
+            }
+            file.close();
+            //qDebug() << source_iterator.filePath();
+            source_iterator.next();
         }
     }
     output.close();
@@ -2266,70 +2310,7 @@ void languages::FindUnusedTags()
     output.close();
     output.remove();
 
-    // Checking DLL
-    qDebug() << "Checking DLL";
-    foreach(tag,list_tags)
-    {
-        int temp = 0;
-        while(temp == 0)
-        {
-            // Mod
-            if(FindTagsInDLL(tag.toStdString(), QString("Assets/CvGameCoreDLL.dll").toStdString()))
-            {
-                list_tags.removeAll(tag);
-                found++;
-                tags_total_counter--;
-                if(tags_total_counter%50==0)
-                {
-                    qDebug() << "Still" << tags_total_counter << "tags to process";
-                }
-				temp++;
-            }
-
-            // Classic game
-            QString game_path_std = game_folder.path() + "/Assets/CvGameCoreDLL.dll";
-            if(FindTagsInDLL(tag.toStdString(), game_path_std.toStdString()))
-            {
-                list_tags.removeAll(tag);
-                tags_total_counter--;
-                if(tags_total_counter%50==0)
-                {
-                    qDebug() << "Still" << tags_total_counter << "tags to process";
-                }
-                temp++;
-            }
-
-            // Beyond the sword
-            game_path_std = game_folder.path() + "/Beyond the Sword/Assets/CvGameCoreDLL.dll";
-            if(FindTagsInDLL(tag.toStdString(), game_path_std.toStdString()))
-            {
-                list_tags.removeAll(tag);
-                tags_total_counter--;
-                if(tags_total_counter%50==0)
-                {
-                    qDebug() << "Still" << tags_total_counter << "tags to process";
-                }
-                temp++;
-            }
-
-            // Warlords
-            game_path_std = game_folder.path() + "/Warlords/Assets/CvGameCoreDLL.dll";
-            if(FindTagsInDLL(tag.toStdString(), game_path_std.toStdString()))
-            {
-                list_tags.removeAll(tag);
-                tags_total_counter--;
-                if(tags_total_counter%50==0)
-                {
-                    qDebug() << "Still" << tags_total_counter << "tags to process";
-                }
-                temp++;
-            }
-            temp++;
-        }
-
-    }
-
-    qDebug() << tags_total_counter << "have not been found. Printing list: _tags_not_found.txt in text folder";
+    qDebug() << tags_total_counter << "tags have not been found. Printing list: _tags_not_found.txt in text folder";
 
     root.setCurrent("Assets/XML/Text/");
 
@@ -2347,4 +2328,121 @@ void languages::FindUnusedTags()
             }
         }
     print_file.close();
+
+    return list_tags;
+}
+
+void languages::RemoveUnusedTags()
+{
+    // Test code
+    QFile test("_tags_not_found.txt");
+    QStringList list_tags;
+    test.open(QIODevice::ReadOnly);
+    QTextStream read_stream(&test);
+    while (!read_stream.atEnd())
+    {
+        list_tags << read_stream.readLine();
+    }
+    test.close();
+
+    // Prepare folder
+    qDebug() << "Preparing files...";
+    QDir dir_import("unused/");
+    dir_import.removeRecursively();
+    dir_import.mkdir(".");
+
+    // List root files
+    QStringList xml_filter;
+    xml_filter << "*.xml";
+    QDir root(".");
+    QStringList root_files;
+    root_files = root.entryList(xml_filter, QDir::Files);
+
+    // Copy and convert files to backup dir
+    QStringList import_files;
+    for(QStringList::Iterator it = root_files.begin(); it != root_files.end(); it++)
+    {
+        QFile::copy(*it,"unused/"+*it);
+        ConvertCiv4ToUTF8("unused/"+*it);
+    }
+    import_files = dir_import.entryList(xml_filter, QDir::Files);
+
+    QString tags;
+    int counter = 0;
+    int file_number = 1;
+    QStringList operation_list;
+
+    for(QStringList::Iterator it = import_files.begin(); it != import_files.end(); it++)
+    {
+        qDebug() << "Processing file" << file_number << "of" << import_files.count();
+        QString current = "unused/" + *it;
+        QDomDocument input;
+        QFile file_input(current);
+        file_input.open(QIODevice::ReadOnly);
+        input.setContent(&file_input);
+        file_input.close();
+
+        QDomNode input_node = input.firstChildElement("Civ4GameText").firstChildElement("TEXT");
+        int remove_tag = 0;
+        int remove_file = 0;
+        while(!input_node.isNull())
+        {
+            QString tag_value = input_node.firstChildElement("Tag").firstChild().nodeValue();
+            //qDebug() << tag_value;
+            remove_tag = 0;
+            foreach(tags,list_tags)
+            {
+                if(tag_value == tags)
+                {
+                    list_tags.removeAll(tags);
+                    QString operation = "FILE: " + *it + " | REMOVED TAG: " + tags;
+                    operation_list << operation;
+                    counter++;
+                    remove_file++;
+                    remove_tag++;
+                }
+            }
+            input_node = input_node.nextSibling();
+            if(remove_tag == 1)
+            {
+                input.firstChildElement("Civ4GameText").removeChild(input_node.previousSibling());
+            }
+        }
+        if(remove_tag == 1)
+        {
+            input.firstChildElement("Civ4GameText").removeChild(input.firstChildElement("Civ4GameText").lastChildElement());
+        }
+        file_input.open(QIODevice::Truncate | QIODevice::WriteOnly);
+        file_input.write(input.toByteArray());
+        file_input.close();
+
+        if(remove_file == 0)
+        {
+            QFile::remove(current);
+        }
+        else
+        {
+            ConvertUTF8ToCiv4(current);
+        }
+        file_number++;
+    }
+
+    // Output modified list
+    QString print_value;
+    QString print_file_name = "unused/_unused_tags_report.txt";
+    QFile print_file(print_file_name);
+
+    if ( print_file.open(QIODevice::Truncate | QIODevice::WriteOnly) )
+        {
+            QTextStream stream( &print_file );
+
+            foreach(print_value, operation_list)
+            {
+                stream << print_value << endl;
+            }
+        }
+        print_file.close();
+
+    qDebug() << "All modified files are in the \"unused\" folder. Removed" << counter << "tags. A detailled report has been print in _unused_tags_report.txt";
+    return;
 }
