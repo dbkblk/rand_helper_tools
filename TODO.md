@@ -3,7 +3,8 @@ DONE - Activate the importation of empty tags
 DONE - Recheck the output if subtag (output but don't do anything)
 DONE - Fix clean up
 DONE - Backup and remove a specific language
-- Detect unused tag based on python and xml files in «Assets»
+DONE - Detect unused tag based on python and xml files in «Assets»
+DONE - Make the sorting function not sensible from case
 - Add a conversion table support
-- Find tag in all files
+- Add all new functions available from commandline
 

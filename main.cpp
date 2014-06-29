@@ -2,6 +2,7 @@
 #include <QtCore>
 #include <QDebug>
 #include <QtXml/QtXml>
+#include "dll_finder.h"
 
 namespace constants {
 const QString VERSION = "0.9";
@@ -31,6 +32,7 @@ public:
     QStringList ListLanguages(QString dir);
     QString AutomaticLanguageDetection(QString dir);
     void RemoveUnusedTags();
+    QString test();
 
 private:
     QString language;
@@ -157,7 +159,7 @@ int main(int argc, char *argv[])
         int z = 0;
 
         do {
-        qDebug() << "\nMain menu:\n----------\n1 - Export all languages [Civ 4 XML -> Language XML]\n2 - Export a specific language [Civ 4 XML -> Language XML]\n3 - Import language strings to ALL files [Language XML -> Civ 4 XML]\n4 - Import language strings to SAME files [Language XML -> Civ 4 XML]\n5 - Clean files [Civ 4 XML]\n6 - Sort tags in categories [Civ 4 XML]\n7 - Remove a specific language [Civ 4 XML]\n8 - Find unused tags in files [WARNING: Experimental]\n9 - Exit program\n\n";
+        qDebug() << "\nMain menu:\n----------\n1 - Export all languages [Civ 4 XML -> Language XML]\n2 - Export a specific language [Civ 4 XML -> Language XML]\n3 - Import language strings to ALL files [Language XML -> Civ 4 XML]\n4 - Import language strings to SAME files [Language XML -> Civ 4 XML]\n5 - Clean files [Civ 4 XML]\n6 - Sort tags in categories [Civ 4 XML]\n7 - Remove a specific language [Civ 4 XML]\n8 - Find unused tags in files \n9 - Exit program\n\n";
         std::cin >> ch;
         std::string lang;
         std::string answer;
@@ -221,6 +223,10 @@ int main(int argc, char *argv[])
 
             case 10:
                 xml->RemoveUnusedTags();
+                break;
+
+            case 35:
+                xml->test();
                 break;
 
             default :
@@ -1815,7 +1821,8 @@ QStringList languages::ListTags(QString dir)
 
     for(QStringList::Iterator it = files.begin(); it != files.end(); it++)
     {
-        QFile file_in(*it);
+        QFile file_in(root.path()+"/"+*it);
+        //qDebug() << root.path()+"/"+*it;
         file_in.open(QIODevice::ReadOnly);
         QDomDocument xml;
         xml.setContent(&file_in);
@@ -1833,7 +1840,12 @@ QStringList languages::ListTags(QString dir)
         file_in.close();
     }
 
-    tags.sort();
+	// Sort unsensitive
+	QMap<QString, QString> strMap;
+    foreach ( QString str, tags ) {
+        strMap.insert( str.toLower(), str );
+    }
+    tags = strMap.values();
 
     return tags;
 }
@@ -2183,14 +2195,56 @@ QStringList languages::FindUnusedTags()
     }
     gamepath.replace("\\","/");
     srcpath.replace("\\","/");
+	
     // List tags
     qDebug() << "Listing tags...";
-    QStringList list_tags = ListTags(".");
+    QStringList list_tags = ListTags(QDir::currentPath());
     QString tag;
+	QString base_tag;
     list_tags.removeDuplicates();
+	
+	// List base game tags
+	QStringList list_base_tags = ListTags(gamepath+"Assets/XML/Text/");
+	QStringList list_ext_tags = ListTags(gamepath+"Beyond the Sword/Assets/XML/Text/");
+
+    // Remove exceptions from the tag list
+
+    foreach(tag, list_tags)
+    {
+        //qDebug() << tag;
+        QDomElement exceptions = xml_categories.firstChildElement().firstChildElement("exceptions").firstChildElement();
+        for(exceptions;!exceptions.isNull();exceptions = exceptions.nextSiblingElement())
+        {
+            QString value = exceptions.firstChild().nodeValue();
+            if(tag.startsWith(value))
+            {
+                list_tags.removeAll(tag);
+            }
+        }
+    }
+	
+	// Remove base game tags from the tag list
+	foreach(tag,list_tags)
+	{
+		foreach(base_tag,list_base_tags)
+		{
+			if (tag == base_tag)
+			{
+				list_tags.removeAll(tag);
+			}
+		}
+		foreach(base_tag,list_ext_tags)
+		{
+			if (tag == base_tag)
+			{
+				list_tags.removeAll(tag);
+			}
+		}
+	}		
+
     int tags_total_counter = list_tags.count();
 
-    qDebug() << "Collecting Python, XML and source files...";
+    qDebug() << "Collecting files...";
     QStringList list_ext;
     list_ext << "*.xml" << "*.py" << "*.CivBeyondSwordWBSave" << "*.Civ4WorldBuilderSave" << "*.CivWarlordsWBSave";
     QStringList list_cpp;
@@ -2445,4 +2499,15 @@ void languages::RemoveUnusedTags()
 
     qDebug() << "All modified files are in the \"unused\" folder. Removed" << counter << "tags. A detailled report has been print in _unused_tags_report.txt";
     return;
+}
+
+QString languages::test()
+{
+    qDebug() << "start";
+    QString path = "J:/Steam/SteamApps/common/Sid Meier's Civilization IV Beyond the Sword/Beyond the Sword/Assets/XML/Text/";
+    QStringList tags = ListTags(path);
+    foreach(QString value,tags){
+        qDebug() << value;
+    }
+    return "ok";
 }
