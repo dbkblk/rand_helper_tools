@@ -54,69 +54,76 @@ int main(int argc, char *argv[])
             {
                 qDebug() << "Exporting all languages";
                 dir_parse.removeRecursively();
-                xml->ParseAllFiles("en");
-                xml->ParseAllFiles("fr");
-                xml->ParseAllFiles("de");
-                xml->ParseAllFiles("it");
-                xml->ParseAllFiles("es");
-                xml->ParseAllFiles("pl");
-                xml->ParseAllFiles("ru");
-                xml->ParseAllFiles("fi");
-                xml->ParseAllFiles("hu");
+                xml->ParseAllFiles("English");
+                foreach(QString lang_export, xml->ListLanguages(".")){
+                    xml->ParseAllFiles(lang_export);
+                }
                 return 0;
             }
             else if(arg2 == "en")
             {
                 qDebug() << "Exporting English";
-                xml->ParseAllFiles("en");
+                xml->ParseAllFiles("English");
                 return 0;
             }
-            else if(arg2 == "fr")
+            else if(arg2 == "zh")
             {
-                qDebug() << "Exporting French";
-                xml->ParseAllFiles("fr");
-                return 0;
-            }
-            else if(arg2 == "de")
-            {
-                qDebug() << "Exporting German";
-                xml->ParseAllFiles("de");
-                return 0;
-            }
-            else if(arg2 == "it")
-            {
-                qDebug() << "Exporting Italian";
-                xml->ParseAllFiles("it");
-                return 0;
-            }
-            else if(arg2 == "es")
-            {
-                qDebug() << "Exporting Spanish";
-                xml->ParseAllFiles("es");
-                return 0;
-            }
-            else if(arg2 == "pl")
-            {
-                qDebug() << "Exporting Polish";
-                xml->ParseAllFiles("pl");
-                return 0;
-            }
-            else if(arg2 == "ru")
-            {
-                qDebug() << "Exporting Russian";
-                xml->ParseAllFiles("ru");
+                qDebug() << "Exporting Chinese";
+                xml->ParseAllFiles("Chinese");
                 return 0;
             }
             else if(arg2 == "fi")
             {
                 qDebug() << "Exporting Finnish";
-                xml->ParseAllFiles("fi");
+                xml->ParseAllFiles("Finnish");
+                return 0;
+            }
+            else if(arg2 == "fr")
+            {
+                qDebug() << "Exporting French";
+                xml->ParseAllFiles("French");
+                return 0;
+            }
+            else if(arg2 == "de")
+            {
+                qDebug() << "Exporting German";
+                xml->ParseAllFiles("German");
                 return 0;
             }
             else if(arg2 == "hu")
             {
                 qDebug() << "Exporting Hungarian";
-                xml->ParseAllFiles("hu");
+                xml->ParseAllFiles("Hungarian");
+                return 0;
+            }
+            else if(arg2 == "it")
+            {
+                qDebug() << "Exporting Italian";
+                xml->ParseAllFiles("Italian");
+                return 0;
+            }
+            else if(arg2 == "ja")
+            {
+                qDebug() << "Exporting Japanese";
+                xml->ParseAllFiles("Japanese");
+                return 0;
+            }
+            else if(arg2 == "pl")
+            {
+                qDebug() << "Exporting Polish";
+                xml->ParseAllFiles("Polish");
+                return 0;
+            }
+            else if(arg2 == "ru")
+            {
+                qDebug() << "Exporting Russian";
+                xml->ParseAllFiles("Russian");
+                return 0;
+            }
+            else if(arg2 == "es")
+            {
+                qDebug() << "Exporting Spanish";
+                xml->ParseAllFiles("Spanish");
                 return 0;
             }
             else
@@ -167,15 +174,11 @@ int main(int argc, char *argv[])
         {
             case 1 :
                 dir_parse.removeRecursively();
-                xml->ParseAllFiles("en");
-                xml->ParseAllFiles("fr");
-                xml->ParseAllFiles("de");
-                xml->ParseAllFiles("it");
-                xml->ParseAllFiles("es");
-                xml->ParseAllFiles("pl");
-                xml->ParseAllFiles("ru");
-                xml->ParseAllFiles("fi");
-                xml->ParseAllFiles("hu");
+                xml->ParseAllFiles("English");
+                foreach(QString lang_export, xml->ListLanguages(".")){
+                    //qDebug() << lang_export;
+                    xml->ParseAllFiles(lang_export);
+                }
                 break;
 
             case 2 :
@@ -243,14 +246,16 @@ void languages::ParseAllFiles(QString int_lang)
     // Language settings
     QString language_code;
     if(int_lang == "English"){language_code = "en";}
+    else if(int_lang == "Chinese"){language_code = "zh";}
+    else if(int_lang == "Finnish"){language_code = "fi";}
     else if(int_lang == "French"){language_code = "fr";}
     else if(int_lang == "German"){language_code = "de";}
+    else if(int_lang == "Hungarian"){language_code = "hu";}
     else if(int_lang == "Italian"){language_code = "it";}
-    else if(int_lang == "Spanish"){language_code = "es";}
+    else if(int_lang == "Japanese"){language_code = "ja";}
     else if(int_lang == "Polish"){language_code = "pl";}
     else if(int_lang == "Russian"){language_code = "ru";}
-    else if(int_lang == "Finnish"){language_code = "fi";}
-    else if(int_lang == "Hungarian"){language_code = "hu";}
+    else if(int_lang == "Spanish"){language_code = "es";}
     else { qDebug() << "Language not supported. Please report on the forum. Aborting..."; return;}
     QString output_dir = "lang/" + language_code + "/";
 
@@ -312,14 +317,16 @@ void languages::ParseDocument(QString input_file, QString int_lang)
 
     QString language_code;
     if(int_lang == "English"){language_code = "en";}
+    else if(int_lang == "Chinese"){language_code = "zh";}
+    else if(int_lang == "Finnish"){language_code = "fi";}
     else if(int_lang == "French"){language_code = "fr";}
     else if(int_lang == "German"){language_code = "de";}
+    else if(int_lang == "Hungarian"){language_code = "hu";}
     else if(int_lang == "Italian"){language_code = "it";}
-    else if(int_lang == "Spanish"){language_code = "es";}
+    else if(int_lang == "Japanese"){language_code = "ja";}
     else if(int_lang == "Polish"){language_code = "pl";}
     else if(int_lang == "Russian"){language_code = "ru";}
-    else if(int_lang == "Finnish"){language_code = "fi";}
-    else if(int_lang == "Hungarian"){language_code = "hu";}
+    else if(int_lang == "Spanish"){language_code = "es";}
 
     // Getting filenames
     input_file.replace(".XML", ".xml", Qt::CaseSensitive);
@@ -2107,6 +2114,8 @@ QString languages::AutomaticLanguageDetection(QString dir)
 {
     // Automatic language detection / menu
     QStringList known_languages = ListLanguages(dir);
+    known_languages << "English";
+    known_languages.sort();
     QString lang;
     QString lang_check;
     std::string answer;

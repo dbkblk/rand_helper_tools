@@ -8,4 +8,5 @@ DONE - Make the sorting function not sensible from case
 DONE - BUG: Updating subtags create a new tag instead
 DONE - Add a conversion table support
 DONE - Add all new functions available from commandline
+DONE - Check the colonization files bug
 
