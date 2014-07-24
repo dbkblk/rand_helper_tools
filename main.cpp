@@ -4,7 +4,7 @@
 #include <QtXml/QtXml>
 
 namespace constants {
-const QString VERSION = "0.9";
+const QString VERSION = "1.0";
 }
 
 class languages

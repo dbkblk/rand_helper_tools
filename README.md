@@ -13,7 +13,7 @@ As of v0.5, it has 3 functions enabled. To work, the executable should be copied
 ### Export all
 The parser read every xml text file in the folder and extract every string for every language known. It create a subfolder «lang» which contains a folder for the 9 main languages actually supported: English, Finnish, French, German, Italian, Hungarian, Polish, Russian* and Spanish. 
 
-* The russian language is specific as it does not use ISO-8859-1 but ISO-8859-5 characters. The charset used in the xml files is latin1 with modded GameFonts.tga and thus, the files are converted to UTF8, so the output files are perfectly readable by russians (but not by me, unfortunately :D).
+* The russian language is specific as it does not use ISO-8859-1 but ISO-8859-5 characters. The charset used in the xml files is latin1 with modded GameFonts.tga and thus, the files are converted to UTF8, so the output files are perfectly readable by russians (but not by me, unfortunately :D). For this special use case, the file "_xml_charsets.config" can be used to convert a character into another one.
 
 For example, the file «A_New_Dawn_Concept_Civ4GameText.xml» will be spread in 6 files for each language which will contains only one language.
 
@@ -40,7 +40,7 @@ Same example in french:
 To resume, the function do:
 - Read all the xml files in the folder where the parser is present. The input files are ISO-8859-1 encoded (Civilization IV format).
 - Extract each string for each language and generate a subfolder "lang/" with a subfolder for each language (en, fr, de, etc.).
-- Russian is converted from encoded based on the modded GameFonts.tga and converted to readable UTF8.
+- Special characters sets rules are read from the "_xml_charsets.config" file and converted to readable UTF8.
 - Each language subfolder will contain a file formatted as the last example with the same name as the input file. The output files are UTF8.
 
 ### Export a language
@@ -206,6 +206,50 @@ For example, for:
 
 - Generate report which contains lines like "FILE: BUILDINGS.xml - TAG: TXT_KEY_BUILDING_AIRPORT_STRATEGY - Removing Russian (empty)" or "FILE: BUILDINGS.xml - TAG: TXT_KEY_BUILDING_ROMAN_FORUM - Removing French (identical)". I think this is pretty straightforward.
 
+### Find unused tags
+
+This function try to find tags in the mod text files which aren't used in the base game nor in the modded dll.
+
+Requirements:
+- Set the base game path to <gamepath></gamepath> into "_xml_parser.config" file
+- Set the DLL source code path to <sourcepath></sourcepath> into "_xml_parser.config" file
+
+Once you've done that, launch the function. It will iterate trough the DLL source code files, then in every xml, python and WorldBuilderSave, to look for tags.
+This is a little hacky because it cannot find tags which are generated on the fly by the game engine. You need to set exceptions for this kind of tag...
+In the config file, set the prefix of theses tags. BUG and BUFFY are known to be generated on-the-fly, that's why there are already added to this list.
+
+    <exceptions>
+        <tag>TXT_KEY_BUG_OPT</tag>
+        <tag>TXT_KEY_BUFFY</tag>
+    </exceptions>
+
+A report will be generated at the end.
+
+Please report if you find others troubles.
+
+### Charset conversion
+
+The only way to add new languages which aren't latin1 is to use a modified gamefonts.tga which replace some characters. The parser is able to encode/decoded these characters when converting to Civ4 or UTF8.
+
+This is the purpose of the file "_xml_charsets.config".
+It look like:
+
+    <main>
+        <Russian>
+            <char unicode="1040">192</char>
+            ...
+        </Russian>
+      </main>
+
+When the parser will read the character &#192; in the file, it will convert it to &#1040; in UTF8, which will make the sentence readable for russian.
+When it will convert the file back to Civ4 format, it will do the opposite.
+You can add as many characters as you want as soon as you use the same format.
+To add a new language, just add a new marker below the "Russian" maker. The marker name MUST BE the same as the one in the game text files (f.i. "Russian", "French", "Spanish", etc.)
+
+### Remove a specific language
+
+The parser will check each game file and remove the specified language whenever it is encountered. A report will be generated.
+
 # Some use cases
 
 ## Merge all base game strings to the platform:
@@ -237,9 +281,3 @@ At the end, you will have sorted files with the last strings values known. That'
 - Start the parser and sort files. Go read a book while processing :D
 - At the end, check the "_REMOVED_TAGS_CATEGORY.xml" files to see if duplicates have been found and manually choose what tag values to keep.
 - The sorted files are in "sorted/". Just replace original.
-
-## FURTHER DEVELOPMENT
-
-- Backup and remove a specific language
-- Detect unused tag based on python and xml files in «Assets»
-- Support of Sinhala language

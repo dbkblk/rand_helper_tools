@@ -19,6 +19,7 @@ RC_FILE = icon.rc
 SOURCES += main.cpp
 
 OTHER_FILES += \
-    TODO.md
+    TODO.md \
+    README.md
 
 HEADERS +=
