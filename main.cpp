@@ -2,7 +2,6 @@
 #include <QtCore>
 #include <QDebug>
 #include <QtXml/QtXml>
-#include "dll_finder.h"
 
 namespace constants {
 const QString VERSION = "0.9";
@@ -643,49 +642,21 @@ void languages::ImportDocumentToAll(QString int_lang, QStringList file_list)
                                 print_list << operation;
                                 //qDebug() << operation;
 
-                                // Check if there is a sub language marker
-                                if (!tag_orig.firstChildElement(tag_lang).firstChildElement("Text").firstChild().isNull() || !tag_orig.firstChildElement("English").firstChildElement("Text").firstChild().isNull())
+                                // Case: original direct value, new subtag value
+                                if (tag_orig.firstChildElement(tag_lang).firstChildElement("Text").firstChild().isNull() && !tag_tr.attribute("gender").isNull())
                                 {
-                                    //qDebug() << value_text_tr;
                                     QString new_value_text = value_text_tr;
-                                    QString new_value_gender;
-                                    QString new_value_plural;
+                                    QString new_value_gender = tag_tr.attribute("gender");
+                                    QString new_value_plural = tag_tr.attribute("plural");
 
-                                    // Check if attributes exists in translated file, then in original file, then use english
-                                    if(!tag_tr.attribute("gender").isNull())
-                                    {
-                                        new_value_gender = tag_tr.attribute("gender");
-                                    }
-                                    else if(!tag_orig.firstChildElement(tag_lang).firstChildElement("Gender").firstChild().isNull())
-                                    {
-                                        new_value_gender = tag_orig.firstChildElement(tag_lang).firstChildElement("Gender").firstChild().nodeValue();
-                                    }
-                                    else
-                                    {
-                                        new_value_gender = tag_orig.firstChildElement("English").firstChildElement("Gender").firstChild().nodeValue();
-                                    }
-                                    if(!tag_tr.attribute("plural").isNull())
-                                    {
-                                        new_value_plural = tag_tr.attribute("plural");
-                                    }
-                                    else if(!tag_orig.firstChildElement(tag_lang).firstChildElement("Plural").firstChild().isNull())
-                                    {
-                                        new_value_plural = tag_orig.firstChildElement(tag_lang).firstChildElement("Plural").firstChild().nodeValue();
-                                    }
-                                    else
-                                    {
-                                        new_value_plural = tag_orig.firstChildElement("English").firstChildElement("Plural").firstChild().nodeValue();
-                                    }
-
-                                    // Append nodes
-                                    QDomNode new_node_language = input.createElement(tag_lang);
-                                    tag_orig.appendChild(new_node_language);
+                                    // Empty text value, then add subtags
+                                    tag_orig.removeChild(tag_orig.firstChildElement(tag_lang).firstChild());
                                     QDomNode new_node_text = input.createElement("Text");
                                     QDomNode new_node_gender = input.createElement("Gender");
                                     QDomNode new_node_plural = input.createElement("Plural");
-                                    new_node_language.appendChild(new_node_text);
-                                    new_node_language.appendChild(new_node_gender);
-                                    new_node_language.appendChild(new_node_plural);
+                                    tag_orig.firstChildElement(tag_lang).firstChild().appendChild(new_node_text);
+                                    tag_orig.firstChildElement(tag_lang).firstChild().appendChild(new_node_gender);
+                                    tag_orig.firstChildElement(tag_lang).firstChild().appendChild(new_node_plural);
 
                                     QDomText new_node_text_value = input.createTextNode(new_value_text);
                                     QDomText new_node_gender_value = input.createTextNode(new_value_gender);
@@ -695,16 +666,56 @@ void languages::ImportDocumentToAll(QString int_lang, QStringList file_list)
                                     new_node_plural.appendChild(new_node_plural_value);
 
                                 }
-                                // Check if the original direct language marker doesn't exist
+                                // Case: original, new subtag value
+                                else if(!tag_orig.firstChildElement(tag_lang).firstChildElement("Text").firstChild().isNull()){
+                                    tag_orig.firstChildElement(tag_lang).firstChildElement("Text").firstChild().setNodeValue(value_text_tr);
+                                    // Set gender and plural
+                                    if (!tag_tr.attribute("gender").isNull()){
+                                    QString new_value_gender = tag_tr.attribute("gender");
+                                    tag_orig.firstChildElement(tag_lang).firstChildElement("Gender").firstChild().setNodeValue(new_value_gender);}
+                                    if(!tag_tr.attribute("plural").isNull()){
+                                    QString new_value_plural = tag_tr.attribute("plural");
+                                    tag_orig.firstChildElement(tag_lang).firstChildElement("Plural").firstChild().setNodeValue(new_value_plural);
+                                    }
+                                }
+
+                                // Case: no original
                                 else if(tag_orig.firstChildElement(tag_lang).firstChild().isNull())
                                 {
+                                    // New subtag value
+                                    if (value_text == "" && !tag_tr.attribute("gender").isNull()){
+                                        QString new_value_text = value_text_tr;
+                                        QString new_value_gender = tag_tr.attribute("gender");
+                                        QString new_value_plural = tag_tr.attribute("plural");
+
+                                        // Append nodes
+                                        QDomNode new_node_language = input.createElement(tag_lang);
+                                        tag_orig.appendChild(new_node_language);
+                                        QDomNode new_node_text = input.createElement("Text");
+                                        QDomNode new_node_gender = input.createElement("Gender");
+                                        QDomNode new_node_plural = input.createElement("Plural");
+                                        new_node_language.appendChild(new_node_text);
+                                        new_node_language.appendChild(new_node_gender);
+                                        new_node_language.appendChild(new_node_plural);
+
+                                        QDomText new_node_text_value = input.createTextNode(new_value_text);
+                                        QDomText new_node_gender_value = input.createTextNode(new_value_gender);
+                                        QDomText new_node_plural_value = input.createTextNode(new_value_plural);
+                                        new_node_text.appendChild(new_node_text_value);
+                                        new_node_gender.appendChild(new_node_gender_value);
+                                        new_node_plural.appendChild(new_node_plural_value);
+                                    }
+
+                                    // New direct value
+                                    else {
                                     QDomNode new_tag = input.createElement(tag_lang);
                                     tag_orig.appendChild(new_tag);
                                     QDomText new_value = input.createTextNode(value_text_tr);
                                     new_tag.appendChild(new_value);
+                                    }
                                 }
 
-                                // Check if there is a direct language marker
+                                // Case: original, direct value
                                 else
                                 {
                                     //qDebug() << "here";
@@ -870,49 +881,21 @@ void languages::ImportDocumentToSameName(QString int_lang, QStringList file_list
                                 print_list << operation;
                                 //qDebug() << operation;
 
-                                // Check if there is a sub language marker
-                                if (!tag_orig.firstChildElement(tag_lang).firstChildElement("Text").firstChild().isNull() || !tag_orig.firstChildElement("English").firstChildElement("Text").firstChild().isNull())
+                                // Case: original direct value, new subtag value
+                                if (tag_orig.firstChildElement(tag_lang).firstChildElement("Text").firstChild().isNull() && !tag_tr.attribute("gender").isNull())
                                 {
-                                    //qDebug() << value_text_tr;
                                     QString new_value_text = value_text_tr;
-                                    QString new_value_gender;
-                                    QString new_value_plural;
+                                    QString new_value_gender = tag_tr.attribute("gender");
+                                    QString new_value_plural = tag_tr.attribute("plural");
 
-                                    // Check if attributes exists in translated file, then in original file, then use english
-                                    if(!tag_tr.attribute("gender").isNull())
-                                    {
-                                        new_value_gender = tag_tr.attribute("gender");
-                                    }
-                                    else if(!tag_orig.firstChildElement(tag_lang).firstChildElement("Gender").firstChild().isNull())
-                                    {
-                                        new_value_gender = tag_orig.firstChildElement(tag_lang).firstChildElement("Gender").firstChild().nodeValue();
-                                    }
-                                    else
-                                    {
-                                        new_value_gender = tag_orig.firstChildElement("English").firstChildElement("Gender").firstChild().nodeValue();
-                                    }
-                                    if(!tag_tr.attribute("plural").isNull())
-                                    {
-                                        new_value_plural = tag_tr.attribute("plural");
-                                    }
-                                    else if(!tag_orig.firstChildElement(tag_lang).firstChildElement("Plural").firstChild().isNull())
-                                    {
-                                        new_value_plural = tag_orig.firstChildElement(tag_lang).firstChildElement("Plural").firstChild().nodeValue();
-                                    }
-                                    else
-                                    {
-                                        new_value_plural = tag_orig.firstChildElement("English").firstChildElement("Plural").firstChild().nodeValue();
-                                    }
-
-                                    // Append nodes
-                                    QDomNode new_node_language = input.createElement(tag_lang);
-                                    tag_orig.appendChild(new_node_language);
+                                    // Empty text value, then add subtags
+                                    tag_orig.removeChild(tag_orig.firstChildElement(tag_lang).firstChild());
                                     QDomNode new_node_text = input.createElement("Text");
                                     QDomNode new_node_gender = input.createElement("Gender");
                                     QDomNode new_node_plural = input.createElement("Plural");
-                                    new_node_language.appendChild(new_node_text);
-                                    new_node_language.appendChild(new_node_gender);
-                                    new_node_language.appendChild(new_node_plural);
+                                    tag_orig.firstChildElement(tag_lang).firstChild().appendChild(new_node_text);
+                                    tag_orig.firstChildElement(tag_lang).firstChild().appendChild(new_node_gender);
+                                    tag_orig.firstChildElement(tag_lang).firstChild().appendChild(new_node_plural);
 
                                     QDomText new_node_text_value = input.createTextNode(new_value_text);
                                     QDomText new_node_gender_value = input.createTextNode(new_value_gender);
@@ -922,16 +905,56 @@ void languages::ImportDocumentToSameName(QString int_lang, QStringList file_list
                                     new_node_plural.appendChild(new_node_plural_value);
 
                                 }
-                                // Check if the original direct language marker doesn't exist
+                                // Case: original, new subtag value
+                                else if(!tag_orig.firstChildElement(tag_lang).firstChildElement("Text").firstChild().isNull()){
+                                    tag_orig.firstChildElement(tag_lang).firstChildElement("Text").firstChild().setNodeValue(value_text_tr);
+                                    // Set gender and plural
+                                    if (!tag_tr.attribute("gender").isNull()){
+                                    QString new_value_gender = tag_tr.attribute("gender");
+                                    tag_orig.firstChildElement(tag_lang).firstChildElement("Gender").firstChild().setNodeValue(new_value_gender);}
+                                    if(!tag_tr.attribute("plural").isNull()){
+                                    QString new_value_plural = tag_tr.attribute("plural");
+                                    tag_orig.firstChildElement(tag_lang).firstChildElement("Plural").firstChild().setNodeValue(new_value_plural);
+                                    }
+                                }
+
+                                // Case: no original
                                 else if(tag_orig.firstChildElement(tag_lang).firstChild().isNull())
                                 {
+                                    // New subtag value
+                                    if (value_text == "" && !tag_tr.attribute("gender").isNull()){
+                                        QString new_value_text = value_text_tr;
+                                        QString new_value_gender = tag_tr.attribute("gender");
+                                        QString new_value_plural = tag_tr.attribute("plural");
+
+                                        // Append nodes
+                                        QDomNode new_node_language = input.createElement(tag_lang);
+                                        tag_orig.appendChild(new_node_language);
+                                        QDomNode new_node_text = input.createElement("Text");
+                                        QDomNode new_node_gender = input.createElement("Gender");
+                                        QDomNode new_node_plural = input.createElement("Plural");
+                                        new_node_language.appendChild(new_node_text);
+                                        new_node_language.appendChild(new_node_gender);
+                                        new_node_language.appendChild(new_node_plural);
+
+                                        QDomText new_node_text_value = input.createTextNode(new_value_text);
+                                        QDomText new_node_gender_value = input.createTextNode(new_value_gender);
+                                        QDomText new_node_plural_value = input.createTextNode(new_value_plural);
+                                        new_node_text.appendChild(new_node_text_value);
+                                        new_node_gender.appendChild(new_node_gender_value);
+                                        new_node_plural.appendChild(new_node_plural_value);
+                                    }
+
+                                    // New direct value
+                                    else {
                                     QDomNode new_tag = input.createElement(tag_lang);
                                     tag_orig.appendChild(new_tag);
                                     QDomText new_value = input.createTextNode(value_text_tr);
                                     new_tag.appendChild(new_value);
+                                    }
                                 }
 
-                                // Check if there is a direct language marker
+                                // Case: original, direct value
                                 else
                                 {
                                     //qDebug() << "here";
@@ -1465,6 +1488,8 @@ void languages::ConvertCiv4ToUTF8(QString file)
     QDomNode write_root = write.createElement("Civ4GameText");
     write.appendChild(write_root);
 
+    // Open conversion table
+
    // Loop the input file
     for (read_text;!read_text.isNull();read_text = read_text.nextSiblingElement())
     {
@@ -1494,7 +1519,8 @@ void languages::ConvertCiv4ToUTF8(QString file)
                 // Check russian
                 if(read_element.tagName() == "Russian")
                 {
-                    write_text_value = ConvertLatin1ToRussian(write_text_value);
+                    //write_text_value = ConvertLatin1ToRussian(write_text_value);
+
                 }
 
                 QDomText write_text = write.createTextNode(write_text_value);
