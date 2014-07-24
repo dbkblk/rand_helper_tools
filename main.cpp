@@ -20,8 +20,8 @@ public:
     void SortCategories();
     void SortCategoriesExperimental();
     QStringList FindUnusedTags();
-    QString ConvertLatin1ToRussian(QString string);
-    QString ConvertRussianToLatin1(QString string);
+    QString ConvertLatin1ToCharset(QString language, QString string);
+    QString ConvertCharsetToLatin1(QString language, QString string);
     void SorterHelper(QString prefix);
     QString ConvertStringToCiv4(QString string);
     void ConvertCiv4ToUTF8(QString file);
@@ -1453,6 +1453,25 @@ void languages::ConvertCiv4ToUTF8(QString file)
      * Save the content to another file
      * Replace the other file with the first */
 
+    // Check for charset file
+    int charset = 0;
+    QFile charset_file("_xml_charsets.config");
+    QStringList value_languages;
+    if(charset_file.exists()){
+        QDomDocument charset_xml;
+        charset_file.open(QIODevice::ReadOnly);
+        charset_xml.setContent(&charset_file);
+        charset_file.close();
+        QDomElement charset_xml_main = charset_xml.firstChildElement("main").firstChildElement();
+
+
+        for (charset_xml_main;!charset_xml_main.isNull();charset_xml_main = charset_xml_main.nextSiblingElement()){
+            value_languages << charset_xml_main.tagName();
+            //qDebug() << charset_xml_main.tagName();
+        }
+        charset = 1;
+    }
+
     // First, pure read to remove faulty characters
     QFile amp_read(file);
     QFile amp_write(file + "_amptemp_");
@@ -1488,8 +1507,6 @@ void languages::ConvertCiv4ToUTF8(QString file)
     QDomNode write_root = write.createElement("Civ4GameText");
     write.appendChild(write_root);
 
-    // Open conversion table
-
    // Loop the input file
     for (read_text;!read_text.isNull();read_text = read_text.nextSiblingElement())
     {
@@ -1516,11 +1533,14 @@ void languages::ConvertCiv4ToUTF8(QString file)
                 QString write_gender_value = read_element.firstChildElement("Gender").firstChild().nodeValue();
                 QString write_plural_value = read_element.firstChildElement("Plural").firstChild().nodeValue();
 
-                // Check russian
-                if(read_element.tagName() == "Russian")
-                {
-                    //write_text_value = ConvertLatin1ToRussian(write_text_value);
-
+                // Check charsets
+                if (charset == 1){
+                    foreach (QString temp, value_languages){
+                        if(read_element.tagName() == temp)
+                        {
+                            write_text_value = ConvertLatin1ToCharset(temp, write_text_value);
+                        }
+                    }
                 }
 
                 QDomText write_text = write.createTextNode(write_text_value);
@@ -1536,10 +1556,14 @@ void languages::ConvertCiv4ToUTF8(QString file)
                 write_node.appendChild(write_element);
                 QString write_text_value = read_element.firstChild().nodeValue();
 
-                // Check russian
-                if(read_element.tagName() == "Russian")
-                {
-                    write_text_value = ConvertLatin1ToRussian(write_text_value);
+                // Check charsets
+                if (charset == 1){
+                    foreach (QString temp, value_languages){
+                        if(read_element.tagName() == temp)
+                        {
+                            write_text_value = ConvertLatin1ToCharset(temp, write_text_value);
+                        }
+                    }
                 }
 
                 QDomText write_text = write.createTextNode(write_text_value);
@@ -1561,6 +1585,25 @@ void languages::ConvertUTF8ToCiv4(QString file)
     /* Read all the file
      * Save the content to another file
      * Replace the other file with the first */
+
+    // Check for charset file
+    int charset = 0;
+    QFile charset_file("_xml_charsets.config");
+    QStringList value_languages;
+    if(charset_file.exists()){
+        QDomDocument charset_xml;
+        charset_file.open(QIODevice::ReadOnly);
+        charset_xml.setContent(&charset_file);
+        charset_file.close();
+        QDomElement charset_xml_main = charset_xml.firstChildElement("main").firstChildElement();
+
+
+        for (charset_xml_main;!charset_xml_main.isNull();charset_xml_main = charset_xml_main.nextSiblingElement()){
+            value_languages << charset_xml_main.tagName();
+            //qDebug() << charset_xml_main.tagName();
+        }
+        charset = 1;
+    }
 
     // Open the input file
     QDomDocument read;
@@ -1606,10 +1649,14 @@ void languages::ConvertUTF8ToCiv4(QString file)
                 QString write_gender_value = read_element.firstChildElement("Gender").firstChild().nodeValue();
                 QString write_plural_value = read_element.firstChildElement("Plural").firstChild().nodeValue();
 
-                // Check russian
-                if(read_element.tagName() == "Russian")
-                {
-                    write_text_value = ConvertRussianToLatin1(write_text_value);
+                // Check charsets
+                if (charset == 1){
+                    foreach (QString temp, value_languages){
+                        if(read_element.tagName() == temp)
+                        {
+                            write_text_value = ConvertCharsetToLatin1(temp, write_text_value);
+                        }
+                    }
                 }
 
                 write_text_value = ConvertStringToCiv4(write_text_value);
@@ -1631,10 +1678,14 @@ void languages::ConvertUTF8ToCiv4(QString file)
 
                 QString write_text_value = read_element.firstChild().nodeValue();
 
-                // Check russian
-                if(read_element.tagName() == "Russian")
-                {
-                     write_text_value = ConvertRussianToLatin1(write_text_value);
+                // Check charsets
+                if (charset == 1){
+                    foreach (QString temp, value_languages){
+                        if(read_element.tagName() == temp)
+                        {
+                            write_text_value = ConvertCharsetToLatin1(temp, write_text_value);
+                        }
+                    }
                 }
 
                 write_text_value = ConvertStringToCiv4(write_text_value);
@@ -1676,163 +1727,73 @@ QString languages::ConvertStringToCiv4(QString string)
     return encode;
 }
 
-QString languages::ConvertLatin1ToRussian(QString string)
+QString languages::ConvertLatin1ToCharset(QString language, QString string)
 {
-    // Convert from C0 (latin1) to B0 (latin5) charsets (8859-1 to 8859-5)
+    // Open the charset file and go through the correct language
+    QFile charset_file("_xml_charsets.config");
+    QDomDocument charset_xml;
+    charset_file.open(QIODevice::ReadOnly);
+    charset_xml.setContent(&charset_file);
+    charset_file.close();
+    QDomElement charset_xml_main = charset_xml.firstChildElement("main").firstChildElement(language).firstChildElement();
+    QMap<int, int> table;
+    for (charset_xml_main;!charset_xml_main.isNull();charset_xml_main = charset_xml_main.nextSiblingElement()){
+        int value_standard = charset_xml_main.firstChild().nodeValue().toInt();
+        int value_unicode = charset_xml_main.attribute("unicode").toInt();
+        table.insert(value_standard,value_unicode);
+    }
 
+    // Open the sentence to translate
     QString encode;
     for(int i=0;i<string.size();++i)
     {
         QChar ch = string.at(i);
 
-        // Conversion table (see ods file)
-        if(ch == QChar(192)){ch = QChar(1040);};
-        if(ch == QChar(193)){ch = QChar(1041);};
-        if(ch == QChar(194)){ch = QChar(1042);};
-        if(ch == QChar(195)){ch = QChar(1043);};
-        if(ch == QChar(196)){ch = QChar(1044);};
-        if(ch == QChar(197)){ch = QChar(1045);};
-        if(ch == QChar(198)){ch = QChar(1046);};
-        if(ch == QChar(199)){ch = QChar(1047);};
-        if(ch == QChar(200)){ch = QChar(1048);};
-        if(ch == QChar(201)){ch = QChar(1049);};
-        if(ch == QChar(202)){ch = QChar(1050);};
-        if(ch == QChar(203)){ch = QChar(1051);};
-        if(ch == QChar(204)){ch = QChar(1052);};
-        if(ch == QChar(205)){ch = QChar(1053);};
-        if(ch == QChar(206)){ch = QChar(1054);};
-        if(ch == QChar(207)){ch = QChar(1055);};
-        if(ch == QChar(208)){ch = QChar(1056);};
-        if(ch == QChar(209)){ch = QChar(1057);};
-        if(ch == QChar(210)){ch = QChar(1058);};
-        if(ch == QChar(211)){ch = QChar(1059);};
-        if(ch == QChar(212)){ch = QChar(1060);};
-        if(ch == QChar(213)){ch = QChar(1061);};
-        if(ch == QChar(214)){ch = QChar(1062);};
-        if(ch == QChar(215)){ch = QChar(1063);};
-        if(ch == QChar(216)){ch = QChar(1064);};
-        if(ch == QChar(217)){ch = QChar(1065);};
-        if(ch == QChar(218)){ch = QChar(1066);};
-        if(ch == QChar(219)){ch = QChar(1067);};
-        if(ch == QChar(220)){ch = QChar(1068);};
-        if(ch == QChar(221)){ch = QChar(1069);};
-        if(ch == QChar(222)){ch = QChar(1070);};
-        if(ch == QChar(223)){ch = QChar(1071);};
-        if(ch == QChar(224)){ch = QChar(1072);};
-        if(ch == QChar(225)){ch = QChar(1073);};
-        if(ch == QChar(226)){ch = QChar(1074);};
-        if(ch == QChar(227)){ch = QChar(1075);};
-        if(ch == QChar(228)){ch = QChar(1076);};
-        if(ch == QChar(229)){ch = QChar(1077);};
-        if(ch == QChar(230)){ch = QChar(1078);};
-        if(ch == QChar(231)){ch = QChar(1079);};
-        if(ch == QChar(232)){ch = QChar(1080);};
-        if(ch == QChar(233)){ch = QChar(1081);};
-        if(ch == QChar(234)){ch = QChar(1082);};
-        if(ch == QChar(235)){ch = QChar(1083);};
-        if(ch == QChar(236)){ch = QChar(1084);};
-        if(ch == QChar(237)){ch = QChar(1085);};
-        if(ch == QChar(238)){ch = QChar(1086);};
-        if(ch == QChar(239)){ch = QChar(1087);};
-        if(ch == QChar(240)){ch = QChar(1088);};
-        if(ch == QChar(241)){ch = QChar(1089);};
-        if(ch == QChar(242)){ch = QChar(1090);};
-        if(ch == QChar(243)){ch = QChar(1091);};
-        if(ch == QChar(244)){ch = QChar(1092);};
-        if(ch == QChar(245)){ch = QChar(1093);};
-        if(ch == QChar(246)){ch = QChar(1094);};
-        if(ch == QChar(247)){ch = QChar(1095);};
-        if(ch == QChar(248)){ch = QChar(1096);};
-        if(ch == QChar(249)){ch = QChar(1097);};
-        if(ch == QChar(250)){ch = QChar(1098);};
-        if(ch == QChar(251)){ch = QChar(1099);};
-        if(ch == QChar(252)){ch = QChar(1100);};
-        if(ch == QChar(253)){ch = QChar(1101);};
-        if(ch == QChar(254)){ch = QChar(1102);};
-        if(ch == QChar(255)){ch = QChar(1103);};
+        QMap<int,int>::iterator f;
+        for (f = table.begin(); f != table.end(); ++f){
+            //qDebug() << f.value() << " | " << f.key();
+            if (f.key() == ch){
+                ch = f.value();
+            }
+        }
+
         encode += ch;
     }
-
     return encode;
 }
 
-QString languages::ConvertRussianToLatin1(QString string)
+QString languages::ConvertCharsetToLatin1(QString language, QString string)
 {
-    // Convert from C0 (latin1) to B0 (latin5) charsets (8859-1 to 8859-5)
+    // Open the charset file and go through the correct language
+    QFile charset_file("_xml_charsets.config");
+    QDomDocument charset_xml;
+    charset_file.open(QIODevice::ReadOnly);
+    charset_xml.setContent(&charset_file);
+    charset_file.close();
+    QDomElement charset_xml_main = charset_xml.firstChildElement("main").firstChildElement(language).firstChildElement();
+    QMap<int, int> table;
+    for (charset_xml_main;!charset_xml_main.isNull();charset_xml_main = charset_xml_main.nextSiblingElement()){
+        int value_standard = charset_xml_main.firstChild().nodeValue().toInt();
+        int value_unicode = charset_xml_main.attribute("unicode").toInt();
+        table.insert(value_unicode,value_standard);
+    }
 
+    // Open the sentence to translate
     QString encode;
     for(int i=0;i<string.size();++i)
     {
         QChar ch = string.at(i);
 
-        // Conversion table (see ods file)
-        if(ch == QChar(1040)){ch = QChar(192);};
-        if(ch == QChar(1041)){ch = QChar(193);};
-        if(ch == QChar(1042)){ch = QChar(194);};
-        if(ch == QChar(1043)){ch = QChar(195);};
-        if(ch == QChar(1044)){ch = QChar(196);};
-        if(ch == QChar(1045)){ch = QChar(197);};
-        if(ch == QChar(1046)){ch = QChar(198);};
-        if(ch == QChar(1047)){ch = QChar(199);};
-        if(ch == QChar(1048)){ch = QChar(200);};
-        if(ch == QChar(1049)){ch = QChar(201);};
-        if(ch == QChar(1050)){ch = QChar(202);};
-        if(ch == QChar(1051)){ch = QChar(203);};
-        if(ch == QChar(1052)){ch = QChar(204);};
-        if(ch == QChar(1053)){ch = QChar(205);};
-        if(ch == QChar(1054)){ch = QChar(206);};
-        if(ch == QChar(1055)){ch = QChar(207);};
-        if(ch == QChar(1056)){ch = QChar(208);};
-        if(ch == QChar(1057)){ch = QChar(209);};
-        if(ch == QChar(1058)){ch = QChar(210);};
-        if(ch == QChar(1059)){ch = QChar(211);};
-        if(ch == QChar(1060)){ch = QChar(212);};
-        if(ch == QChar(1061)){ch = QChar(213);};
-        if(ch == QChar(1062)){ch = QChar(214);};
-        if(ch == QChar(1063)){ch = QChar(215);};
-        if(ch == QChar(1064)){ch = QChar(216);};
-        if(ch == QChar(1065)){ch = QChar(217);};
-        if(ch == QChar(1066)){ch = QChar(218);};
-        if(ch == QChar(1067)){ch = QChar(219);};
-        if(ch == QChar(1068)){ch = QChar(220);};
-        if(ch == QChar(1069)){ch = QChar(221);};
-        if(ch == QChar(1070)){ch = QChar(222);};
-        if(ch == QChar(1071)){ch = QChar(223);};
-        if(ch == QChar(1072)){ch = QChar(224);};
-        if(ch == QChar(1073)){ch = QChar(225);};
-        if(ch == QChar(1074)){ch = QChar(226);};
-        if(ch == QChar(1075)){ch = QChar(227);};
-        if(ch == QChar(1076)){ch = QChar(228);};
-        if(ch == QChar(1077)){ch = QChar(229);};
-        if(ch == QChar(1078)){ch = QChar(230);};
-        if(ch == QChar(1079)){ch = QChar(231);};
-        if(ch == QChar(1080)){ch = QChar(232);};
-        if(ch == QChar(1081)){ch = QChar(233);};
-        if(ch == QChar(1082)){ch = QChar(234);};
-        if(ch == QChar(1083)){ch = QChar(235);};
-        if(ch == QChar(1084)){ch = QChar(236);};
-        if(ch == QChar(1085)){ch = QChar(237);};
-        if(ch == QChar(1086)){ch = QChar(238);};
-        if(ch == QChar(1087)){ch = QChar(239);};
-        if(ch == QChar(1088)){ch = QChar(240);};
-        if(ch == QChar(1089)){ch = QChar(241);};
-        if(ch == QChar(1090)){ch = QChar(242);};
-        if(ch == QChar(1091)){ch = QChar(243);};
-        if(ch == QChar(1092)){ch = QChar(244);};
-        if(ch == QChar(1093)){ch = QChar(245);};
-        if(ch == QChar(1094)){ch = QChar(246);};
-        if(ch == QChar(1095)){ch = QChar(247);};
-        if(ch == QChar(1096)){ch = QChar(248);};
-        if(ch == QChar(1097)){ch = QChar(249);};
-        if(ch == QChar(1098)){ch = QChar(250);};
-        if(ch == QChar(1099)){ch = QChar(251);};
-        if(ch == QChar(1100)){ch = QChar(252);};
-        if(ch == QChar(1101)){ch = QChar(253);};
-        if(ch == QChar(1102)){ch = QChar(254);};
-        if(ch == QChar(1103)){ch = QChar(255);};
+        QMap<int,int>::iterator f;
+        for (f = table.begin(); f != table.end(); ++f){
+            //qDebug() << f.value() << " | " << f.key();
+            if (f.key() == ch){
+                ch = f.value();
+            }
+        }
+
         encode += ch;
     }
-
     return encode;
 }
 
