@@ -1,4 +1,5 @@
 #include "f_lang.h"
+#include "f_files.h"
 #include <QtCore>
 #include <QtXml>
 
@@ -79,27 +80,26 @@ bool f_lang::isSupportedLang(QString langCode){
     }
 }
 
-void f_lang::convertCivToUTF(QString file)
+bool f_lang::convertCivToUTF(QString file)
 {
     /* Read all the file
      * Save the content to another file
      * Replace the other file with the first */
 
-    // Check for charset file
+    // Check for charset specific rules (ex: Russian)
     int charset = 0;
-    QFile charset_file("_xml_charsets.config");
+    QFile settings("xml_parser.config");
     QStringList value_languages;
-    if(charset_file.exists()){
-        QDomDocument charset_xml;
-        charset_file.open(QIODevice::ReadOnly);
-        charset_xml.setContent(&charset_file);
-        charset_file.close();
-        QDomElement charset_xml_main = charset_xml.firstChildElement("main").firstChildElement();
+    if(settings.exists()){
+        QDomDocument xml;
+        settings.open(QIODevice::ReadOnly);
+        xml.setContent(&settings);
+        settings.close();
+        QDomElement xml_main = xml.firstChildElement("main").firstChildElement("charsets").firstChildElement();
 
-
-        for (charset_xml_main;!charset_xml_main.isNull();charset_xml_main = charset_xml_main.nextSiblingElement()){
-            value_languages << charset_xml_main.tagName();
-            //qDebug() << charset_xml_main.tagName();
+        for (xml_main;!xml_main.isNull();xml_main = xml_main.nextSiblingElement()){
+            value_languages <<xml_main.tagName();
+            qDebug() << xml_main.tagName() << "charset rules found";
         }
         charset = 1;
     }
@@ -124,11 +124,17 @@ void f_lang::convertCivToUTF(QString file)
 
     // Open the input file
     QDomDocument read;
-    QFile file_in(file + "_amptemp_");
+    QString filename = file + "_amptemp_";
+    QFile file_in(filename);
+    f_files f;
+    f_lang l;
+    if(!f.checkXMLConformity(filename)){
+        qDebug() << "Non conformal XML" << filename;
+        return false;
+    }
     file_in.open(QIODevice::ReadOnly);
     read.setContent(&file_in);
     QDomElement read_text = read.firstChildElement("Civ4GameText").firstChildElement("TEXT");
-    //qDebug() << read_text.firstChildElement().tagName();
 
     // Create the output file
     QDomDocument write;
@@ -170,7 +176,8 @@ void f_lang::convertCivToUTF(QString file)
                     foreach (QString temp, value_languages){
                         if(read_element.tagName() == temp)
                         {
-                            write_text_value = f_lang::convertLatinToCharset(temp, write_text_value);
+                            qDebug() << "Converting" << write_text_value;
+                            write_text_value = l.convertLatinToCharset(temp, write_text_value);
                         }
                     }
                 }
@@ -193,7 +200,8 @@ void f_lang::convertCivToUTF(QString file)
                     foreach (QString temp, value_languages){
                         if(read_element.tagName() == temp)
                         {
-                            write_text_value = f_lang::convertLatinToCharset(temp, write_text_value);
+                            //qDebug() << "Converting" << write_text_value;
+                            write_text_value = l.convertLatinToCharset(temp, write_text_value);
                         }
                     }
                 }
@@ -212,38 +220,42 @@ void f_lang::convertCivToUTF(QString file)
     QFile::rename("rewrite.xml",file);
 }
 
-void f_lang::convertUTFToCiv(QString file)
+bool f_lang::convertUTFToCiv(QString file)
 {
     /* Read all the file
      * Save the content to another file
      * Replace the other file with the first */
 
-    // Check for charset file
+    // Check for charset specific rules (ex: Russian)
     int charset = 0;
-    QFile charset_file("_xml_charsets.config");
+    QFile settings("xml_parser.config");
     QStringList value_languages;
-    if(charset_file.exists()){
-        QDomDocument charset_xml;
-        charset_file.open(QIODevice::ReadOnly);
-        charset_xml.setContent(&charset_file);
-        charset_file.close();
-        QDomElement charset_xml_main = charset_xml.firstChildElement("main").firstChildElement();
+    if(settings.exists()){
+        QDomDocument xml;
+        settings.open(QIODevice::ReadOnly);
+        xml.setContent(&settings);
+        settings.close();
+        QDomElement xml_main = xml.firstChildElement("main").firstChildElement("charsets").firstChildElement();
 
-
-        for (charset_xml_main;!charset_xml_main.isNull();charset_xml_main = charset_xml_main.nextSiblingElement()){
-            value_languages << charset_xml_main.tagName();
-            //qDebug() << charset_xml_main.tagName();
+        for (xml_main;!xml_main.isNull();xml_main = xml_main.nextSiblingElement()){
+            value_languages <<xml_main.tagName();
+            qDebug() << xml_main.tagName() << "charset rules found";
         }
         charset = 1;
     }
 
     // Open the input file
-    QDomDocument read;
-    QFile file_in(file);
-    file_in.open(QIODevice::ReadOnly);
-    read.setContent(&file_in);
-    QDomNode read_text = read.firstChildElement("Civ4GameText").firstChildElement();
-    //qDebug() << read_text.firstChildElement().tagName();
+   QDomDocument read;
+   QFile file_in(file);
+   f_files f;
+   f_lang l;
+   if(!f.checkXMLConformity(file)){
+       qDebug() << "Non conformal XML" << file;
+       return false;
+   }
+   file_in.open(QIODevice::ReadOnly);
+   read.setContent(&file_in);
+   QDomNode read_text = read.firstChildElement("Civ4GameText").firstChildElement();
 
     // Create the output file
     QDomDocument write;
@@ -286,14 +298,14 @@ void f_lang::convertUTFToCiv(QString file)
                     foreach (QString temp, value_languages){
                         if(read_element.tagName() == temp)
                         {
-                            write_text_value = f_lang::convertCharsetToLatin(temp, write_text_value);
+                            write_text_value = l.convertCharsetToLatin(temp, write_text_value);
                         }
                     }
                 }
 
-                write_text_value = f_lang::convertStringToCiv(write_text_value);
-                write_gender_value = f_lang::convertStringToCiv(write_gender_value);
-                write_plural_value = f_lang::convertStringToCiv(write_plural_value);
+                write_text_value = l.convertStringToCiv(write_text_value);
+                write_gender_value = l.convertStringToCiv(write_gender_value);
+                write_plural_value = l.convertStringToCiv(write_plural_value);
 
                 QDomText write_text = write.createTextNode(write_text_value);
                 QDomText write_gender = write.createTextNode(write_gender_value);
@@ -315,12 +327,12 @@ void f_lang::convertUTFToCiv(QString file)
                     foreach (QString temp, value_languages){
                         if(read_element.tagName() == temp)
                         {
-                            write_text_value = f_lang::convertCharsetToLatin(temp, write_text_value);
+                            write_text_value = l.convertCharsetToLatin(temp, write_text_value);
                         }
                     }
                 }
 
-                write_text_value = f_lang::convertStringToCiv(write_text_value);
+                write_text_value = l.convertStringToCiv(write_text_value);
 
                 QDomText write_text = write.createTextNode(write_text_value);
                 write_element.appendChild(write_text);
@@ -359,15 +371,15 @@ QString f_lang::convertStringToCiv(QString string)
     return encode;
 }
 
-QString f_lang::convertLatinToCharset(QString language, QString string)
+QString f_lang::convertLatinToCharset(QString langName, QString string)
 {
     // Open the charset file and go through the correct language
-    QFile charset_file("_xml_charsets.config");
+    QFile charset_file("xml_parser.config");
     QDomDocument charset_xml;
     charset_file.open(QIODevice::ReadOnly);
     charset_xml.setContent(&charset_file);
     charset_file.close();
-    QDomElement charset_xml_main = charset_xml.firstChildElement("main").firstChildElement(language).firstChildElement();
+    QDomElement charset_xml_main = charset_xml.firstChildElement("main").firstChildElement("charsets").firstChildElement(langName).firstChildElement();
     QMap<int, int> table;
     for (charset_xml_main;!charset_xml_main.isNull();charset_xml_main = charset_xml_main.nextSiblingElement()){
         int value_standard = charset_xml_main.firstChild().nodeValue().toInt();
@@ -394,15 +406,16 @@ QString f_lang::convertLatinToCharset(QString language, QString string)
     return encode;
 }
 
-QString f_lang::convertCharsetToLatin(QString language, QString string)
+QString f_lang::convertCharsetToLatin(QString langName, QString string)
 {
     // Open the charset file and go through the correct language
-    QFile charset_file("_xml_charsets.config");
+    QFile charset_file("xml_parser.config");
     QDomDocument charset_xml;
     charset_file.open(QIODevice::ReadOnly);
     charset_xml.setContent(&charset_file);
     charset_file.close();
-    QDomElement charset_xml_main = charset_xml.firstChildElement("main").firstChildElement(language).firstChildElement();
+    QDomElement charset_xml_main = charset_xml.firstChildElement("main").firstChildElement("charsets").firstChildElement(langName).firstChildElement();
+    //qDebug() << charset_xml_main.tagName();
     QMap<int, int> table;
     for (charset_xml_main;!charset_xml_main.isNull();charset_xml_main = charset_xml_main.nextSiblingElement()){
         int value_standard = charset_xml_main.firstChild().nodeValue().toInt();

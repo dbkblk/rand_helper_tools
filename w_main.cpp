@@ -43,12 +43,6 @@ void w_main::exportToAndroidXML(){
 void w_main::on_actionTest_triggered()
 {
     f_lang l;
-    ui->console->clear();
-    if(l.isSupportedLang("ze")){
-        ui->console->append("true");
-    }
-    else{
-        ui->console->append("false");
-    }
-
+    l.convertUTFToCiv("UNITS.xml");
+    ui->console->append("done");
 }

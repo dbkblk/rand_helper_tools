@@ -11,7 +11,7 @@ public:
     f_files();
     bool compareMd5(QFile file1, QFile file2);
     bool generateXMLAndroid(QFile file);
-    bool checkXMLConformity(QFile file);
+    bool checkXMLConformity(QString fileName);
 };
 
 #endif // F_FILES_H

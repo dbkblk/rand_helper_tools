@@ -40,7 +40,18 @@ bool f_files::generateXMLAndroid(QFile file){
     // Generate a basic Android XML file ready to be used
 }
 
-bool f_files::checkXMLConformity(QFile file){
+bool f_files::checkXMLConformity(QString fileName){
     // Check the structure of a civ4 xml file
+    QFile file(fileName);
+    file.open(QIODevice::ReadOnly);
+    QDomDocument read;
+    read.setContent(&file);
+    QDomElement read_text = read.firstChildElement("Civ4GameText").firstChildElement("TEXT");
+    if(!read_text.isNull()){
+        return true;
+    }
+    else{
+        return false;
+    }
 }
 
