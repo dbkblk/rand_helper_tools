@@ -4,22 +4,29 @@
 #
 #-------------------------------------------------
 
-QT       += core xml
+INCLUDEPATH += .
 
-QT       -= gui
+QT       += core gui network widgets xml
 
 TARGET = _xml_parser
-CONFIG   += console
-CONFIG   -= app_bundle
 
 TEMPLATE = app
 
 RC_FILE = icon.rc
 
-SOURCES += main.cpp
+SOURCES += main.cpp \
+    w_main.cpp \
+    f_lang.cpp \
+    f_files.cpp
 
 OTHER_FILES += \
     TODO.md \
     README.md
 
-HEADERS +=
+HEADERS += \
+    w_main.h \
+    f_lang.h \
+    f_files.h
+
+FORMS += \
+    w_main.ui

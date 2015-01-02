@@ -1,4 +1,13 @@
 TODO:
+
+## 2.0 (currently defined)
+- Clean GUI, dead simple to use.
+- Break useful functions into smaller ones.
+- Integrate transifex init / pull / push
+- Allow backup of pulled files
+- Easy language support
+
+## 1.0
 DONE - Activate the importation of empty tags
 DONE - Recheck the output if subtag (output but don't do anything)
 DONE - Fix clean up

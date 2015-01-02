@@ -1,7 +1,9 @@
 #include <iostream>
 #include <QtCore>
+#include <QtWidgets>
+#include <QtXml>
 #include <QDebug>
-#include <QtXml/QtXml>
+#include "w_main.h"
 
 namespace constants {
 const QString VERSION = "1.0";
@@ -38,10 +40,14 @@ private:
     const char* lang_file;
 };
 
+using namespace std;
+
 int main(int argc, char *argv[])
 {
-    QCoreApplication a(argc, argv);
-    languages *xml = new languages();
+    QApplication a(argc, argv);
+    w_main w;
+    w.show();
+    /*languages *xml = new languages();
     QDir dir_parse("lang/");
 
     if(argc > 1)
@@ -158,8 +164,10 @@ int main(int argc, char *argv[])
         }
     }
     else
-    {
-        qDebug() << QString("Civilization IV : XML translation tool v") + QString(constants::VERSION) + QString("\n-------------------------------------------\nBy dbkblk (A New Dawn team)\nNOTA: This executable must be in the same folder than xml files");
+    {*/
+
+
+        /*qDebug() << QString("Civilization IV : XML translation tool v") + QString(constants::VERSION) + QString("\n-------------------------------------------\nBy dbkblk (A New Dawn team)\nNOTA: This executable must be in the same folder than xml files");
 
         int ch;
         int z = 0;
@@ -236,7 +244,7 @@ int main(int argc, char *argv[])
 
         }
         } while (z=1);
-    }
+    }*/
 
     return a.exec();
 }
