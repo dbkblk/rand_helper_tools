@@ -1,5 +1,32 @@
 #include "f_files.h"
 #include <QtCore>
+#include <QtXml>
+
+// Out of class functions (for code convenience)
+void saveDir(QString dir, QString value){
+    QFile settings("xml_parser.config");
+    settings.open(QIODevice::ReadOnly);
+    QDomDocument xml;
+    xml.setContent(&settings);
+    settings.close();
+    xml.firstChildElement("main").firstChildElement("directories").setAttribute(dir,value);
+    settings.open(QIODevice::WriteOnly | QIODevice::Truncate);
+    QTextStream ts(&settings);
+    xml.save(ts, 4);
+    settings.close();
+}
+
+QString readDir(QString dir){
+    QFile settings("xml_parser.config");
+    settings.open(QIODevice::ReadOnly);
+    QDomDocument xml;
+    xml.setContent(&settings);
+    settings.close();
+    QDomElement value = xml.firstChildElement("main").firstChildElement("directories").toElement();
+    return value.attribute(dir);
+}
+
+// f_files definition
 
 f_files::f_files()
 {
@@ -17,23 +44,3 @@ bool f_files::checkXMLConformity(QFile file){
     // Check the structure of a civ4 xml file
 }
 
-QString f_files::readParam(QString param)
-{
-    QSettings settings("xmlparser_config.ini", QSettings::IniFormat);
-    if(!settings.contains(param)) {
-        return "error";
-    }
-    QString value = settings.value(param).toString();
-    return value;
-}
-
-bool f_files::setParam(QString param, QString newValue)
-{
-    if(!QFile::exists("xmlparser_config.ini")) {
-        QFile ch_conf;
-        ch_conf.open(QIODevice::WriteOnly);
-    }
-    QSettings settings("xmlparser_config.ini", QSettings::IniFormat);
-    settings.setValue(param, newValue);
-    return 0;
-}

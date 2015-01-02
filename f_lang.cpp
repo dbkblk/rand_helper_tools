@@ -6,16 +6,77 @@ f_lang::f_lang()
 {
 }
 
-QString f_lang::getIntlCode(QString langCode){
-        // Input international code and output game code (fr > French)
+QString f_lang::getIntlName(QString langCode){
+    // Input international code and output game code (fr > French)
+    // Open the settings
+    QString value = "Unsupported";
+    QFile settings("xml_parser.config");
+    settings.open(QIODevice::ReadOnly);
+    QDomDocument xml;
+    xml.setContent(&settings);
+    settings.close();
+    QDomElement lang = xml.firstChildElement("main").firstChildElement("supported").firstChildElement("language").toElement();
+    while(!lang.isNull()){
+        if(langCode == lang.attribute("code")){
+            value = lang.firstChild().nodeValue();
+        }
+        lang = lang.nextSiblingElement();
+    }
+    return value;
 }
 
-QStringList f_lang::getSupportedLang(){
-        // Output list of supported languages
+QString f_lang::getIntlCode(QString langName){
+    // Input international code and output game code (fr > French)
+    // Open the settings
+    QString value = "Unsupported";
+    QFile settings("xml_parser.config");
+    settings.open(QIODevice::ReadOnly);
+    QDomDocument xml;
+    xml.setContent(&settings);
+    settings.close();
+    QDomElement lang = xml.firstChildElement("main").firstChildElement("supported").firstChildElement("language").toElement();
+    while(!lang.isNull()){
+        if(langName ==  lang.firstChild().nodeValue()){
+            value = lang.attribute("code");
+        }
+        lang = lang.nextSiblingElement();
+    }
+    return value;
+}
+
+QStringList f_lang::getSupportedCodes(){
+    // Output list of supported languages
+    QStringList list;
+
+    // Open the settings
+    QFile settings("xml_parser.config");
+    settings.open(QIODevice::ReadOnly);
+    QDomDocument xml;
+    xml.setContent(&settings);
+    settings.close();
+    QDomElement lang = xml.firstChildElement("main").firstChildElement("supported").firstChildElement("language").toElement();
+    while(!lang.isNull()){
+        list << lang.attribute("code");
+        lang = lang.nextSiblingElement();
+    }
+     return list;
 }
 
 bool f_lang::isSupportedLang(QString langCode){
     // Ouput true or false
+    QStringList list = getSupportedCodes();
+    int counter = 0;
+    foreach (QString entry, list){
+        if(entry == langCode){
+            counter++;
+        }
+    }
+    if(counter>0){
+        return true;
+    }
+    else{
+        return false;
+    }
 }
 
 void f_lang::convertCivToUTF(QString file)

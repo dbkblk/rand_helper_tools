@@ -6,8 +6,9 @@ class f_lang
 {
 public:
     f_lang();
-    QString getIntlCode(QString langCode);
-    QStringList getSupportedLang();
+    QString getIntlName(QString langCode);
+    QString getIntlCode(QString langName);
+    QStringList getSupportedCodes();
     bool isSupportedLang(QString langCode);
     void convertCivToUTF(QString file);
     void convertUTFToCiv(QString file);

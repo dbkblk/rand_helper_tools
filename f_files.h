@@ -2,6 +2,9 @@
 #define F_FILES_H
 #include <QtCore>
 
+void saveDir(QString dir, QString value);
+QString readDir(QString dir);
+
 class f_files
 {
 public:
@@ -9,8 +12,6 @@ public:
     bool compareMd5(QFile file1, QFile file2);
     bool generateXMLAndroid(QFile file);
     bool checkXMLConformity(QFile file);
-    QString readParam(QString param);
-    bool setParam(QString param, QString newValue);
 };
 
 #endif // F_FILES_H

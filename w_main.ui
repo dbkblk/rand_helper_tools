@@ -32,55 +32,73 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QWidget" name="verticalLayoutWidget">
+   <widget class="QWidget" name="verticalLayoutWidget_2">
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>130</y>
+      <y>10</y>
       <width>581</width>
-      <height>121</height>
+      <height>241</height>
      </rect>
     </property>
-    <layout class="QVBoxLayout" name="verticalLayout">
+    <layout class="QVBoxLayout" name="verticalLayout_2">
      <item>
-      <widget class="QLabel" name="label">
-       <property name="text">
-        <string>Base files directory:</string>
+      <widget class="QProgressBar" name="progressBar">
+       <property name="value">
+        <number>0</number>
        </property>
       </widget>
      </item>
      <item>
-      <layout class="QHBoxLayout" name="horizontalLayout">
-       <item>
-        <widget class="QLineEdit" name="line_baseDir"/>
-       </item>
-       <item>
-        <widget class="QPushButton" name="bt_baseDirChange">
-         <property name="text">
-          <string>Modifier</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-     <item>
-      <widget class="QLabel" name="label_2">
-       <property name="text">
-        <string>Export directory:</string>
+      <widget class="QTextEdit" name="console">
+       <property name="readOnly">
+        <bool>true</bool>
        </property>
       </widget>
      </item>
      <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <layout class="QVBoxLayout" name="verticalLayout">
        <item>
-        <widget class="QLineEdit" name="line_exportDir"/>
-       </item>
-       <item>
-        <widget class="QPushButton" name="bt_exportDirChange">
+        <widget class="QLabel" name="label">
          <property name="text">
-          <string>Modifier</string>
+          <string>Base files directory:</string>
          </property>
         </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout">
+         <item>
+          <widget class="QLineEdit" name="line_baseDir"/>
+         </item>
+         <item>
+          <widget class="QPushButton" name="bt_baseDirChange">
+           <property name="text">
+            <string>Modifier</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_2">
+         <property name="text">
+          <string>Export directory:</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_2">
+         <item>
+          <widget class="QLineEdit" name="line_exportDir"/>
+         </item>
+         <item>
+          <widget class="QPushButton" name="bt_exportDirChange">
+           <property name="text">
+            <string>Modifier</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
       </layout>
      </item>
@@ -100,6 +118,7 @@
     <property name="title">
      <string>Exit</string>
     </property>
+    <addaction name="actionTest"/>
    </widget>
    <widget class="QMenu" name="menuTranslations">
     <property name="title">
@@ -198,6 +217,11 @@
    </property>
    <property name="text">
     <string>Remove a specific language</string>
+   </property>
+  </action>
+  <action name="actionTest">
+   <property name="text">
+    <string>Test</string>
    </property>
   </action>
  </widget>

@@ -6,7 +6,7 @@
 #include "w_main.h"
 
 namespace constants {
-const QString VERSION = "1.0";
+const QString VERSION = "2.0.0";
 }
 
 class languages
