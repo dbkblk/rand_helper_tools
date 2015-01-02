@@ -47,207 +47,11 @@ int main(int argc, char *argv[])
     QApplication a(argc, argv);
     w_main w;
     w.show();
-    /*languages *xml = new languages();
-    QDir dir_parse("lang/");
-
-    if(argc > 1)
-    {
-        QString arg1 = argv[1];
-        QString arg2 = argv[2];
-        if(arg1 == "export")
-        {
-            if(arg2 == "all")
-            {
-                qDebug() << "Exporting all languages";
-                dir_parse.removeRecursively();
-                xml->ParseAllFiles("English");
-                foreach(QString lang_export, xml->ListLanguages(".")){
-                    xml->ParseAllFiles(lang_export);
-                }
-                return 0;
-            }
-            else if(arg2 == "en")
-            {
-                qDebug() << "Exporting English";
-                xml->ParseAllFiles("English");
-                return 0;
-            }
-            else if(arg2 == "zh")
-            {
-                qDebug() << "Exporting Chinese";
-                xml->ParseAllFiles("Chinese");
-                return 0;
-            }
-            else if(arg2 == "fi")
-            {
-                qDebug() << "Exporting Finnish";
-                xml->ParseAllFiles("Finnish");
-                return 0;
-            }
-            else if(arg2 == "fr")
-            {
-                qDebug() << "Exporting French";
-                xml->ParseAllFiles("French");
-                return 0;
-            }
-            else if(arg2 == "de")
-            {
-                qDebug() << "Exporting German";
-                xml->ParseAllFiles("German");
-                return 0;
-            }
-            else if(arg2 == "hu")
-            {
-                qDebug() << "Exporting Hungarian";
-                xml->ParseAllFiles("Hungarian");
-                return 0;
-            }
-            else if(arg2 == "it")
-            {
-                qDebug() << "Exporting Italian";
-                xml->ParseAllFiles("Italian");
-                return 0;
-            }
-            else if(arg2 == "ja")
-            {
-                qDebug() << "Exporting Japanese";
-                xml->ParseAllFiles("Japanese");
-                return 0;
-            }
-            else if(arg2 == "pl")
-            {
-                qDebug() << "Exporting Polish";
-                xml->ParseAllFiles("Polish");
-                return 0;
-            }
-            else if(arg2 == "ru")
-            {
-                qDebug() << "Exporting Russian";
-                xml->ParseAllFiles("Russian");
-                return 0;
-            }
-            else if(arg2 == "es")
-            {
-                qDebug() << "Exporting Spanish";
-                xml->ParseAllFiles("Spanish");
-                return 0;
-            }
-            else
-            {
-                qDebug() << "Language not recognized";
-            }
-        }
-        else if(arg1 == "import")
-        {
-            if(arg2 == "all")
-            {
-                qDebug() << "Importing files to all documents";
-                xml->ImportAllDocuments(1);
-                return 0;
-            }
-            else if(arg2 == "same")
-            {
-                qDebug() << "Importing files to documents with same name only";
-                xml->ImportAllDocuments(0);
-                return 0;
-            }
-            else
-            {
-                qDebug() << "Unknown argument for import (all / same)";
-            }
-        }
-        else if (arg1 == "clean") { xml->CleanFiles(); return 0;}
-        else if (arg1 == "sort") { xml->SortCategories(); return 0;}
-        else
-        {
-            qDebug() << "Unknown argument (all / <lang>)";
-        }
-    }
-    else
-    {*/
-
-
-        /*qDebug() << QString("Civilization IV : XML translation tool v") + QString(constants::VERSION) + QString("\n-------------------------------------------\nBy dbkblk (A New Dawn team)\nNOTA: This executable must be in the same folder than xml files");
-
-        int ch;
-        int z = 0;
-
-        do {
-        qDebug() << "\nMain menu:\n----------\n1 - Export all languages [Civ 4 XML -> Language XML]\n2 - Export a specific language [Civ 4 XML -> Language XML]\n3 - Import language strings to ALL files [Language XML -> Civ 4 XML]\n4 - Import language strings to SAME files [Language XML -> Civ 4 XML]\n5 - Clean files [Civ 4 XML]\n6 - Sort tags in categories [Civ 4 XML]\n7 - Remove a specific language [Civ 4 XML]\n8 - Find unused tags in files \n9 - Exit program\n\n";
-        std::cin >> ch;
-        std::string lang;
-        std::string answer;
-        QString lang_remove;
-        switch (ch)
-        {
-            case 1 :
-                dir_parse.removeRecursively();
-                xml->ParseAllFiles("English");
-                foreach(QString lang_export, xml->ListLanguages(".")){
-                    //qDebug() << lang_export;
-                    xml->ParseAllFiles(lang_export);
-                }
-                break;
-
-            case 2 :
-                dir_parse.removeRecursively();
-                lang_remove = xml->AutomaticLanguageDetection(".");
-                if (lang_remove == "error"){break;}
-                xml->ParseAllFiles(lang_remove);
-                break;
-
-            case 3 :
-                xml->ImportAllDocuments(1);
-                break;
-
-            case 4 :
-                xml->ImportAllDocuments(0);
-                break;
-
-
-            case 5 :
-                xml->CleanFiles();
-                break;
-
-            case 6 :
-                xml->SortCategories();
-                break;
-
-            case 7:
-                xml->RemoveLanguage();
-                break;
-
-            case 8:
-                xml->FindUnusedTags();
-                qDebug() << "Would you like to remove the unused tags from text files (Y/N)?";
-                std::cin >> answer;
-                if (answer == "Y")
-                {
-                    xml->RemoveUnusedTags();
-                }
-                break;
-
-            case 9:
-                return 0;
-                break;
-
-            case 10:
-                xml->RemoveUnusedTags();
-                break;
-
-            case 35:
-                xml->test();
-                break;
-
-            default :
-                break;
-
-        }
-        } while (z=1);
-    }*/
 
     return a.exec();
 }
+
+/*
 
 void languages::ParseAllFiles(QString int_lang)
 {
@@ -1027,7 +831,7 @@ void languages::SortCategories()
         * Save category file
     * Convert the files back to Civ4
     * Print the duplicate list */
-
+/*
     // Check requirements
     QFile categories("_xml_parser.config");
     if(!categories.exists())
@@ -1055,7 +859,7 @@ void languages::SortCategories()
         ConvertCiv4ToUTF8("sorted/"+*it);
     }
 
-    /* Collect all tags in a bigfile */
+    // Collect all tags in a bigfile
     qDebug() << "Collecting all tags to a file";
     QDomDocument xml_collect;
     QFile xml_collect_file("sorted/TEMP");
@@ -1205,7 +1009,7 @@ void languages::SortCategories()
     categories_list << "MISC" << "MISC_PEDIA";
     categories_list.sort();
 
-    /* Sorting */
+    // Sorting
 
     QString tag;
     QString category;
@@ -1462,355 +1266,7 @@ void languages::SortCategories()
     qDebug() << "Original tag number:" << tags_total_counter << "| New tag number:" << tags_output_counter;
 }
 
-void languages::ConvertCiv4ToUTF8(QString file)
-{
-    /* Read all the file
-     * Save the content to another file
-     * Replace the other file with the first */
 
-    // Check for charset file
-    int charset = 0;
-    QFile charset_file("_xml_charsets.config");
-    QStringList value_languages;
-    if(charset_file.exists()){
-        QDomDocument charset_xml;
-        charset_file.open(QIODevice::ReadOnly);
-        charset_xml.setContent(&charset_file);
-        charset_file.close();
-        QDomElement charset_xml_main = charset_xml.firstChildElement("main").firstChildElement();
-
-
-        for (charset_xml_main;!charset_xml_main.isNull();charset_xml_main = charset_xml_main.nextSiblingElement()){
-            value_languages << charset_xml_main.tagName();
-            //qDebug() << charset_xml_main.tagName();
-        }
-        charset = 1;
-    }
-
-    // First, pure read to remove faulty characters
-    QFile amp_read(file);
-    QFile amp_write(file + "_amptemp_");
-    amp_read.open(QIODevice::ReadOnly);
-    amp_write.open(QIODevice::WriteOnly);
-    QTextStream amp_in(&amp_read);
-    QTextStream amp_out(&amp_write);
-    while(!amp_in.atEnd())
-    {
-        QString line = amp_in.readLine();
-        line.replace("&#xd;","").replace(QLatin1Char('&'), "&amp;").replace("&amp;amp;","&amp;").replace("&amp;#","&#").replace("&amp;lt;","&lt;").replace("&amp;gt;","&gt;");
-        line.simplified();
-        amp_out << line;
-    }
-    amp_read.close();
-    amp_write.close();
-
-
-    // Open the input file
-    QDomDocument read;
-    QFile file_in(file + "_amptemp_");
-    file_in.open(QIODevice::ReadOnly);
-    read.setContent(&file_in);
-    QDomElement read_text = read.firstChildElement("Civ4GameText").firstChildElement("TEXT");
-    //qDebug() << read_text.firstChildElement().tagName();
-
-    // Create the output file
-    QDomDocument write;
-    QFile file_out("rewrite.xml");
-    file_out.open(QIODevice::WriteOnly | QIODevice::Truncate);
-    QDomNode declaration = write.createProcessingInstruction("xml",QString("version=\"1.0\" encoding=\"UTF-8\""));
-    write.insertBefore(declaration,write.firstChild());
-    QDomNode write_root = write.createElement("Civ4GameText");
-    write.appendChild(write_root);
-
-   // Loop the input file
-    for (read_text;!read_text.isNull();read_text = read_text.nextSiblingElement())
-    {
-        //qDebug() << read_text.firstChildElement().tagName();
-        QDomElement read_element = read_text.firstChildElement();
-        QDomElement write_node = write.createElement("TEXT");
-        write_root.appendChild(write_node);
-
-        for (read_element;!read_element.isNull();read_element = read_element.nextSiblingElement())
-        {
-            //qDebug() << read_element.tagName();
-            if(!read_element.firstChildElement("Text").isNull())
-            {
-                QDomElement write_element = write.createElement(read_element.tagName());
-                write_node.appendChild(write_element);
-                QDomElement write_element_text = write.createElement("Text");
-                QDomElement write_element_gender = write.createElement("Gender");
-                QDomElement write_element_plural = write.createElement("Plural");
-                write_element.appendChild(write_element_text);
-                write_element.appendChild(write_element_gender);
-                write_element.appendChild(write_element_plural);
-
-                QString write_text_value = read_element.firstChildElement("Text").firstChild().nodeValue();
-                QString write_gender_value = read_element.firstChildElement("Gender").firstChild().nodeValue();
-                QString write_plural_value = read_element.firstChildElement("Plural").firstChild().nodeValue();
-
-                // Check charsets
-                if (charset == 1){
-                    foreach (QString temp, value_languages){
-                        if(read_element.tagName() == temp)
-                        {
-                            write_text_value = ConvertLatin1ToCharset(temp, write_text_value);
-                        }
-                    }
-                }
-
-                QDomText write_text = write.createTextNode(write_text_value);
-                QDomText write_gender = write.createTextNode(write_gender_value);
-                QDomText write_plural = write.createTextNode(write_plural_value);
-                write_element_text.appendChild(write_text);
-                write_element_gender.appendChild(write_gender);
-                write_element_plural.appendChild(write_plural);
-            }
-            else
-            {
-                QDomElement write_element = write.createElement(read_element.tagName());
-                write_node.appendChild(write_element);
-                QString write_text_value = read_element.firstChild().nodeValue();
-
-                // Check charsets
-                if (charset == 1){
-                    foreach (QString temp, value_languages){
-                        if(read_element.tagName() == temp)
-                        {
-                            write_text_value = ConvertLatin1ToCharset(temp, write_text_value);
-                        }
-                    }
-                }
-
-                QDomText write_text = write.createTextNode(write_text_value);
-                write_element.appendChild(write_text);
-            }
-        }
-    }
-    QTextStream ts(&file_out);
-    write.save(ts, 3);
-    file_out.close();
-    file_in.close();
-    QFile::remove(file + "_amptemp_");
-    QFile::remove(file);
-    QFile::rename("rewrite.xml",file);
-}
-
-void languages::ConvertUTF8ToCiv4(QString file)
-{
-    /* Read all the file
-     * Save the content to another file
-     * Replace the other file with the first */
-
-    // Check for charset file
-    int charset = 0;
-    QFile charset_file("_xml_charsets.config");
-    QStringList value_languages;
-    if(charset_file.exists()){
-        QDomDocument charset_xml;
-        charset_file.open(QIODevice::ReadOnly);
-        charset_xml.setContent(&charset_file);
-        charset_file.close();
-        QDomElement charset_xml_main = charset_xml.firstChildElement("main").firstChildElement();
-
-
-        for (charset_xml_main;!charset_xml_main.isNull();charset_xml_main = charset_xml_main.nextSiblingElement()){
-            value_languages << charset_xml_main.tagName();
-            //qDebug() << charset_xml_main.tagName();
-        }
-        charset = 1;
-    }
-
-    // Open the input file
-    QDomDocument read;
-    QFile file_in(file);
-    file_in.open(QIODevice::ReadOnly);
-    read.setContent(&file_in);
-    QDomNode read_text = read.firstChildElement("Civ4GameText").firstChildElement();
-    //qDebug() << read_text.firstChildElement().tagName();
-
-    // Create the output file
-    QDomDocument write;
-    QFile file_out(file + "_tempconvert_");
-    file_out.open(QIODevice::WriteOnly | QIODevice::Truncate);
-    QDomNode declaration = write.createProcessingInstruction("xml",QString("version=\"1.0\" encoding=\"ISO-8859-1\""));
-    write.insertBefore(declaration,write.firstChild());
-    QDomNode write_root = write.createElement("Civ4GameText");
-    write.appendChild(write_root);
-    //qDebug() << write.firstChildElement().tagName();
-
-   // Loop the input file
-    for (read_text;!read_text.isNull();read_text = read_text.nextSibling())
-    {
-        //qDebug() << read_text.firstChildElement().tagName();
-        QDomElement read_element = read_text.firstChildElement();
-        QDomNode write_node = write.createElement("TEXT");
-        write_root.appendChild(write_node);
-
-        for (read_element;!read_element.isNull();read_element = read_element.nextSiblingElement())
-        {
-            //qDebug() << read_element.tagName();
-            if(!read_element.firstChildElement("Text").isNull())
-            {
-                QDomElement write_element = write.createElement(read_element.tagName());
-                write_node.appendChild(write_element);
-                QDomElement write_element_text = write.createElement("Text");
-                QDomElement write_element_gender = write.createElement("Gender");
-                QDomElement write_element_plural = write.createElement("Plural");
-                write_element.appendChild(write_element_text);
-                write_element.appendChild(write_element_gender);
-                write_element.appendChild(write_element_plural);
-
-                QString write_text_value = read_element.firstChildElement("Text").firstChild().nodeValue();
-                QString write_gender_value = read_element.firstChildElement("Gender").firstChild().nodeValue();
-                QString write_plural_value = read_element.firstChildElement("Plural").firstChild().nodeValue();
-
-                // Check charsets
-                if (charset == 1){
-                    foreach (QString temp, value_languages){
-                        if(read_element.tagName() == temp)
-                        {
-                            write_text_value = ConvertCharsetToLatin1(temp, write_text_value);
-                        }
-                    }
-                }
-
-                write_text_value = ConvertStringToCiv4(write_text_value);
-                write_gender_value = ConvertStringToCiv4(write_gender_value);
-                write_plural_value = ConvertStringToCiv4(write_plural_value);
-
-                QDomText write_text = write.createTextNode(write_text_value);
-                QDomText write_gender = write.createTextNode(write_gender_value);
-                QDomText write_plural = write.createTextNode(write_plural_value);
-
-                write_element_text.appendChild(write_text);
-                write_element_gender.appendChild(write_gender);
-                write_element_plural.appendChild(write_plural);
-            }
-            else
-            {
-                QDomElement write_element = write.createElement(read_element.tagName());
-                write_node.appendChild(write_element);
-
-                QString write_text_value = read_element.firstChild().nodeValue();
-
-                // Check charsets
-                if (charset == 1){
-                    foreach (QString temp, value_languages){
-                        if(read_element.tagName() == temp)
-                        {
-                            write_text_value = ConvertCharsetToLatin1(temp, write_text_value);
-                        }
-                    }
-                }
-
-                write_text_value = ConvertStringToCiv4(write_text_value);
-
-                QDomText write_text = write.createTextNode(write_text_value);
-                write_element.appendChild(write_text);
-            }
-        }
-    }
-
-    QTextStream ts(&file_out);
-    QString docString = write.toString().replace("&amp;", "&").replace(QLatin1Char('&'), "&amp;").replace("&amp;#","&#").replace("&amp;lt;","&lt;").replace("&amp;gt;","&gt;").replace("&amp;amp;","&amp;");
-    ts << docString;
-    //write.save(ts, 3);
-    file_out.close();
-    file_in.close();
-
-    QFile::remove(file);
-    QFile::rename(file + "_tempconvert_",file);
-}
-
-QString languages::ConvertStringToCiv4(QString string)
-{
-    QString encode;
-    for(int i=0;i<string.size();++i)
-    {
-        QChar ch = string.at(i);
-        if(ch.unicode() > 127)
-        {
-            encode += QChar(38);
-            encode += QString("#%1;").arg((int)ch.unicode());
-        }
-        else
-        {
-            encode += ch;
-        }
-    }
-    encode.replace("&amp;", "&").replace(QLatin1Char('&'), "&amp;").replace("&amp;#","&#").replace("&amp;lt;","&lt;").replace("&amp;gt;","&gt;");
-    return encode;
-}
-
-QString languages::ConvertLatin1ToCharset(QString language, QString string)
-{
-    // Open the charset file and go through the correct language
-    QFile charset_file("_xml_charsets.config");
-    QDomDocument charset_xml;
-    charset_file.open(QIODevice::ReadOnly);
-    charset_xml.setContent(&charset_file);
-    charset_file.close();
-    QDomElement charset_xml_main = charset_xml.firstChildElement("main").firstChildElement(language).firstChildElement();
-    QMap<int, int> table;
-    for (charset_xml_main;!charset_xml_main.isNull();charset_xml_main = charset_xml_main.nextSiblingElement()){
-        int value_standard = charset_xml_main.firstChild().nodeValue().toInt();
-        int value_unicode = charset_xml_main.attribute("unicode").toInt();
-        table.insert(value_standard,value_unicode);
-    }
-
-    // Open the sentence to translate
-    QString encode;
-    for(int i=0;i<string.size();++i)
-    {
-        QChar ch = string.at(i);
-
-        QMap<int,int>::iterator f;
-        for (f = table.begin(); f != table.end(); ++f){
-            //qDebug() << f.value() << " | " << f.key();
-            if (f.key() == ch){
-                ch = f.value();
-            }
-        }
-
-        encode += ch;
-    }
-    return encode;
-}
-
-QString languages::ConvertCharsetToLatin1(QString language, QString string)
-{
-    // Open the charset file and go through the correct language
-    QFile charset_file("_xml_charsets.config");
-    QDomDocument charset_xml;
-    charset_file.open(QIODevice::ReadOnly);
-    charset_xml.setContent(&charset_file);
-    charset_file.close();
-    QDomElement charset_xml_main = charset_xml.firstChildElement("main").firstChildElement(language).firstChildElement();
-    QMap<int, int> table;
-    for (charset_xml_main;!charset_xml_main.isNull();charset_xml_main = charset_xml_main.nextSiblingElement()){
-        int value_standard = charset_xml_main.firstChild().nodeValue().toInt();
-        int value_unicode = charset_xml_main.attribute("unicode").toInt();
-        table.insert(value_unicode,value_standard);
-    }
-
-    // Open the sentence to translate
-    QString encode;
-    for(int i=0;i<string.size();++i)
-    {
-        QChar ch = string.at(i);
-
-        QMap<int,int>::iterator f;
-        for (f = table.begin(); f != table.end(); ++f){
-            //qDebug() << f.value() << " | " << f.key();
-            if (f.key() == ch){
-                ch = f.value();
-            }
-        }
-
-        encode += ch;
-    }
-    return encode;
-}
 
 QStringList languages::ListTags(QString dir)
 {
@@ -1854,7 +1310,7 @@ QStringList languages::ListTags(QString dir)
 
 QStringList languages::ListLanguages(QString dir)
 {
-    QStringList tags;
+    /*QStringList tags;
     QStringList xml_filter;
     xml_filter << "*.xml";
     QStringList files;
@@ -1905,7 +1361,7 @@ void languages::CleanFiles()
     dir_import.removeRecursively();
     dir_import.mkdir(".");
 
-    /* Search the tag trough existing files and replace with the new value if found */
+    // Search the tag trough existing files and replace with the new value if found
     QStringList xml_filter;
     xml_filter << "*.xml";
 
@@ -2118,50 +1574,7 @@ void languages::RemoveLanguage()
     qDebug() << "All modified files are in the \"backup\" folder";
 }
 
-QString languages::AutomaticLanguageDetection(QString dir)
-{
-    // Automatic language detection / menu
-    QStringList known_languages = ListLanguages(dir);
-    known_languages << "English";
-    known_languages.sort();
-    QString lang;
-    QString lang_check;
-    std::string answer;
-    int lang_counter = 0;
 
-    qDebug("\nWhich language do you want to process ?\n");
-
-    foreach(lang, known_languages)
-    {
-        lang_counter++;
-        qDebug() << lang_counter << ")" << lang;
-    }
-    qDebug() << lang_counter+1 << ")  Exit";
-
-    std::cin >> answer;
-    lang_counter = 0;
-
-    if(QString::fromStdString(answer).toInt() > known_languages.count()+1)
-    {
-        qDebug("Invalid selection");
-        return "error";
-    }
-    else if (QString::fromStdString(answer).toInt() == known_languages.count()+1)
-    {
-        return "error";
-    }
-
-    foreach(lang, known_languages)
-    {
-        lang_counter++;
-        if(lang_counter == QString::fromStdString(answer).toInt())
-        {
-            qDebug() << "Processing" << lang;
-            lang_check = lang;
-        }
-    }
-    return lang_check;
-}
 
 QStringList languages::FindUnusedTags()
 {
@@ -2262,7 +1675,7 @@ QStringList languages::FindUnusedTags()
     QDir game_folder(gamepath);
     QDir source_folder(srcpath);
 
-    /* Collect all files in a bigfile */
+    // Collect all files in a bigfile
     QDirIterator mod_iterator(root.absolutePath(), list_ext, QDir::Files | QDir::NoDotAndDotDot,  QDirIterator::Subdirectories);
     QDirIterator game_iterator(game_folder.path(), list_ext, QDir::Files | QDir::NoDotAndDotDot,  QDirIterator::Subdirectories);
     QDirIterator source_iterator(source_folder.path(), list_cpp, QDir::Files | QDir::NoDotAndDotDot,  QDirIterator::Subdirectories);
@@ -2504,14 +1917,4 @@ void languages::RemoveUnusedTags()
     qDebug() << "All modified files are in the \"unused\" folder. Removed" << counter << "tags. A detailled report has been print in _unused_tags_report.txt";
     return;
 }
-
-QString languages::test()
-{
-    qDebug() << "start";
-    QString path = "J:/Steam/SteamApps/common/Sid Meier's Civilization IV Beyond the Sword/Beyond the Sword/Assets/XML/Text/";
-    QStringList tags = ListTags(path);
-    foreach(QString value,tags){
-        qDebug() << value;
-    }
-    return "ok";
-}
+*/

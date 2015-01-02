@@ -1,25 +1,206 @@
-<?xml version='1.0'?>
+<?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <author/>
- <comment/>
- <exportmacro/>
  <class>w_main</class>
  <widget class="QMainWindow" name="w_main">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>640</width>
-    <height>480</height>
+    <width>600</width>
+    <height>300</height>
    </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>600</width>
+    <height>300</height>
+   </size>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>600</width>
+    <height>300</height>
+   </size>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
-  <widget class="QMenuBar" name="menubar"/>
-  <widget class="QWidget" name="centralwidget"/>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QWidget" name="verticalLayoutWidget">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>130</y>
+      <width>581</width>
+      <height>121</height>
+     </rect>
+    </property>
+    <layout class="QVBoxLayout" name="verticalLayout">
+     <item>
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>Base files directory:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <widget class="QLineEdit" name="line_baseDir"/>
+       </item>
+       <item>
+        <widget class="QPushButton" name="bt_baseDirChange">
+         <property name="text">
+          <string>Modifier</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>Export directory:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <item>
+        <widget class="QLineEdit" name="line_exportDir"/>
+       </item>
+       <item>
+        <widget class="QPushButton" name="bt_exportDirChange">
+         <property name="text">
+          <string>Modifier</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </widget>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>600</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuExit">
+    <property name="title">
+     <string>Exit</string>
+    </property>
+   </widget>
+   <widget class="QMenu" name="menuTranslations">
+    <property name="title">
+     <string>Translations</string>
+    </property>
+    <widget class="QMenu" name="menuAdvanced">
+     <property name="title">
+      <string>Advanced</string>
+     </property>
+     <addaction name="actionImport_to_game_files"/>
+     <addaction name="actionExport_to_Android_XML"/>
+    </widget>
+    <addaction name="actionDownload_latest_translations"/>
+    <addaction name="actionUpload_latest_english_strings"/>
+    <addaction name="actionBackup_translations_from_platform"/>
+    <addaction name="menuAdvanced"/>
+   </widget>
+   <widget class="QMenu" name="menuClean_XML">
+    <property name="title">
+     <string>XML cleaner</string>
+    </property>
+    <addaction name="actionSort_tags_by_categories"/>
+    <addaction name="actionRemove_translations_identical_to_english"/>
+    <addaction name="actionRemove_duplicate_language_tags"/>
+    <addaction name="actionRemove_a_specific_language"/>
+   </widget>
+   <addaction name="menuExit"/>
+   <addaction name="menuTranslations"/>
+   <addaction name="menuClean_XML"/>
+  </widget>
   <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionExport_to_Android_XML">
+   <property name="text">
+    <string>Export to Android XML</string>
+   </property>
+  </action>
+  <action name="actionImport_to_game_files">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Import to game files</string>
+   </property>
+  </action>
+  <action name="actionDownload_latest_translations">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Merge latest translations</string>
+   </property>
+  </action>
+  <action name="actionUpload_latest_english_strings">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Upload latest english strings</string>
+   </property>
+  </action>
+  <action name="actionBackup_translations_from_platform">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Backup translations from platform</string>
+   </property>
+  </action>
+  <action name="actionSort_tags_by_categories">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Sort tags by categories</string>
+   </property>
+  </action>
+  <action name="actionRemove_translations_identical_to_english">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Remove translations identical to english</string>
+   </property>
+  </action>
+  <action name="actionRemove_duplicate_language_tags">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Remove duplicate language tags</string>
+   </property>
+  </action>
+  <action name="actionRemove_a_specific_language">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Remove a specific language</string>
+   </property>
+  </action>
  </widget>
- <pixmapfunction/>
+ <resources/>
  <connections/>
 </ui>
