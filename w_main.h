@@ -14,13 +14,14 @@ class w_main : public QMainWindow
 public:
     explicit w_main(QWidget *parent = 0);
     ~w_main();
-    void exportToAndroidXML();
+    void exportToAndroidXML(QString langCode);
 
 private slots:
     void on_bt_baseDirChange_clicked();
     void on_bt_exportDirChange_clicked();
-
     void on_actionTest_triggered();
+    void on_actionExport_to_Android_XML_triggered();
+    void debugWindow(int time);
 
 private:
     Ui::w_main *ui;

@@ -10,6 +10,8 @@ public:
     QString getIntlCode(QString langName);
     QStringList getSupportedCodes();
     bool isSupportedLang(QString langCode);
+    QStringList getEnabledCodes();
+    bool isEnabledLang(QString langCode);
     bool convertCivToUTF(QString file);
     bool convertUTFToCiv(QString file);
     QString convertStringToCiv(QString string);

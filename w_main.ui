@@ -224,6 +224,11 @@
     <string>Test</string>
    </property>
   </action>
+  <action name="actionSet_active_languages">
+   <property name="text">
+    <string>Set active languages</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections/>

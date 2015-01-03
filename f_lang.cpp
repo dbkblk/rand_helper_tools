@@ -45,6 +45,26 @@ QString f_lang::getIntlCode(QString langName){
     return value;
 }
 
+QStringList f_lang::getEnabledCodes(){
+    // Output list of supported languages
+    QStringList list;
+
+    // Open the settings
+    QFile settings("xml_parser.config");
+    settings.open(QIODevice::ReadOnly);
+    QDomDocument xml;
+    xml.setContent(&settings);
+    settings.close();
+    QDomElement lang = xml.firstChildElement("main").firstChildElement("supported").firstChildElement("language").toElement();
+    while(!lang.isNull()){
+        if(lang.attribute("enabled").toInt() == 1){
+            list << lang.attribute("code");
+        }
+        lang = lang.nextSiblingElement();
+    }
+     return list;
+}
+
 QStringList f_lang::getSupportedCodes(){
     // Output list of supported languages
     QStringList list;
@@ -80,6 +100,23 @@ bool f_lang::isSupportedLang(QString langCode){
     }
 }
 
+bool f_lang::isEnabledLang(QString langCode){
+    // Ouput true or false
+    QStringList list = getEnabledCodes();
+    int counter = 0;
+    foreach (QString entry, list){
+        if(entry == langCode){
+            counter++;
+        }
+    }
+    if(counter>0){
+        return true;
+    }
+    else{
+        return false;
+    }
+}
+
 bool f_lang::convertCivToUTF(QString file)
 {
     /* Read all the file
@@ -99,7 +136,7 @@ bool f_lang::convertCivToUTF(QString file)
 
         for (xml_main;!xml_main.isNull();xml_main = xml_main.nextSiblingElement()){
             value_languages <<xml_main.tagName();
-            qDebug() << xml_main.tagName() << "charset rules found";
+            //qDebug() << xml_main.tagName() << "charset rules found";
         }
         charset = 1;
     }
@@ -176,7 +213,7 @@ bool f_lang::convertCivToUTF(QString file)
                     foreach (QString temp, value_languages){
                         if(read_element.tagName() == temp)
                         {
-                            qDebug() << "Converting" << write_text_value;
+                            //qDebug() << "Converting" << write_text_value;
                             write_text_value = l.convertLatinToCharset(temp, write_text_value);
                         }
                     }
@@ -239,7 +276,7 @@ bool f_lang::convertUTFToCiv(QString file)
 
         for (xml_main;!xml_main.isNull();xml_main = xml_main.nextSiblingElement()){
             value_languages <<xml_main.tagName();
-            qDebug() << xml_main.tagName() << "charset rules found";
+            //qDebug() << xml_main.tagName() << "charset rules found";
         }
         charset = 1;
     }
