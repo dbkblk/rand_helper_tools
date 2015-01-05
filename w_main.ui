@@ -68,7 +68,11 @@
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout">
          <item>
-          <widget class="QLineEdit" name="line_baseDir"/>
+          <widget class="QLineEdit" name="line_baseDir">
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+          </widget>
          </item>
          <item>
           <widget class="QPushButton" name="bt_baseDirChange">
@@ -77,24 +81,42 @@
            </property>
           </widget>
          </item>
+         <item>
+          <widget class="QPushButton" name="bt_openBaseDir">
+           <property name="text">
+            <string>Open</string>
+           </property>
+          </widget>
+         </item>
         </layout>
        </item>
        <item>
         <widget class="QLabel" name="label_3">
          <property name="text">
-          <string>Import directory:</string>
+          <string>Translations directory:</string>
          </property>
         </widget>
        </item>
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_3">
          <item>
-          <widget class="QLineEdit" name="line_importDir"/>
+          <widget class="QLineEdit" name="line_importDir">
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+          </widget>
          </item>
          <item>
           <widget class="QPushButton" name="bt_importDirChange">
            <property name="text">
             <string>Change</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="bt_openTranslDir">
+           <property name="text">
+            <string>Open</string>
            </property>
           </widget>
          </item>
@@ -110,12 +132,23 @@
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_2">
          <item>
-          <widget class="QLineEdit" name="line_exportDir"/>
+          <widget class="QLineEdit" name="line_exportDir">
+           <property name="readOnly">
+            <bool>true</bool>
+           </property>
+          </widget>
          </item>
          <item>
           <widget class="QPushButton" name="bt_exportDirChange">
            <property name="text">
             <string>Change</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="bt_openExportDir">
+           <property name="text">
+            <string>Open</string>
            </property>
           </widget>
          </item>

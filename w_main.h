@@ -28,6 +28,12 @@ private slots:
 
     void on_bt_importDirChange_clicked();
 
+    void on_bt_openBaseDir_clicked();
+
+    void on_bt_openTranslDir_clicked();
+
+    void on_bt_openExportDir_clicked();
+
 private:
     Ui::w_main *ui;
 };

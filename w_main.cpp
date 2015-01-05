@@ -267,3 +267,33 @@ void w_main::on_actionImport_to_game_files_triggered()
 }
 
 
+
+void w_main::on_bt_openBaseDir_clicked()
+{
+    if(readDir("base").isEmpty()){
+        QMessageBox::critical(0, "Error", QObject::tr("You must set the directory first"));
+    }
+    else{
+        QDesktopServices::openUrl(QUrl::fromLocalFile(readDir("base")));
+    }
+}
+
+void w_main::on_bt_openTranslDir_clicked()
+{
+    if(readDir("translations").isEmpty()){
+        QMessageBox::critical(0, "Error", QObject::tr("You must set the directory first"));
+    }
+    else{
+        QDesktopServices::openUrl(QUrl::fromLocalFile(readDir("translations")));
+    }
+}
+
+void w_main::on_bt_openExportDir_clicked()
+{
+    if(readDir("export").isEmpty()){
+        QMessageBox::critical(0, "Error", QObject::tr("You must set the directory first"));
+    }
+    else{
+        QDesktopServices::openUrl(QUrl::fromLocalFile(readDir("export")));
+    }
+}
