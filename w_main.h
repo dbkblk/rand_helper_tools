@@ -15,6 +15,7 @@ public:
     explicit w_main(QWidget *parent = 0);
     ~w_main();
     void exportToAndroidXML(QString langCode);
+    void importToCivXML(QString langCode, bool all_files);
 
 private slots:
     void on_bt_baseDirChange_clicked();
@@ -22,6 +23,10 @@ private slots:
     void on_actionTest_triggered();
     void on_actionExport_to_Android_XML_triggered();
     void debugWindow(int time);
+
+    void on_actionImport_to_game_files_triggered();
+
+    void on_bt_importDirChange_clicked();
 
 private:
     Ui::w_main *ui;
