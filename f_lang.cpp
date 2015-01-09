@@ -122,7 +122,7 @@ bool f_lang::convertCivToUTF(QString file)
     /* Read all the file
      * Save the content to another file
      * Replace the other file with the first */
-
+    qDebug() << file;
     // Check for charset specific rules (ex: Russian)
     int charset = 0;
     QFile settings("xml_parser.config");

@@ -9,7 +9,7 @@ class f_files
 {
 public:
     f_files();
-    bool compareMd5(QFile file1, QFile file2);
+    QString checkMd5(QString file_path);
     bool generateXMLAndroid(QFile file);
     bool checkXMLConformity(QString fileName);
     bool convertXMLCivToAndroid(QString file, QString langCode);

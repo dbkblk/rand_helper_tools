@@ -73,7 +73,8 @@ void w_main::exportToAndroidXML(QString langCode){
     for(QStringList::Iterator it = folders.begin(); it != folders.end(); it++)
     {
         QString exportname = exportdir + "/" + *it;
-        QFile::copy(*it,exportname);
+        if(QFile::exists(exportname)){QFile::remove(exportname);}
+        QFile::copy(readDir("base") + "/" + *it,exportname);
         l.convertCivToUTF(exportname);
         f.convertXMLCivToAndroid(exportname,langCode);
         QFile::remove(exportname);
@@ -200,7 +201,7 @@ void w_main::on_actionImport_to_game_files_triggered()
 
     // Get base files, copy and convert them to export
     QStringList list = f.getBaseFilesList();
-    range = range + list.count() + list.count(); // x2 because of the process at the end.
+    range = range + list.count() + list.count() + list.count(); // x2 because of the process at the end.
     ui->progressBar->setRange(0,range);
     ui->progressBar->setValue(0);
     QStringList exported_list;
@@ -253,12 +254,31 @@ void w_main::on_actionImport_to_game_files_triggered()
             counter++;
             ui->progressBar->setValue(counter);
         }
+
     }
 
     // Convert the files back to ISO-8859-1
     ui->console->append("Saving files (conversion to ISO-8859-1)...");
     foreach(QString entry, exported_list){
         l.convertUTFToCiv(entry);
+        counter++;
+        ui->progressBar->setValue(counter);
+    }
+
+    // Check md5sum
+    foreach(QString entry, list){
+        // Check md5 of base file
+        QString base_md5 = f.checkMd5(entry);
+
+        // Check md5 of export file
+        QStringList filelist = entry.split("/");
+        QString filename = "";
+        foreach(QString entry, filelist){
+            filename = entry;
+        }
+        QString export_md5 = f.checkMd5(export_dir_string + filename);
+        qDebug() << base_md5 << " / " << export_md5;
+        if (base_md5 == export_md5){QFile::remove(export_dir_string + filename);}
         counter++;
         ui->progressBar->setValue(counter);
     }

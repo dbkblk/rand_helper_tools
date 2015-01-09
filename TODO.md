@@ -6,6 +6,8 @@ TODO:
 - Integrate transifex init / pull / push
 - Allow backup of pulled files
 - Easy language support
+- Add simple options checks on main window
+- Add the function to check if a language is present two times and remove the second one
 
 ## 1.0
 DONE - Activate the importation of empty tags

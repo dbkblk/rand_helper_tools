@@ -33,8 +33,19 @@ f_files::f_files()
 {
 }
 
-bool f_files::compareMd5(QFile file1, QFile file2){
-    // Input two files and compare md5
+QString f_files::checkMd5(QString file_path){
+    // Generate hash of original file
+    QFile file(file_path);
+    QCryptographicHash crypto(QCryptographicHash::Md5);
+    file.open(QFile::ReadOnly);
+    while(!file.atEnd()){
+        crypto.addData(file.read(8192));
+    }
+    QByteArray hash = crypto.result().toHex();
+    QString hash_string = hash;
+    //qDebug() << "Generated hash " << orig_hash_string << " of " << *it;
+    file.close();
+    return hash_string;
 }
 
 bool f_files::generateXMLAndroid(QFile file){
