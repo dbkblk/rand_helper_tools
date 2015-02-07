@@ -12,7 +12,7 @@ class f_files
 public:
     f_files();
     QString checkMd5(QString file_path);
-    bool generateXMLAndroid(QFile file);
+    //bool generateXMLAndroid(QFile file);
     bool checkXMLConformity(QString fileName);
     bool convertXMLCivToAndroid(QString file, QString langCode);
     bool convertXMLAndroidToCiv(QString file, QStringList files_to_check, QString langCode);

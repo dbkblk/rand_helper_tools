@@ -520,7 +520,8 @@ QStringList f_lang::listLangInDir(QString dir)
             qDebug() << "Processing" << lang;
             lang_check = lang;
         }
-    }
-    return lang_check;*/
+    }*/
+    QStringList empty;
+    return empty;
 }
 

@@ -71,9 +71,9 @@ QString f_files::checkMd5(QString file_path){
     return hash_string;
 }
 
-bool f_files::generateXMLAndroid(QFile file){
+/*bool f_files::generateXMLAndroid(QFile file){
     // Generate a basic Android XML file ready to be used
-}
+}*/
 
 bool f_files::checkXMLConformity(QString fileName){
     // Check the structure of a civ4 xml file
@@ -216,7 +216,7 @@ bool f_files::convertXMLAndroidToCiv(QString file, QStringList files_to_check, Q
     }
 
     // Create / open existing log list
-    QFile log_file(readDir("export") + "/report_" + langCode );
+    QFile log_file(readDir("export") + "/report_" + langCode + ".xml");
     QDomDocument log;
     if(log_file.exists()){
         log_file.open(QIODevice::ReadOnly);
@@ -277,6 +277,7 @@ bool f_files::convertXMLAndroidToCiv(QString file, QStringList files_to_check, Q
 
                 if (value_tag == value_tag_tr)
                 {
+                    qDebug() << value_tag;
                     s++;
                     int skip = 0;
                     QString value_text_tr = tag_tr.firstChild().nodeValue();
@@ -343,14 +344,21 @@ bool f_files::convertXMLAndroidToCiv(QString file, QStringList files_to_check, Q
                             QString new_value_gender = tag_tr.attribute("gender");
                             QString new_value_plural = tag_tr.attribute("plural");
 
+                            // If no language value, add it first
+                            if(tag_orig.firstChildElement(langName).firstChild().isNull()){
+                                QDomNode new_node_language = input.createElement(langName);
+                                tag_orig.appendChild(new_node_language);
+                            }
                             // Empty text value, then add subtags
-                            tag_orig.removeChild(tag_orig.firstChildElement(langName).firstChild());
+                            else {
+                                tag_orig.removeChild(tag_orig.firstChildElement(langName).firstChild());
+                            }
                             QDomNode new_node_text = input.createElement("Text");
                             QDomNode new_node_gender = input.createElement("Gender");
                             QDomNode new_node_plural = input.createElement("Plural");
-                            tag_orig.firstChildElement(langName).firstChild().appendChild(new_node_text);
-                            tag_orig.firstChildElement(langName).firstChild().appendChild(new_node_gender);
-                            tag_orig.firstChildElement(langName).firstChild().appendChild(new_node_plural);
+                            tag_orig.firstChildElement(langName).appendChild(new_node_text);
+                            tag_orig.firstChildElement(langName).appendChild(new_node_gender);
+                            tag_orig.firstChildElement(langName).appendChild(new_node_plural);
 
                             QDomText new_node_text_value = input.createTextNode(new_value_text);
                             QDomText new_node_gender_value = input.createTextNode(new_value_gender);
