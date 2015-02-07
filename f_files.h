@@ -4,6 +4,8 @@
 
 void saveDir(QString dir, QString value);
 QString readDir(QString dir);
+void saveOption(QString option, QString value);
+QString readOption(QString option);
 
 class f_files
 {
@@ -17,6 +19,10 @@ public:
     QStringList getBaseFilesList();
     QStringList getTranslationFilesList(QString langCode);
     QStringList checkImportLanguages();
+    void sortCategories();
+
+signals:
+    void message(QString message);
 };
 
 #endif // F_FILES_H

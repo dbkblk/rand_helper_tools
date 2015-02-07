@@ -17,6 +17,10 @@ w_main::w_main(QWidget *parent) :
     ui->line_baseDir->setText(readDir("base"));
     ui->line_importDir->setText(readDir("translations"));
     ui->line_exportDir->setText(readDir("export"));
+
+    l = new f_lang();
+    f = new f_files();
+    //connect(f,SIGNAL(message(QString)),this,SLOT(appendMessage(QString)));
 }
 
 w_main::~w_main()
@@ -60,8 +64,6 @@ void w_main::on_bt_exportDirChange_clicked()
 void w_main::exportToAndroidXML(QString langCode){
 
     // List all files
-    f_lang l;
-    f_files f;
     QDir root(readDir("base"));
     QString exportdir = readDir("export");
     QStringList xml_filter;
@@ -75,8 +77,8 @@ void w_main::exportToAndroidXML(QString langCode){
         QString exportname = exportdir + "/" + *it;
         if(QFile::exists(exportname)){QFile::remove(exportname);}
         QFile::copy(readDir("base") + "/" + *it,exportname);
-        l.convertCivToUTF(exportname);
-        f.convertXMLCivToAndroid(exportname,langCode);
+        l->convertCivToUTF(exportname);
+        f->convertXMLCivToAndroid(exportname,langCode);
         QFile::remove(exportname);
     }
 
@@ -119,43 +121,13 @@ void w_main::importToCivXML(QString langCode, bool all_files){
 
 void w_main::on_actionTest_triggered()
 {
-    QString langCode = "hu";
-    // Create / open existing log list
-    QFile log_file(readDir("export") + "/report_" + langCode );
-    QDomDocument log;
-    if(log_file.exists()){
-        log_file.open(QIODevice::ReadOnly);
-        log.setContent(&log_file);
-        log_file.close();
-    }
-    else{
-        QDomNode declaration = log.createProcessingInstruction("xml",QString("version=\"1.0\" encoding=\"UTF-8\""));
-        log.insertBefore(declaration,log.firstChild());
-        log.appendChild(log.createElement("root"));
-    }
-    QDomElement log_root = log.firstChildElement();
-    qDebug() << log_root.tagName();
-
-    // log entry
-    QDomElement log_entry = log.createElement("entry");
-    log_entry.setAttribute("file","file");
-    log_entry.setAttribute("tag","value_tag");
-    log_entry.setAttribute("old_value","value_text");
-    log_entry.setAttribute("new_value","value_text_tr");
-    log_root.appendChild(log_entry);
-
-    log_file.open(QIODevice::Truncate | QIODevice::WriteOnly);
-    QTextStream rep(&log_file);
-    log.save(rep, 4);
-    log_file.close();
+    saveOption("importtoall","3");
 }
 
 void w_main::on_actionExport_to_Android_XML_triggered()
 {
-    f_lang l;
-    f_files f;
     // Get enabled languages
-    QStringList languages = l.getEnabledCodes();
+    QStringList languages = l->getEnabledCodes();
     int count = languages.count();
     int counter = 0;
     ui->progressBar->setRange(0,count);
@@ -171,23 +143,29 @@ void w_main::on_actionExport_to_Android_XML_triggered()
     ui->console->append("Export successful");
 }
 
+void w_main::appendMessage(QString message){
+    ui->console->append(message);
+}
+
 void w_main::on_actionImport_to_game_files_triggered()
 {
     ui->console->clear();
     ui->console->append("Preparing files (conversion to UTF8)...");
     // Check options
-    bool opt_same_name = true;
+    int opt = readOption("importtoall").toInt();
+    bool opt_same_name;
+    if(opt == 1){opt_same_name = false;}
+    else{opt_same_name = true;}
+
     // Read export dir
-    f_files f;
-    f_lang l;
-    QStringList translations = f.checkImportLanguages();
+    QStringList translations = f->checkImportLanguages();
     translations.removeAll("en"); // Remove english from the list
 
     // Create counter for the progress bar
     int counter = 0;
     int range = 0;
     foreach(QString tr_code, translations){
-        QStringList tr_fileslist = f.getTranslationFilesList(tr_code);
+        QStringList tr_fileslist = f->getTranslationFilesList(tr_code);
         range = range + tr_fileslist.count();
     }
 
@@ -200,7 +178,7 @@ void w_main::on_actionImport_to_game_files_triggered()
     }
 
     // Get base files, copy and convert them to export
-    QStringList list = f.getBaseFilesList();
+    QStringList list = f->getBaseFilesList();
     range = range + list.count() + list.count() + list.count(); // x2 because of the process at the end.
     ui->progressBar->setRange(0,range);
     ui->progressBar->setValue(0);
@@ -218,7 +196,7 @@ void w_main::on_actionImport_to_game_files_triggered()
             output.remove();
         }
         QFile::copy(entry,export_dir_string + filename);
-        l.convertCivToUTF(export_dir_string + filename);
+        l->convertCivToUTF(export_dir_string + filename);
         exported_list << export_dir_string + filename;
         counter++;
         ui->progressBar->setValue(counter);
@@ -228,8 +206,8 @@ void w_main::on_actionImport_to_game_files_triggered()
 
     // Read each translation file for importation
     foreach(QString tr_code, translations){
-        QStringList tr_fileslist = f.getTranslationFilesList(tr_code);
-        ui->console->append("Processing " + l.getIntlName(tr_code));
+        QStringList tr_fileslist = f->getTranslationFilesList(tr_code);
+        ui->console->append("Processing " + l->getIntlName(tr_code));
         foreach(QString tr_file, tr_fileslist){
             QStringList same_name;
             if(opt_same_name){
@@ -250,7 +228,7 @@ void w_main::on_actionImport_to_game_files_triggered()
             }
 
             //qDebug() << "Importing" << tr_file << "in" << tr_code;
-            f.convertXMLAndroidToCiv(tr_file, same_name,tr_code);
+            f->convertXMLAndroidToCiv(tr_file, same_name,tr_code);
             counter++;
             ui->progressBar->setValue(counter);
         }
@@ -260,7 +238,7 @@ void w_main::on_actionImport_to_game_files_triggered()
     // Convert the files back to ISO-8859-1
     ui->console->append("Saving files (conversion to ISO-8859-1)...");
     foreach(QString entry, exported_list){
-        l.convertUTFToCiv(entry);
+        l->convertUTFToCiv(entry);
         counter++;
         ui->progressBar->setValue(counter);
     }
@@ -268,7 +246,7 @@ void w_main::on_actionImport_to_game_files_triggered()
     // Check md5sum
     foreach(QString entry, list){
         // Check md5 of base file
-        QString base_md5 = f.checkMd5(entry);
+        QString base_md5 = f->checkMd5(entry);
 
         // Check md5 of export file
         QStringList filelist = entry.split("/");
@@ -276,7 +254,7 @@ void w_main::on_actionImport_to_game_files_triggered()
         foreach(QString entry, filelist){
             filename = entry;
         }
-        QString export_md5 = f.checkMd5(export_dir_string + filename);
+        QString export_md5 = f->checkMd5(export_dir_string + filename);
         qDebug() << base_md5 << " / " << export_md5;
         if (base_md5 == export_md5){QFile::remove(export_dir_string + filename);}
         counter++;

@@ -2,6 +2,8 @@
 #define W_MAIN_H
 
 #include <QMainWindow>
+#include "f_files.h"
+#include "f_lang.h"
 
 namespace Ui {
 class w_main;
@@ -17,25 +19,25 @@ public:
     void exportToAndroidXML(QString langCode);
     void importToCivXML(QString langCode, bool all_files);
 
+public slots:
+    void appendMessage(QString message);
+
 private slots:
     void on_bt_baseDirChange_clicked();
     void on_bt_exportDirChange_clicked();
     void on_actionTest_triggered();
     void on_actionExport_to_Android_XML_triggered();
     void debugWindow(int time);
-
     void on_actionImport_to_game_files_triggered();
-
     void on_bt_importDirChange_clicked();
-
     void on_bt_openBaseDir_clicked();
-
     void on_bt_openTranslDir_clicked();
-
     void on_bt_openExportDir_clicked();
 
 private:
     Ui::w_main *ui;
+    f_lang *l;
+    f_files *f;
 };
 
 #endif // W_MAIN_H
