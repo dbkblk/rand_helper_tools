@@ -21,6 +21,7 @@ w_main::w_main(QWidget *parent) :
     l = new f_lang();
     f = new f_files();
     //connect(f,SIGNAL(message(QString)),this,SLOT(appendMessage(QString)));
+    this->setWindowTitle("Civilization 4 XML parser");
 }
 
 w_main::~w_main()
@@ -77,7 +78,7 @@ void w_main::exportToAndroidXML(QString langCode){
         QString exportname = exportdir + "/" + *it;
         if(QFile::exists(exportname)){QFile::remove(exportname);}
         QFile::copy(readDir("base") + "/" + *it,exportname);
-        l->convertCivToUTF(exportname);
+        //l->convertCivToUTF(exportname);
         f->convertXMLCivToAndroid(exportname,langCode);
         QFile::remove(exportname);
     }
@@ -179,7 +180,7 @@ void w_main::on_actionImport_to_game_files_triggered()
 
     // Get base files, copy and convert them to export
     QStringList list = f->getBaseFilesList();
-    range = range + list.count() + list.count() + list.count(); // x2 because of the process at the end.
+    range = range + list.count() + list.count(); // x2 because of the process at the end.
     ui->progressBar->setRange(0,range);
     ui->progressBar->setValue(0);
     QStringList exported_list;
@@ -236,12 +237,12 @@ void w_main::on_actionImport_to_game_files_triggered()
     }
 
     // Convert the files back to ISO-8859-1
-    ui->console->append("Saving files (conversion to ISO-8859-1)...");
+    /*ui->console->append("Saving files (conversion to ISO-8859-1)...");
     foreach(QString entry, exported_list){
-        l->convertUTFToCiv(entry);
+        //l->convertUTFToCiv(entry);
         counter++;
         ui->progressBar->setValue(counter);
-    }
+    }*/
 
     // Check md5sum
     foreach(QString entry, list){

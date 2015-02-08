@@ -277,7 +277,7 @@ bool f_files::convertXMLAndroidToCiv(QString file, QStringList files_to_check, Q
 
                 if (value_tag == value_tag_tr)
                 {
-                    qDebug() << value_tag;
+                    //qDebug() << value_tag;
                     s++;
                     int skip = 0;
                     QString value_text_tr = tag_tr.firstChild().nodeValue();
