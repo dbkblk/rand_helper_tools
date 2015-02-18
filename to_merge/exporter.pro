@@ -1,14 +1,8 @@
-#-------------------------------------------------
-#
-# Project created by QtCreator 2014-05-22T08:40:05
-#
-#-------------------------------------------------
-
 INCLUDEPATH += .
 
 QT       += core gui network widgets xml
 
-TARGET = _xml_parser
+TARGET = xml_exporter
 
 TEMPLATE = app
 

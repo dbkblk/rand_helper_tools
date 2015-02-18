@@ -2,8 +2,10 @@
 #define F_LANG_H
 #include <QtCore>
 
-class f_lang
+class f_lang : public QObject
 {
+    Q_OBJECT
+
 public:
     f_lang();
     QString getIntlName(QString langCode);

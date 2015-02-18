@@ -7,8 +7,10 @@ QString readDir(QString dir);
 void saveOption(QString option, QString value);
 QString readOption(QString option);
 
-class f_files
+class f_files : public QObject
 {
+    Q_OBJECT
+
 public:
     f_files();
     QString checkMd5(QString file_path);

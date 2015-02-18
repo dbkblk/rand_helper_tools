@@ -18,9 +18,9 @@ w_main::w_main(QWidget *parent) :
     ui->line_importDir->setText(readDir("translations"));
     ui->line_exportDir->setText(readDir("export"));
 
-    l = new f_lang();
     f = new f_files();
-    //connect(f,SIGNAL(message(QString)),this,SLOT(appendMessage(QString)));
+    l = new f_lang();
+    connect(f,SIGNAL(message(QString)),this,SLOT(setMessageToConsole(QString)));
     this->setWindowTitle("Civilization 4 XML parser");
 }
 
@@ -78,8 +78,11 @@ void w_main::exportToAndroidXML(QString langCode){
         QString exportname = exportdir + "/" + *it;
         if(QFile::exists(exportname)){QFile::remove(exportname);}
         QFile::copy(readDir("base") + "/" + *it,exportname);
-        //l->convertCivToUTF(exportname);
-        f->convertXMLCivToAndroid(exportname,langCode);
+        // Convert from latin1 to UTF8 if enabled
+        if(readOption("fullutf8") == "0"){
+            l.convertCivToUTF(exportname);
+        }
+        f.convertXMLCivToAndroid(exportname,langCode);
         QFile::remove(exportname);
     }
 
@@ -144,10 +147,6 @@ void w_main::on_actionExport_to_Android_XML_triggered()
     ui->console->append("Export successful");
 }
 
-void w_main::appendMessage(QString message){
-    ui->console->append(message);
-}
-
 void w_main::on_actionImport_to_game_files_triggered()
 {
     ui->console->clear();
@@ -180,7 +179,12 @@ void w_main::on_actionImport_to_game_files_triggered()
 
     // Get base files, copy and convert them to export
     QStringList list = f->getBaseFilesList();
-    range = range + list.count() + list.count(); // x2 because of the process at the end.
+    if(readOption("fullutf8") == "0"){
+        range = range + list.count() + list.count() + list.count(); // x3 because of the process at the end.
+    }
+    else{ // Only count x2 if there is no reconversion back
+        range = range + list.count() + list.count();
+    }
     ui->progressBar->setRange(0,range);
     ui->progressBar->setValue(0);
     QStringList exported_list;
@@ -237,12 +241,15 @@ void w_main::on_actionImport_to_game_files_triggered()
     }
 
     // Convert the files back to ISO-8859-1
-    /*ui->console->append("Saving files (conversion to ISO-8859-1)...");
-    foreach(QString entry, exported_list){
-        //l->convertUTFToCiv(entry);
-        counter++;
-        ui->progressBar->setValue(counter);
-    }*/
+    // Convert from UTF8 to latin1 if enabled
+    if(readOption("fullutf8") == "0"){
+        ui->console->append("Saving files (conversion to ISO-8859-1)...");
+        foreach(QString entry, exported_list){
+            l->convertUTFToCiv(entry);
+            counter++;
+            ui->progressBar->setValue(counter);
+        }
+    }
 
     // Check md5sum
     foreach(QString entry, list){
@@ -295,4 +302,9 @@ void w_main::on_bt_openExportDir_clicked()
     else{
         QDesktopServices::openUrl(QUrl::fromLocalFile(readDir("export")));
     }
+}
+
+void w_main::setMessageToConsole(QString message)
+{
+    ui->console->append(message);
 }

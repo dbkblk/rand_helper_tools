@@ -3,7 +3,8 @@
 #include <QtCore>
 #include <QtXml>
 
-f_lang::f_lang()
+f_lang::f_lang(QObject *parent) :
+    QObject(parent)
 {
 }
 
@@ -214,7 +215,7 @@ bool f_lang::convertCivToUTF(QString file)
                         if(read_element.tagName() == temp)
                         {
                             //qDebug() << "Converting" << write_text_value;
-                            write_text_value = l.convertLatinToCharset(temp, write_text_value);
+                            //write_text_value = l.convertLatinToCharset(temp, write_text_value);
                         }
                     }
                 }
@@ -238,7 +239,7 @@ bool f_lang::convertCivToUTF(QString file)
                         if(read_element.tagName() == temp)
                         {
                             //qDebug() << "Converting" << write_text_value;
-                            write_text_value = l.convertLatinToCharset(temp, write_text_value);
+                            //write_text_value = l.convertLatinToCharset(temp, write_text_value);
                         }
                     }
                 }

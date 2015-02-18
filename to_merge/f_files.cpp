@@ -52,7 +52,8 @@ QString readOption(QString option){
 
 // f_files definition
 
-f_files::f_files()
+f_files::f_files(QObject *parent) :
+    QObject(parent)
 {
 }
 
@@ -133,6 +134,7 @@ bool f_files::convertXMLCivToAndroid(QString file, QString langCode)
     f_files f;
     if (!f.checkXMLConformity(file))
     {
+        emit(QString(file + " is not properly formatted"));
         qDebug() << file << " is not properly formatted";
         file_input.remove();
         return false;

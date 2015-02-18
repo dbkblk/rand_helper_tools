@@ -20,7 +20,7 @@ public:
     void importToCivXML(QString langCode, bool all_files);
 
 public slots:
-    void appendMessage(QString message);
+    void setMessageToConsole(QString message);
 
 private slots:
     void on_bt_baseDirChange_clicked();
