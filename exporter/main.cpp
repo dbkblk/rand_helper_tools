@@ -36,12 +36,33 @@ QString getIntlName(QString langCode){
     return value;
 }
 
+QStringList getEnabledCodes(){
+    // Output list of supported languages
+    QStringList list;
+
+    // Open the settings
+    QFile settings("exporter.config");
+    settings.open(QIODevice::ReadOnly);
+    QDomDocument xml;
+    xml.setContent(&settings);
+    settings.close();
+    QDomElement lang = xml.firstChildElement("main").firstChildElement("languages").firstChildElement("language").toElement();
+    while(!lang.isNull()){
+        if(lang.attribute("enabled").toInt() == 1){
+            list << lang.attribute("code");
+        }
+        lang = lang.nextSiblingElement();
+    }
+     return list;
+}
+
+
 bool convertXMLCivToAndroid(QString exportDir, QString file, QString langCode)
 {
     QDomDocument input;
     QDomDocument output;
 
-    QString langName = getIntlName("en");
+    QString langName = getIntlName(langCode);
 
     file.replace(".XML", ".xml", Qt::CaseSensitive);
     exportDir = exportDir + "/" + langCode + "/";
@@ -136,6 +157,9 @@ int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
 
+    // Announcement
+    qDebug() << "Civ. IV XML exporter v1.0; \"A New Dawn Resurection, dbkblk\"";
+
     // First extract informations from the config file
     QFile settings("exporter.config");
     settings.open(QIODevice::ReadOnly);
@@ -147,6 +171,7 @@ int main(int argc, char *argv[])
     if(dirFrom.isEmpty() || dirTo.isEmpty())
     {
         qDebug() << "One of the config directory is empty, cannot continue.";
+        return a.exec();
     }
     else{
         qDebug() << "Exporting files";
@@ -158,24 +183,68 @@ int main(int argc, char *argv[])
     xml_filter << "*.xml";
     QStringList folders;
     folders = root.entryList(xml_filter, QDir::Files);
-    QString langCode = "en";
 
-    // Convert all the files in the language
-    for(QStringList::Iterator it = folders.begin(); it != folders.end(); it++)
-    {
-        // Prepare conversion
-        QString fileName = dirFrom + "/" + *it;
-        QString exportName = dirTo + "/" + langCode + "/" + *it;
-        if(QFile::exists(exportName)){QFile::remove(exportName);}
+    // Get enabled languages
+    QStringList languages;
+    if(xml.firstChildElement("main").firstChildElement("options").firstChildElement("englishOnly").firstChild().nodeValue() == "1"){
+        languages << "en";
+    }
+    else{
+        languages = getEnabledCodes();
+    }
+    foreach(QString entry, languages){
+        QString langCode = entry;
+        // Remove and create the output directory to reflect text files changes in the main mod
+        QDir recreate(QString(dirTo + "/" + langCode + "/"));
+        recreate.removeRecursively();
+        recreate.mkpath(".");
 
-        // Convert each file to Android XML
-        if(!convertXMLCivToAndroid(dirTo, fileName,langCode))
+        // Convert all the files in the language
+        for(QStringList::Iterator it = folders.begin(); it != folders.end(); it++)
         {
-            qDebug() << "A problem has occured on" << fileName << ". Please review the file before to continue.";
-            return 0;
+            // Prepare conversion
+            QString fileName = dirFrom + "/" + *it;
+            QString exportName = dirTo + "/" + langCode + "/" + *it;
+            if(QFile::exists(exportName)){QFile::remove(exportName);}
+
+            // Convert each file to Android XML
+            if(!convertXMLCivToAndroid(dirTo, fileName,langCode))
+            {
+                qDebug() << "A problem has occured on" << fileName << ". Please review the file before to continue.";
+                return 0;
+            }
+        }
+
+        // Check output files
+        QStringList output_files;
+        QDir output(dirTo + "/" + langCode);
+        output_files = output.entryList(xml_filter, QDir::Files);
+        for(QStringList::Iterator it = output_files.begin(); it != output_files.end(); it++)
+        {
+            QString fileName = dirTo + "/" + langCode + "/" + *it;
+            int not_empty_counter = 0;
+            QDomDocument check;
+            QFile file_check(fileName);
+            file_check.open(QIODevice::ReadOnly);
+            check.setContent(&file_check);
+            file_check.close();
+            QDomElement node_check = check.firstChildElement("resources").firstChildElement("string");
+            for(node_check;!node_check.isNull();node_check = node_check.nextSiblingElement())
+            {
+                if(!node_check.firstChild().nodeValue().isEmpty())
+                {
+                    not_empty_counter++;
+                }
+            }
+
+            if(not_empty_counter == 0)
+            {
+                file_check.remove();
+            }
+            check.clear();
         }
     }
 
     qDebug() << "Exportation is done.";
-    return 0;
+    return a.exec();
 }
