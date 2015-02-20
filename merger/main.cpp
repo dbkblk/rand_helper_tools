@@ -345,7 +345,7 @@ int main(int argc, char *argv[])
                             // Write the node to the correct category
                             QDomElement input_element_node = input_text_node.firstChildElement();
                             QDomElement xml_removed_node = xml_removed.firstChildElement();
-                            QDomNode xml_text_node = xml_removed.createElement("Text");
+                            QDomNode xml_text_node = xml_removed.createElement("TEXT");
                             xml_removed_node.appendChild(xml_text_node);
                             for(input_element_node;!input_element_node.isNull();input_element_node = input_element_node.nextSiblingElement())
                             {
@@ -391,7 +391,7 @@ int main(int argc, char *argv[])
                             // Write the node to the correct category
                             QDomElement input_element_node = input_text_node.firstChildElement();
                             QDomElement xml_detected_node = xml_detected.firstChildElement();
-                            QDomNode xml_text_node = xml_detected.createElement("Text");
+                            QDomNode xml_text_node = xml_detected.createElement("TEXT");
                             xml_detected_node.appendChild(xml_text_node);
                             for(input_element_node;!input_element_node.isNull();input_element_node = input_element_node.nextSiblingElement())
                             {

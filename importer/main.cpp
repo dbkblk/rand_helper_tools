@@ -196,7 +196,7 @@ bool convertXMLAndroidToCiv(QString dirTrans, QString dirTo, QString file, QStri
         QDomElement root = input_tr.documentElement();
 
 
-        QDomElement tag_orig = input.firstChildElement("Civ4GameText").firstChildElement().toElement();
+        QDomElement tag_orig = input.firstChildElement("Civ4GameText").firstChildElement("TEXT").toElement();
         for(tag_orig;!tag_orig.isNull();tag_orig = tag_orig.nextSiblingElement())
         {
             // Compare each occurence with each tag of the translated file
