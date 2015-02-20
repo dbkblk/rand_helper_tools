@@ -171,7 +171,7 @@ int main(int argc, char *argv[])
     if(dirFrom.isEmpty() || dirTo.isEmpty())
     {
         qDebug() << "One of the config directory is empty, cannot continue.";
-        return a.exec();
+        return 1;
     }
     else{
         qDebug() << "Exporting files";
@@ -211,7 +211,7 @@ int main(int argc, char *argv[])
             if(!convertXMLCivToAndroid(dirTo, fileName,langCode))
             {
                 qDebug() << "A problem has occured on" << fileName << ". Please review the file before to continue.";
-                return 0;
+                return 1;
             }
         }
 
@@ -246,5 +246,5 @@ int main(int argc, char *argv[])
     }
 
     qDebug() << "Exportation is done.";
-    return a.exec();
+    return 0;
 }
