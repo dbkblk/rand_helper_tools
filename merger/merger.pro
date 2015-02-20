@@ -4,12 +4,12 @@
 #
 #-------------------------------------------------
 
-QT       += core
+QT       += core xml
 
 QT       -= gui
 
 TARGET = merger
-CONFIG   += console
+CONFIG   += console qt
 CONFIG   -= app_bundle
 
 TEMPLATE = app
