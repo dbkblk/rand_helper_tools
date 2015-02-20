@@ -229,7 +229,7 @@ int main(int argc, char *argv[])
             check.setContent(&file_check);
             file_check.close();
             QDomElement node_check = check.firstChildElement("resources").firstChildElement("string");
-            for(node_check;!node_check.isNull();node_check = node_check.nextSiblingElement())
+            for(;!node_check.isNull();node_check = node_check.nextSiblingElement())
             {
                 if(!node_check.firstChild().nodeValue().isEmpty())
                 {
