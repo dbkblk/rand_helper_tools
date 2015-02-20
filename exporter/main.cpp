@@ -174,6 +174,15 @@ int main(int argc, char *argv[])
         return 1;
     }
     else{
+        // Make sure the path is normalized
+        if(!dirFrom.endsWith("/")){
+            dirFrom.append("/");
+        }
+        if(!dirTo.endsWith("/")){
+            dirTo.append("/");
+        }
+        dirFrom.replace("\\","/");
+        dirTo.replace("\\","/");
         qDebug() << "Exporting files";
     }
 

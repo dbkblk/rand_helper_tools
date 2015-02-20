@@ -77,6 +77,8 @@ int main(int argc, char *argv[])
         if(!dirTo.endsWith("/")){
             dirTo.append("/");
         }
+        dirFrom.replace("\\","/");
+        dirTo.replace("\\","/");
         qDebug() << "Merging files";
     }
 
