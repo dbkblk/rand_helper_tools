@@ -9,3 +9,6 @@ cleaner = cleaner/cleaner.pro
 audio_injector = audio_injector/audio_injector.pro
 offline_patcher = offline_patcher/offline_patcher.pro
 transifex_stats_parser = transifex_stats_parser/transifex_stats_parser.pro
+
+DISTFILES += README.md\
+            TODO.md
