@@ -1,0 +1,19 @@
+Get changes:
+svn diff -r732 --force --diff-cmd /usr/bin/diff -x -au svn://svn.code.sf.net/p/anewdawn/code/Trunk/Translations > and_732to868_update.patch
+
+Apply changes:
+patch -p0 -E --binary < and_732to868_update.patch
+tools\svn.exe diff -r732 --force --diff-cmd tools\diff.exe -x -au "svn://svn.code.sf.net/p/anewdawn/code/Trunk/Rise of Mankind - A New Dawn/Assets/Modules/" > and_732to868_update.patch
+
+New system:
+Patch download:
+Get new/modified/deleted files with: .\tools\svn.exe diff -r 875:HEAD --summarize "http://svn.code.sf.net/p/anewdawn/code/Trunk/Rise of Mankind - A New Dawn/" > diff.txt
+Make a list of new / modified files.
+Make another list of deleted files and save it to patcherToDelete.xml
+Download each n/m with rsync (compress) to a patch dir
+Compress the patch dir to tar.xz (renamed to .patch).
+
+Patch applying:
+Copy the patch to the mod folder.
+Untar and overwrite.
+Parse patcherToDelete.xml, remove each file first, list dir and remove each dir.
