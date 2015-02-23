@@ -42,26 +42,6 @@ QString getLanguageCodeFromName(QString langName){
     return value;
 }
 
-QStringList getEnabledCodes(){
-    // Output list of supported languages
-    QStringList list;
-
-    // Open the settings
-    QFile settings("languageMap.xml");
-    settings.open(QIODevice::ReadOnly);
-    QDomDocument xml;
-    xml.setContent(&settings);
-    settings.close();
-    QDomElement lang = xml.firstChildElement("main").firstChildElement("language").toElement();
-    while(!lang.isNull()){
-        if(lang.attribute("enabled").toInt() == 1){
-            list << lang.attribute("code");
-        }
-        lang = lang.nextSiblingElement();
-    }
-     return list;
-}
-
 int getLocalVersion()
 {
     //** Get version number from "Assets/Python/Contrib/CvModName.py"
@@ -149,12 +129,6 @@ QString getTranslation(QString langCode, QString tag)
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
-
-    // Get enabled languages code
-    QStringList enabled_lang = getEnabledCodes();
-    qDebug() << enabled_lang;
-    qDebug() << getLanguageCodeFromName("SimpChinese");
-
     // Open the installer file
     QString name_in = "full_installer_script.nsi";
     QString name_out = name_in + "temp";
