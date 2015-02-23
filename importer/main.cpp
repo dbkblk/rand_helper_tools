@@ -25,7 +25,7 @@ QStringList getEnabledCodes(){
     QStringList list;
 
     // Open the settings
-    QFile settings("exporter.config");
+    QFile settings("importer.config");
     settings.open(QIODevice::ReadOnly);
     QDomDocument xml;
     xml.setContent(&settings);
@@ -405,7 +405,7 @@ int main(int argc, char *argv[])
     QCoreApplication a(argc, argv);
 
     // Announcement
-    qDebug() << "Civ. IV XML importer v1.0; \"A New Dawn Resurection, dbkblk\"";
+    qDebug() << "Civ. IV XML importer v1.01; \"A New Dawn Resurection, dbkblk\"";
 
     // First extract informations from the config file
     QFile settings("importer.config");

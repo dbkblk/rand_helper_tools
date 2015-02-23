@@ -170,5 +170,5 @@ int main(int argc, char *argv[])
     file_out.close();
     QFile::remove(name_in);
     QFile::rename(name_out,name_in);
-    return a.exec();
+    return 0;
 }
