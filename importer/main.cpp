@@ -405,7 +405,7 @@ int main(int argc, char *argv[])
     QCoreApplication a(argc, argv);
 
     // Announcement
-    qDebug() << "Civ. IV XML importer v1.01; \"A New Dawn Resurection, dbkblk\"";
+    qDebug() << "Civ. IV XML importer v1.2; \"A New Dawn Resurection, dbkblk\"";
 
     // First extract informations from the config file
     QFile settings("importer.config");
@@ -447,7 +447,15 @@ int main(int argc, char *argv[])
 
     // Read export dir
     QStringList translations = checkImportLanguages(dirTrans);
+    QStringList enabled_translations = getEnabledCodes();
     translations.removeAll("en"); // Remove english from the list
+    foreach(QString entry, translations)
+    { // Remove disabled translations
+        if(!enabled_translations.contains(entry))
+        {
+            translations.removeAll(entry);
+        }
+    }
 
     // Get the directories
     to.mkdir(".");
@@ -513,9 +521,11 @@ int main(int argc, char *argv[])
             filename = entry;
         }
         QString export_md5 = checkMd5(dirTo + filename);
-        qDebug() << base_md5 << " / " << export_md5;
-        //if (base_md5 == export_md5){QFile::remove(dirTo + filename);}
+        //qDebug() << base_md5 << " / " << export_md5;
+        if (base_md5 == export_md5){QFile::remove(dirTo + filename);}
     }
+
+    qDebug() << "Import finished. Only modified files are kept in the output folder. You can quit the program and review the reports.";
 
     return a.exec();
 }
