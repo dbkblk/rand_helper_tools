@@ -7,7 +7,7 @@ int main(int argc, char *argv[])
     qDebug() << "Civ. IV Asian language patcher v1.0; \"A New Dawn Resurection, dbkblk\"";
 
     // Read the executable location in checker_config.ini
-    QSettings settings("checker_config.ini", QSettings::IniFormat);
+    QSettings settings("checker/checker_config.ini", QSettings::IniFormat);
     if(!settings.contains("Main/ExecutablePath")) {
         qDebug() << "Please set your executable path in the launcher before to launch the patch.";
         return a.exec();
@@ -23,19 +23,19 @@ int main(int argc, char *argv[])
     qDebug() << "Executable found at" << executable;
 
     // Get tool paths
-    const QString TOOL_XZ = "xz.exe -d ";
-    const QString TOOL_TAR = "tar.exe -xpf ";
+    const QString TOOL_XZ = "checker/xz.exe -d ";
+    const QString TOOL_TAR = "checker/tar.exe -xpf ";
 
     // Extract the asian executable next to the english one
     qDebug() << "Extracting package";
     QStringList path = executable.split("/");
     path.removeLast();
     QString dirPath = path.join("/");
-    QFile::copy("Civ4BeyondSword_Asian.tar.xz","temp.tar.xz");
+    QFile::copy("checker/Civ4BeyondSword_Asian.tar.xz","checker/temp.tar.xz");
     QProcess unzip;
-    unzip.execute(TOOL_XZ + "temp.tar.xz");
-    unzip.execute(TOOL_TAR + "temp.tar");
-    QFile::remove("temp.tar");
+    unzip.execute(TOOL_XZ + "checker/temp.tar.xz");
+    unzip.execute(TOOL_TAR + "checker/temp.tar");
+    QFile::remove("checker/temp.tar");
     QFile::remove(QString(dirPath + "/Civ4BeyondSword_Asian.exe"));
     QFile::rename("Civ4BeyondSword_Asian.exe",QString(dirPath + "/Civ4BeyondSword_Asian.exe"));
 
