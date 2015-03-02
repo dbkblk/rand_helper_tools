@@ -1,6 +1,6 @@
 TEMPLATE = subdirs
 
-SUBDIRS = exporter importer merger cleaner audio_injector offline_patcher transifex_stats_parser mcp_updater \
+SUBDIRS = exporter importer merger cleaner audio_injector transifex_stats_parser mcp_updater \
     installer_lang_update \
     asian_patcher
 
@@ -9,7 +9,6 @@ importer = importer/importer.pro
 merger = merger/merger.pro
 cleaner = cleaner/cleaner.pro
 audio_injector = audio_injector/audio_injector.pro
-offline_patcher = offline_patcher/offline_patcher.pro
 transifex_stats_parser = transifex_stats_parser/transifex_stats_parser.pro
 mcp_updater = mcp_updater/mcp_updater.pro
 
