@@ -1,6 +1,6 @@
 # Civilization 4 XML translation tool
 
-*This tool is intended to be used by developpers*
+*This documentation is outdated*
 
 ## DESCRIPTION
 The goal of this tool is to convert civ 4 xml text files to individual language xml file. These individual language files can be imported to translation platform. 

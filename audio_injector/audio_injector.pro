@@ -17,4 +17,5 @@ TEMPLATE = app
 
 SOURCES += main.cpp
 
-DISTFILES +=
+DISTFILES += \
+    README.md

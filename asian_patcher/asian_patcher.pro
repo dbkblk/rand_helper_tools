@@ -17,3 +17,6 @@ TEMPLATE = app
 QMAKE_LFLAGS += /MANIFESTUAC:'level='requireAdministrator''
 
 SOURCES += main.cpp
+
+DISTFILES += \
+    README.md
