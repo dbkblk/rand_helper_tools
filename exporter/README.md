@@ -2,6 +2,8 @@
 
 This tool will convert XML files from the non-standard format of Civilization IV to the XML Android format (per-languages files). It is only compatible with UTF8.
 
+## Details
+
 The parser read every xml text file in the folder and extract every string for every language known. It create a subfolder «lang» which contains a folder for all the enables languages.
 
 For example, the file «A_New_Dawn_Concept_Civ4GameText.xml» will be spread in x files for each language which will contains only one language.
