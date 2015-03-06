@@ -49,10 +49,8 @@ QStringList ListTags(QString dir)
     return tags;
 }
 
-int main(int argc, char *argv[])
+int getUnusedTagsList(QString listName)
 {
-    QCoreApplication a(argc, argv);
-
     // First extract informations from the config file
     QFile settings("cleaner.config");
     settings.open(QIODevice::ReadOnly);
@@ -265,7 +263,7 @@ int main(int argc, char *argv[])
 
     // Print not found list
     QString print_value;
-    QFile print_file("_tags_not_found.txt");
+    QFile print_file(listName);
     if ( print_file.open(QIODevice::ReadWrite) )
     {
       QTextStream stream( &print_file );
@@ -277,6 +275,181 @@ int main(int argc, char *argv[])
     print_file.close();
 
     qDebug() << "The cleaner has finished to look for unused tags.";
+    return 0;
+}
+
+void removeUnusedTags(QString textFilesDir, QString outputDir, QStringList tagsList)
+{
+    // Prepare folder
+    qDebug() << "Preparing files...";
+    QDir dir_import(outputDir);
+    dir_import.removeRecursively();
+    dir_import.mkdir(".");
+
+    // List root files
+    QStringList xml_filter;
+    xml_filter << "*.xml";
+    QDir root(textFilesDir);
+    QStringList root_files;
+    root_files = root.entryList(xml_filter, QDir::Files);
+
+    // Copy and convert files to backup dir
+    QStringList import_files;
+    for(QStringList::Iterator it = root_files.begin(); it != root_files.end(); it++)
+    {
+        QFile::copy(textFilesDir + *it, outputDir + *it);
+    }
+    import_files = dir_import.entryList(xml_filter, QDir::Files);
+
+    QString tags;
+    int counter = 0;
+    int file_number = 1;
+    QStringList operation_list;
+    for(QStringList::Iterator it = import_files.begin(); it != import_files.end(); it++)
+    {
+        qDebug() << "Processing file" << file_number << "of" << import_files.count();
+        QString current = outputDir + *it;
+        QDomDocument input;
+        QFile file_input(current);
+        file_input.open(QIODevice::ReadOnly);
+        input.setContent(&file_input);
+        file_input.close();
+
+        QDomElement input_node = input.firstChildElement("Civ4GameText").firstChildElement("TEXT").toElement();
+        int remove_file = 0;
+        int remove_tag = 0;
+        while(!input_node.isNull())
+        {
+            QString tag_value = input_node.firstChildElement("Tag").firstChild().nodeValue();
+            //qDebug() << tag_value;
+            remove_tag = 0;
+            foreach(tags,tagsList)
+            {
+                if(tag_value == tags)
+                {
+                    tagsList.removeAll(tags);
+                    QString operation = "FILE: " + *it + " | REMOVED TAG: " + tags;
+                    operation_list << operation;
+                    counter++;
+                    remove_file++;
+                    remove_tag++;
+                }
+            }
+            input_node = input_node.nextSiblingElement();
+            if(remove_tag == 1)
+            {
+                input.firstChildElement("Civ4GameText").removeChild(input_node.previousSibling());
+            }
+        }
+        if(remove_tag == 1)
+        {
+            input.firstChildElement("Civ4GameText").removeChild(input.firstChildElement("Civ4GameText").lastChildElement());
+        }
+
+        file_input.open(QIODevice::Truncate | QIODevice::WriteOnly);
+        QTextStream ts(&file_input);
+        input.save(ts, 4);
+        file_input.close();
+
+        if(remove_file == 0)
+        {
+            QFile::remove(current);
+        }
+        file_number++;
+    }
+
+    // Output modified list
+    QString print_value;
+    QString print_file_name = outputDir + "report_cleanup.txt";
+    QFile print_file(print_file_name);
+
+    if ( print_file.open(QIODevice::Truncate | QIODevice::WriteOnly) )
+        {
+            QTextStream stream( &print_file );
+
+            foreach(print_value, operation_list)
+            {
+                stream << print_value << endl;
+            }
+        }
+        print_file.close();
+
+    qDebug() << "All modified files are in the output folder. Removed" << counter << "tags. A detailled report has been print in report_cleanup.txt";
+    return;
+}
+
+int main(int argc, char *argv[])
+{
+    QCoreApplication a(argc, argv);
+
+    // First extract informations from the config file
+    QFile settings("cleaner.config");
+    settings.open(QIODevice::ReadOnly);
+    QDomDocument xml;
+    xml.setContent(&settings);
+    settings.close();
+    QString dirText = xml.firstChildElement("main").firstChildElement("directories").attribute("text");
+    QString dirTo = xml.firstChildElement("main").firstChildElement("directories").attribute("to");
+    QString dirBTS = xml.firstChildElement("main").firstChildElement("directories").attribute("BTS");
+    QString dirSources = xml.firstChildElement("main").firstChildElement("directories").attribute("sources");
+    QString dirMod = xml.firstChildElement("main").firstChildElement("directories").attribute("mod");
+    QString tagsList = xml.firstChildElement("main").firstChildElement("list").firstChild().nodeValue();
+    if(dirText.isEmpty() || dirTo.isEmpty() || dirBTS.isEmpty() || dirSources.isEmpty() || dirMod.isEmpty())
+    {
+        qDebug() << "One of the config directory is empty, cannot continue.";
+        return 1;
+    }
+    else{
+        // Make sure the path is normalized
+        if(!dirText.endsWith("/")){
+            dirText.append("/");
+        }
+        if(!dirTo.endsWith("/")){
+            dirTo.append("/");
+        }
+        if(!dirBTS.endsWith("/")){
+            dirBTS.append("/");
+        }
+        if(!dirSources.endsWith("/")){
+            dirSources.append("/");
+        }
+        if(!dirMod.endsWith("/")){
+            dirMod.append("/");
+        }
+        dirText.replace("\\","/");
+        dirTo.replace("\\","/");
+        dirBTS.replace("\\","/");
+        dirSources.replace("\\","/");
+        dirMod.replace("\\","/");
+        qDebug() << "Importing files";
+    }
+    QDir to(dirTo);
+    to.removeRecursively();
+
+    // List tags in the tags list
+    QStringList list_tags;
+    if(tagsList.isEmpty())
+    {
+        qDebug() << "No tag list found. The cleaner will look for unused tags now. It can take a while to process.";
+       list_tags = getUnusedTagsList();
+    }
+    else
+    {
+        // List tags in the file
+        QFile test(tagsList);
+
+        test.open(QIODevice::ReadOnly);
+        QTextStream read_stream(&test);
+        while (!read_stream.atEnd())
+        {
+            list_tags << read_stream.readLine();
+        }
+        test.close();
+
+        removeUnusedTags(dirText, dirTo, list_tags);
+    }
+
+
 
     return a.exec();
 }
