@@ -9,12 +9,14 @@ QT       += core xml
 QT       -= gui
 
 TARGET = asian_patcher
-CONFIG   += console qt
+CONFIG   += console qt static
 CONFIG   -= app_bundle
 
 TEMPLATE = app
 
-QMAKE_LFLAGS += /MANIFESTUAC:'level='requireAdministrator''
+RC_FILE = manifest.rc
+
+QMAKE_LFLAGS += -static-libgcc -static-libstdc++ -static -lstdc++ -lpthread
 
 SOURCES += main.cpp
 
