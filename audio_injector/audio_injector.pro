@@ -9,11 +9,12 @@ QT       += core xml
 QT       -= gui
 
 TARGET = civ4_audio_xml_injector
-CONFIG   += console qt
+CONFIG   += console qt static
 CONFIG   -= app_bundle
 
 TEMPLATE = app
 
+QMAKE_LFLAGS += -static-libgcc -static-libstdc++ -static -lstdc++ -lpthread
 
 SOURCES += main.cpp
 

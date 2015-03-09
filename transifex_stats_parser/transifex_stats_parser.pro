@@ -9,11 +9,12 @@ QT       += core xml
 QT       -= gui
 
 TARGET = and2_transifex_format
-CONFIG   += console
+CONFIG   += console static
 CONFIG   -= app_bundle
 
 TEMPLATE = app
 
+QMAKE_LFLAGS += -static-libgcc -static-libstdc++ -static -lstdc++ -lpthread
 
 SOURCES += main.cpp
 

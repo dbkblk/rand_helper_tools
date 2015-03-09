@@ -430,7 +430,7 @@ int main(int argc, char *argv[])
     QStringList list_tags;
     if(tagsList.isEmpty())
     {
-        qDebug() << "No tag list found. The cleaner will look for unused tags now. It can take a while to process.";
+       qDebug() << "No tag list found. The cleaner will look for unused tags now. It can take a while to process.";
        list_tags = getUnusedTagsList();
     }
     else
