@@ -210,9 +210,11 @@ int main(int argc, char *argv[])
 
         QString filename = read_categories.attribute("file");
         QString filename_pedia = dirTo + "temp/" + filename + "_PEDIA.xml";
+        QString filename_strategy = dirTo + "temp/" + filename + "_STRATEGY.xml";
         QString filename_removed = dirTo + "temp/_REMOVED_TAGS_" + filename + ".xml";
         QString filename_removed_pedia = dirTo + "temp/_REMOVED_TAGS_" + filename + "_PEDIA.xml";
-        categories_list << filename << filename + "_PEDIA";
+        QString filename_removed_strategy = dirTo + "temp/_REMOVED_TAGS_" + filename + "_STRATEGY.xml";
+        categories_list << filename << filename + "_PEDIA" << filename + "_STRATEGY";
         filename = dirTo + "temp/" + filename + ".xml";
         QFile temp(filename);
         temp.open(QIODevice::WriteOnly | QIODevice::Truncate);
@@ -224,6 +226,11 @@ int main(int argc, char *argv[])
         QTextStream ts_pedia(&temp_pedia);
         xml_temp.save(ts_pedia,4);
         temp_pedia.close();
+        QFile temp_strategy(filename_strategy);
+        temp_strategy.open(QIODevice::WriteOnly | QIODevice::Truncate);
+        QTextStream ts_strategy(&temp_strategy);
+        xml_temp.save(ts_strategy,4);
+        temp_strategy.close();
         QFile temp_removed(filename_removed);
         temp_removed.open(QIODevice::WriteOnly | QIODevice::Truncate);
         QTextStream ts_removed(&temp_removed);
@@ -234,6 +241,11 @@ int main(int argc, char *argv[])
         QTextStream ts_removed_pedia(&temp_removed_pedia);
         xml_temp.save(ts_removed_pedia,4);
         temp_removed_pedia.close();
+        QFile temp_removed_strategy(filename_removed_strategy);
+        temp_removed_strategy.open(QIODevice::WriteOnly | QIODevice::Truncate);
+        QTextStream ts_removed_strategy(&temp_removed_strategy);
+        xml_temp.save(ts_removed_strategy,4);
+        temp_removed_strategy.close();
 
     }
     // Create MISC classic, pedia, and removed
@@ -250,6 +262,11 @@ int main(int argc, char *argv[])
     QTextStream ts_temp_pedia(&misc_pedia);
     xml_misc.save(ts_temp_pedia,4);
     misc_pedia.close();
+    QFile misc_strategy(dirTo + "temp/MISC_STRATEGY.xml");
+    misc_strategy.open(QIODevice::WriteOnly | QIODevice::Truncate);
+    QTextStream ts_temp_strategy(&misc_strategy);
+    xml_misc.save(ts_temp_strategy,4);
+    misc_strategy.close();
     QFile misc_removed(dirTo + "temp/_REMOVED_TAGS_MISC.xml");
     misc_removed.open(QIODevice::WriteOnly | QIODevice::Truncate);
     QTextStream ts_temp_removed(&misc_removed);
@@ -260,7 +277,12 @@ int main(int argc, char *argv[])
     QTextStream ts_temp_removed_pedia(&misc_removed_pedia);
     xml_misc.save(ts_temp_removed_pedia,4);
     misc_removed_pedia.close();
-    categories_list << "MISC" << "MISC_PEDIA";
+    QFile misc_removed_strategy(dirTo + "temp/_REMOVED_TAGS_MISC_STRATEGY.xml");
+    misc_removed_strategy.open(QIODevice::WriteOnly | QIODevice::Truncate);
+    QTextStream ts_temp_removed_strategy(&misc_removed_strategy);
+    xml_misc.save(ts_temp_removed_strategy,4);
+    misc_removed_strategy.close();
+    categories_list << "MISC" << "MISC_PEDIA" << "MISC_STRATEGY";
     categories_list.sort();
 
     // Sorting
@@ -300,9 +322,13 @@ int main(int argc, char *argv[])
                     }
                 }
             }
-            if(tag.contains("_PEDIA"))
+            if(tag.endsWith("_PEDIA"))
             {
                 category_value = category_value + "_PEDIA";
+            }
+            else if(tag.endsWith("_STRATEGY"))
+            {
+                category_value = category_value + "_STRATEGY";
             }
 
             if(category == category_value)
