@@ -14,6 +14,8 @@ CONFIG   -= app_bundle
 
 TEMPLATE = app
 
+RC_FILE = manifest.rc
+
 QMAKE_LFLAGS += -static-libgcc -static-libstdc++ -static -lstdc++ -lpthread
 
 SOURCES += main.cpp
