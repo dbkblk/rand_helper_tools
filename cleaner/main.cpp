@@ -100,14 +100,15 @@ int getUnusedTagsList(QString listName)
     QString tag;
     QString base_tag;
     tagsList.removeDuplicates();
+    //qDebug() << tagsList;
 
     // List base game tags
-    QString dirTextOrig = dirBTS + "Assets/XML/Text/";
-    QString dirTextBTS = dirBTS + "Beyond the Sword/Assets/XML/Text/";
-    QString dirTextWarlords = dirBTS + "Warlords/Assets/XML/Text/";
-    QStringList listTagsOrig = ListTags(dirTextOrig);
-    QStringList listTagsWarlords = ListTags(dirTextWarlords);
-    QStringList listTagsBTS = ListTags(dirTextBTS);
+    //QString dirTextOrig = dirBTS + "Assets/XML/Text/";
+    //QString dirTextBTS = dirBTS + "Beyond the Sword/Assets/XML/Text/";
+    //QString dirTextWarlords = dirBTS + "Warlords/Assets/XML/Text/";
+    //QStringList listTagsOrig = ListTags(dirTextOrig);
+    //QStringList listTagsWarlords = ListTags(dirTextWarlords);
+    //QStringList listTagsBTS = ListTags(dirTextBTS);
 
     // Remove exceptions from the tag list
     foreach(tag, tagsList)
@@ -125,7 +126,7 @@ int getUnusedTagsList(QString listName)
     }
 
     // Remove base game tags from the tag list
-    foreach(tag,tagsList)
+    /*foreach(tag,tagsList)
     {
       foreach(base_tag,listTagsOrig)
       {
@@ -148,7 +149,7 @@ int getUnusedTagsList(QString listName)
           tagsList.removeAll(tag);
         }
       }
-    }
+    }*/
     qDebug() << "Found" << tagsList.count() << "unique tags";
 
     // List all the files to check
@@ -431,7 +432,7 @@ int main(int argc, char *argv[])
     if(tagsList.isEmpty())
     {
        qDebug() << "No tag list found. The cleaner will look for unused tags now. It can take a while to process.";
-       list_tags = getUnusedTagsList();
+       getUnusedTagsList("_tags_not_found.txt");
     }
     else
     {
