@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
     QCoreApplication a(argc, argv);
 
     // Announcement
-    qDebug() << "Civ. IV XML merger v1.0; \"A New Dawn Resurection, dbkblk\"";
+    qDebug() << "Civ. IV XML merger v1.1; \"A New Dawn Resurection, dbkblk\"";
 
     // First extract informations from the config file
     QFile settings("merger.config");
@@ -322,11 +322,11 @@ int main(int argc, char *argv[])
                     }
                 }
             }
-            if(tag.endsWith("_PEDIA"))
+            if(tag.contains("_PEDIA"))
             {
                 category_value = category_value + "_PEDIA";
             }
-            else if(tag.endsWith("_STRATEGY"))
+            else if(tag.endsWith("_STRATEGY") && (category_value.contains("UNITS") || category_value.contains("TECHNOLOGIES") || category_value.contains("BUILDINGS") || category_value.contains("PROJECTS")))
             {
                 category_value = category_value + "_STRATEGY";
             }
