@@ -118,6 +118,7 @@ QString getTranslation(QString langCode, QString tag)
         if(tagTransl.attribute("name") == tag){
             if(!QString(tagTransl.firstChild().nodeValue()).isNull()){
                 result = tagTransl.firstChild().nodeValue();
+                result.replace("\"","'");
                 return result;
             }
         }
