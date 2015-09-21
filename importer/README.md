@@ -48,3 +48,21 @@ This function is nearly identical as the classic import except it only check the
 If the file is "import/fr/A_New_Dawn_Concept_Civ4GameText.xml», then it will only check «A_New_Dawn_Concept_Civ4GameText.xml» in root folder instead of checking all files in root folder.
 
 If you have duplicated tags and don't want to use the sort function, it is recommended to use this function.
+
+# HOW TO USE THE TRANSLATIONS TOOLS:
+
+## Requirements:
+- A valid account of Transifex (free).
+- Initialize your credentials of Transifex on your PC. Just double-click on "translations_initialize_transifex.bat" and fill in your user/password when asked. It will create a ".transifexrc" file in your user directory of Windows. You only have to do this the first time.
+
+## How to update the translations:
+- Execute "translations_download_latest.bat" to start downloading latest translations. If none are more recent than those already into the "lang" subfolder, it will only skip downloading.
+- Execute "translations_import_latest.bat". It might takes some time. The program will check for the language folders into the "lang" subfolder then import the languages files which are compatible into the main files. The resulting files will be pasted into the subfolder "imported/".
+- For each language updated, a report is generated (report_LANG.xml). Open it to check what has been updated.
+- Then just copy the updated text files back into the mod folder.
+
+## How to push new mod strings into the server:
+Now done automatically through Afforess server. No need for any operation to update the translation platform.
+A script has been create in the first place "translations_update_english_strings.bat", thought I do not recommend to use it.
+
+dbkblk, 2015-09
