@@ -8,7 +8,7 @@ QT       += core xml
 
 QT       -= gui
 
-TARGET = script_translations
+TARGET = mcp_script_translations
 CONFIG   += console qt static
 CONFIG   -= app_bundle
 

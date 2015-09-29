@@ -119,6 +119,7 @@ QString getTranslation(QString langCode, QString tag)
             if(!QString(tagTransl.firstChild().nodeValue()).isNull()){
                 result = tagTransl.firstChild().nodeValue();
                 result.replace("\"","'");
+                result.replace("\\'","'");
                 return result;
             }
         }
@@ -151,7 +152,12 @@ int main(int argc, char *argv[])
             line = temp.join("\"");
         }
 
-        // Update translations lines
+        // Update translations lines (including commented ones)
+        QString langString = "LangString ";
+        if(line.startsWith("; LangString")){
+            langString = "; LangString ";
+        }
+
         if(line.startsWith("LangString")){
             // Get language infos
             QStringList temp_lang = line.replace("{","|").replace("}","|").split("|");
@@ -162,7 +168,7 @@ int main(int argc, char *argv[])
             // Get tag
             QStringList temp_tag = temp_lang[0].split(" ");
             QString tag = temp_tag[1];
-            line = "LangString " + tag + " ${LANG_" + langName + "} " + "\"" + getTranslation(langCode, tag) + "\"";
+            line = langString + tag + " ${LANG_" + langName + "} " + "\"" + getTranslation(langCode, tag) + "\"";
         }
 
         out_enc << line << "\n";

@@ -8,7 +8,7 @@ QT       += core xml
 
 QT       -= gui
 
-TARGET = installer_lang_update
+TARGET = script_translations
 CONFIG   += console qt static
 CONFIG   -= app_bundle
 
