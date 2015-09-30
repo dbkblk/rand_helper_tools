@@ -86,19 +86,16 @@ QStringList getTagList()
 
 QString getTranslation(QString langCode, QString tag)
 {
-    // Output list of supported languages
-    QStringList list;
-
     // Open the english file
     QFile settings("translations/installer_en.xml");
     settings.open(QIODevice::ReadOnly);
     QDomDocument xml;
     xml.setContent(&settings);
     settings.close();
-    QString result;
+    QString result = "";
     QDomElement tagEl = xml.firstChildElement("resources").firstChildElement("string").toElement();
     while(!tagEl.isNull()){
-        if(tagEl.attribute("name") == tag){
+        if(tagEl.attribute("name") == ("INSTALLER_" + tag)){
             result = tagEl.firstChild().nodeValue();
         }
         tagEl = tagEl.nextSiblingElement();
@@ -115,7 +112,7 @@ QString getTranslation(QString langCode, QString tag)
     transl.close();
     QDomElement tagTransl = xmltransl.firstChildElement("resources").firstChildElement("string").toElement();
     while(!tagTransl.isNull()){
-        if(tagTransl.attribute("name") == tag){
+        if(tagTransl.attribute("name") == ("INSTALLER_" + tag)){
             if(!QString(tagTransl.firstChild().nodeValue()).isNull()){
                 result = tagTransl.firstChild().nodeValue();
                 result.replace("\"","'");
@@ -158,7 +155,9 @@ int main(int argc, char *argv[])
             langString = "; LangString ";
         }
 
-        if(line.startsWith("LangString")){
+        if(line.startsWith(langString)){
+            QString backup = line;
+
             // Get language infos
             QStringList temp_lang = line.replace("{","|").replace("}","|").split("|");
             QStringList temp_lang_name = temp_lang[1].split("_");
@@ -168,7 +167,19 @@ int main(int argc, char *argv[])
             // Get tag
             QStringList temp_tag = temp_lang[0].split(" ");
             QString tag = temp_tag[1];
-            line = langString + tag + " ${LANG_" + langName + "} " + "\"" + getTranslation(langCode, tag) + "\"";
+            if(backup.startsWith(";"))
+            { // Pick the second char as the first is a comment
+                tag = temp_tag[2];
+            }
+            QString translation = getTranslation(langCode, tag);
+            if (!translation.isEmpty())
+            {
+                line = langString + tag + " ${LANG_" + langName + "} " + "\"" + translation + "\"";
+            }
+            else
+            {
+                line = backup;
+            }
         }
 
         out_enc << line << "\n";
