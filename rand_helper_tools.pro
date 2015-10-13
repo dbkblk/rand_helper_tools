@@ -1,6 +1,6 @@
 TEMPLATE = subdirs
 
-SUBDIRS = exporter importer merger cleaner audio_injector transifex_stats_parser \
+SUBDIRS = art_files_detector exporter importer merger cleaner audio_injector transifex_stats_parser \
     installer_lang_update mcp_installer_lang_update asian_patcher \
     scan_tool
 
@@ -12,6 +12,7 @@ audio_injector = audio_injector/audio_injector.pro
 transifex_stats_parser = transifex_stats_parser/transifex_stats_parser.pro
 installer_lang_update = installer_lang_update/installer_lang_update.pro
 mcp_installer_lang_update = mcp_installer_lang_update/mcp_installer_lang_update.pro
+art_files_detector = art_files_detector/art_files_detector.pro
 
 DISTFILES += README.md\
             TODO.md
