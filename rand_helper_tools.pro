@@ -1,7 +1,8 @@
 TEMPLATE = subdirs
 
 SUBDIRS = exporter importer merger cleaner audio_injector transifex_stats_parser \
-    installer_lang_update mcp_installer_lang_update asian_patcher
+    installer_lang_update mcp_installer_lang_update asian_patcher \
+    scan_tool
 
 exporter.file = exporter/exporter.pro
 importer = importer/importer.pro
