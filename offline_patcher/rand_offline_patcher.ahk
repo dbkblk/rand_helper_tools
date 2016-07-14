@@ -1,9 +1,8 @@
-#NoEnv
 #NoTrayIcon
 
-version = 2.0
-tool_svn = "%A_ScriptDir%\tools\svn.exe"
-tool_diff = "%A_ScriptDir%\tools\diff.exe"
+version = 2.1
+tool_svn = %A_ScriptDir%\tools\svn.exe
+tool_diff = %A_ScriptDir%\tools\diff.exe
 
 ; Checking ini file
 settings = %A_ScriptDir%\settings.ini
@@ -16,7 +15,6 @@ IfExist %settings%
 IfNotExist, %sGameDir%\Assets\Python\Contrib\CvModName.py
 {
     sGameDir = 
-    return
 }
 
 
@@ -54,7 +52,7 @@ download:
         GuiControl, Show, TxtProgress
 
         ; Start the svn diff command
-        command = %tool_svn% diff -r%rev% --force --diff-cmd %tool_diff% -x -au "http://svn.code.sf.net/p/anewdawn/code/Trunk/Rise of Mankind - A New Dawn/" > and_%rev%_update.patch
+        command = "%tool_svn%" diff -r%rev% --force --diff-cmd "%tool_diff%" -x -au "http://svn.code.sf.net/p/anewdawn/code/Trunk/Rise of Mankind - A New Dawn/" > and_%rev%_update.patch
         RunWait, %comspec% /c "%command%",,Hide
 
         ; Check if file exists
