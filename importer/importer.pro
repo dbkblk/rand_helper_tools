@@ -9,7 +9,10 @@ QT       += core xml
 QT       -= gui
 
 TARGET = importer
-CONFIG   += console qt static
+CONFIG   += console qt
+win32 {
+CONFIG  +=  static
+}
 CONFIG   -= app_bundle
 
 TEMPLATE = app

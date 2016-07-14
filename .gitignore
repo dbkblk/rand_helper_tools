@@ -1,6 +1,9 @@
 build-*/
 exec/
 Makefile*
+.vscode/
+*.pro.user*
+archives/
 
 #################
 ## Eclipse
