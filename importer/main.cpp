@@ -527,5 +527,5 @@ int main(int argc, char *argv[])
 
     qDebug() << "Import finished. Only modified files are kept in the output folder. You can quit the program and review the reports.";
 
-    return a.exec();
+    return 0;
 }

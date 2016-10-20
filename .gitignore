@@ -4,6 +4,7 @@ Makefile*
 .vscode/
 *.pro.user*
 archives/
+files/
 
 #################
 ## Eclipse
