@@ -458,7 +458,10 @@ int main(int argc, char *argv[])
     }
 
     // Get the directories
-    to.mkdir(".");
+    if (!to.mkpath(".")) {
+        qDebug() << "Failed to create the export directory.";
+        return a.exec();
+    }
 
     // Get base files and copy them to export
     QStringList xml_filter;
