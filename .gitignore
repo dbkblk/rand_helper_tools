@@ -5,6 +5,8 @@ Makefile*
 *.pro.user*
 archives/
 files/
+*.o
+*.qmake.stash
 
 #################
 ## Eclipse
