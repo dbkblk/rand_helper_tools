@@ -218,6 +218,7 @@ bool convertXMLAndroidToCiv(QString dirTrans, QString dirTo, QString file, QStri
                     value_text_tr.replace("\\'","\'").replace("\\\"","\"").replace("\\t","[TAB]");
                     QString value_text;
 
+                    // Case: English value equals the value to translate
                     if(value_text_tr == tag_orig.firstChildElement("English").firstChild().nodeValue())
                     {
                         skip++;
@@ -239,6 +240,38 @@ bool convertXMLAndroidToCiv(QString dirTrans, QString dirTo, QString file, QStri
                     else
                     {
                         value_text = tag_orig.firstChildElement(langName).firstChild().nodeValue();
+                    }
+
+                    // Case: English value equals the value to translate but tag already exists (> remove it).
+                    if( skip > 0 )
+                    {
+                        if (!tag_orig.firstChildElement(langName).isNull())
+                        {
+                            // Remove the element
+//                            qDebug() << "Removing value" << value_tag;
+                            QDomNode temp = tag_orig.firstChildElement(langName);
+                            temp.parentNode().removeChild(temp);
+
+                            // Add a log entry
+                            QDomElement log_entry = log.createElement("entry");
+                            QStringList temp_list = current.split("/");
+                            QString it_name = "";
+                            foreach(QString entry, temp_list){
+                                it_name = entry;
+                            }
+                            log_entry.setAttribute("tag",value_tag);
+                            log_entry.setAttribute("file",it_name);
+                            log_root.appendChild(log_entry);
+                            QDomNode log_old_value = log.createElement("old_value");
+                            QDomNode log_new_value = log.createElement("new_value");
+                            log_entry.appendChild(log_old_value);
+                            log_entry.appendChild(log_new_value);
+                            QDomText log_old_value_text = log.createTextNode(value_text_tr);
+                            QDomText log_new_value_text = log.createTextNode("");
+                            log_old_value.appendChild(log_old_value_text);
+                            log_new_value.appendChild(log_new_value_text);
+
+                        }
                     }
 
                     //qDebug() << value_tag << " : " << value_text << " / " << value_text_tr;
