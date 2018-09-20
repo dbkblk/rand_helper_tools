@@ -531,5 +531,5 @@ int main(int argc, char *argv[])
 
     qDebug() << "Original tag number:" << tags_total_counter << "| New tag number:" << tags_output_counter;
 
-    return a.exec();
+    return 0;
 }
