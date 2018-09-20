@@ -11,11 +11,6 @@ QT       -= gui
 TARGET = importer
 CONFIG   += console qt
 
-win32 {
-    CONFIG  +=  static
-    QMAKE_LFLAGS += -static-libgcc -static-libstdc++ -static -lstdc++ -lpthread
-}
-
 CONFIG   -= app_bundle
 
 SOURCES += main.cpp
