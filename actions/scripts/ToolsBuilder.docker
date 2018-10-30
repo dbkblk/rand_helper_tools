@@ -1,0 +1,16 @@
+# Base image
+FROM debian:stretch-slim
+
+# MXE and UPX dependencies
+RUN apt-get update && apt-get install -y gnupg
+RUN echo "deb http://pkg.mxe.cc/repos/apt/debian wheezy main" >  /etc/apt/sources.list.d/mxeapt.list
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys D43A795B73B16ABE9643FE1AFD8FFF16DB45C6AB
+RUN apt-get update
+RUN apt-get install -y mxe-i686-w64-mingw32.static-qtbase mxe-i686-w64-mingw32.static-qttools upx
+RUN apt install -y python-pip
+RUN pip install transifex-client
+#RUN apt install -y qt5-default
+RUN apt-get clean
+
+# Define environment variable
+ENV PATH=/usr/lib/mxe/usr/bin:/usr/lib/mxe/usr/i686-w64-mingw32.static/qt5/bin:$PATH

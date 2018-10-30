@@ -1,0 +1,18 @@
+FROM rand_build_tools
+
+# Set the working directory to /app
+WORKDIR /app
+
+# Copy the parent directory contents into the container at /app
+ADD . /app
+
+# ENTRYPOINT ["cd", "project/"]
+#ENTRYPOINT  &&  &&  &&  && mv build/checker_release/and2_checker.exe build/and2_checker.exe && mv build/updater_release/upd_proc.exe build/upd_proc.exe && echo "## COMPRESSION ##" && upx build/and2_checker.exe && upx build/upd_proc.exe
+
+#ENTRYPOINT [ "echo \"## PREPARING PROJECT ##\"", \
+#             "i686-w64-mingw32.static-qmake-qt5 rand_helper_tools.pro",            \
+#             "echo \"## COMPILATION ##\"",             \
+#             "make -j4",             \
+#]
+
+ENTRYPOINT ls && ./actions/scripts/docker_compile_script.sh
